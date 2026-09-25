@@ -69,15 +69,16 @@ export class WeatherIconComponent {
     const slug = this.resolvedSlug();
 
     if (attempt === 0) {
-      // Primary: local bundled asset from @meteocons/svg
-      return `/meteocons/${style}/${slug}.svg`;
-    }
-    if (attempt === 1) {
-      // Secondary fallback: jsDelivr CDN
+      // Primary: jsDelivr CDN for @meteocons/svg
       return `https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/${style}/${slug}.svg`;
     }
-    // Final fallback: standard not-available / clear-day
-    return `/meteocons/${style}/not-available.svg`;
+    if (attempt === 1) {
+      // Secondary CDN: unpkg CDN for @meteocons/svg
+      return `https://unpkg.com/@meteocons/svg@0.1.0/${style}/${slug}.svg`;
+    }
+    // Final fallback: clear-day or clear-night from jsDelivr CDN
+    const fallbackSlug = this.isDay() ? 'clear-day' : 'clear-night';
+    return `https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/${style}/${fallbackSlug}.svg`;
   });
 
   handleImageError(): void {
