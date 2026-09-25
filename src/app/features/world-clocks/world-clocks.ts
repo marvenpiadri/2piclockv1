@@ -5,6 +5,7 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { GeocodingService } from '../../core/services/geocoding.service';
 import { MatIconModule } from '@angular/material/icon';
 import { CountryFlagComponent } from '../../shared/components/country-flag/country-flag';
+import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
@@ -15,7 +16,7 @@ interface WorldClock { location:GeoLocation; hour:number; minute:number; second:
 
 @Component({
  selector:'app-world-clocks', standalone:true,
- imports:[MatIconModule,CountryFlagComponent,FormsModule,DragDropModule],
+ imports:[MatIconModule,CountryFlagComponent,AnalogClockComponent,FormsModule,DragDropModule],
  changeDetection:ChangeDetectionStrategy.OnPush, templateUrl:'./world-clocks.html', styleUrl:'./world-clocks.css'
 })
 export class WorldClocksComponent implements OnDestroy {

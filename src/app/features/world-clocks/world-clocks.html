@@ -17,9 +17,15 @@
  @for(loc of locationResults();track loc.id){<div class="location-result"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag'"></app-country-flag><span><b>{{loc.name}}</b><small>{{loc.country}} · {{loc.timezone}}</small></span>@if(isPinned(loc.id)){<button type="button" class="pin-action pinned" (click)="removeLocation(loc.id)" aria-label="Remove pinned clock"><mat-icon>check</mat-icon></button>}@else{<button type="button" class="pin-action" (click)="pinLocation(loc)" aria-label="Pin clock"><mat-icon>add</mat-icon></button>}</div>}
  @if(!isSearching()&&locationResults().length===0){<span class="search-status">No matching locations.</span>}
 </div>}
-<section class="clock-list" cdkDropList (cdkDropListDropped)="dropClock($event)" aria-label="Pinned world clocks">
+<section class="clock-list" 
+         [class.layout-grid]="style() === 'analog'" 
+         [class.layout-vertical]="style() === 'digital'"
+         cdkDropList 
+         [cdkDropListOrientation]="style() === 'analog' ? 'horizontal' : 'vertical'"
+         (cdkDropListDropped)="dropClock($event)" 
+         aria-label="Pinned world clocks">
  @for(clock of displayedClocks();track clock.location.id){
- <article class="world-clock" cdkDrag>
+ <article class="world-clock" [class.world-clock-grid]="style() === 'analog'" cdkDrag>
   <div class="clock-location">
    <div class="drag-handle" cdkDragHandle title="Drag to reorder"><mat-icon>drag_indicator</mat-icon></div>
    <app-country-flag [countryCode]="clock.location.countryCode" [customClass]="'flag'"></app-country-flag>
@@ -28,8 +34,10 @@
   </div>
   @if(style()==='digital'){
    <div class="digital-clock" [attr.aria-label]="clock.location.name+' '+clock.time">
-    <div class="digital-time">{{clock.time}}<span class="digital-seconds">:{{clock.second.toString().padStart(2,'0')}}</span></div>
-    <div class="digital-footer"><span>{{clock.date}}</span><span>{{clock.isDay?'DAY':'NIGHT'}}</span></div>
+    <div class="digital-screen-content">
+     <div class="digital-time">{{clock.time}}<span class="digital-seconds">:{{clock.second.toString().padStart(2,'0')}}</span></div>
+     <div class="digital-footer"><span>{{clock.date}}</span><span>{{clock.isDay?'DAY':'NIGHT'}}</span></div>
+    </div>
    </div>
   } @else {
    <div class="analog-clock" [attr.aria-label]="clock.location.name+' '+clock.time">
