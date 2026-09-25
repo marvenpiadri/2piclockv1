@@ -1,11 +1,24 @@
-<div align="center">
+# 2piClock · Living Celestial Clock & Astronomical Observatory
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+> High-precision diurnal radian clock, atmospheric telemetry, solar/lunar ephemeris, and global temporal synchronization engine built with Angular 21, Zoneless Signals, and Tailwind CSS.
 
-  <h1>Built with AI Studio</h2>
+---
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🌟 Key Features & Product Modules
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+- **2π Radian Horizon Clock (`/sky`)**: Real-time diurnal radian vector simulation, optical twilight gradients, and living sky window.
+- **Solar & Daylight Calculator (`/astronomy`)**: Precise NOAA solar coordinates, golden hour boundaries, twilight regimes, and "When Is?" astronomical query solver.
+- **Lunar Ephemeris & Phase Indicator (`/astronomy`)**: High-accuracy synodic moon phase terminator, illumination fraction, and upcoming milestone dates.
+- **World Radio & Earth Audio (`/radio`)**: Live terrestrial broadcasts synchronized with local diurnal solar cycles.
+- **World Clocks Grid (`/world-clocks`)**: Synchronized multi-city time dashboard with DST awareness.
+- **Stargazing & Dark Sky Planner (`/stargazing`)**: Bortle dark sky index calculations, moon interference, and astrophotography window predictor.
+- **3D Celestial Orrery & Space View (`/space`)**: Interactive 3D deep space canvas with realistic multi-frequency star twinkling, constellation anchors, and meteors.
 
-</div>
+---
+
+## 🚀 Tech Stack
+
+- **Framework**: Angular 21 (Zoneless, OnPush Change Detection, Signals)
+- **Styling**: Tailwind CSS 4 & Custom Glassmorphism UI
+- **Build System**: Angular Application Builder (`@angular/build`) & Vite
+- **Astronomy & Math**: Astronomical algorithms based on NOAA and Meeus ephemeris formulas.

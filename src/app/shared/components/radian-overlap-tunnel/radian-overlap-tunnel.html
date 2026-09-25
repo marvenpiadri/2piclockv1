@@ -1,0 +1,64 @@
+<section class="overlap-panel">
+  <header class="overlap-head">
+    <div>
+      <div class="eyebrow"><span class="eyebrow-mark">2π</span> GLOBAL TIME OVERLAP</div>
+      <h2>Find a time that works for everyone</h2>
+      <p>Drag the timeline. Each row shows local time and the practical work window for that city.</p>
+    </div>
+    @if (overlapData.bestWindow; as best) {
+      <div class="best-window">
+        <span>COMMON WINDOW</span>
+        <strong>{{ formatUtcH(best.startUtcH) }}–{{ formatUtcH(best.endUtcH) }} UTC</strong>
+      </div>
+    }
+  </header>
+
+  <div class="timeline-shell">
+    <div class="timeline-axis" aria-hidden="true">
+      @for (hour of axisHours; track hour) {
+        <span [style.left.%]="hour / 24 * 100">{{ hour }}:00</span>
+      }
+    </div>
+
+    <div class="timeline-rows">
+      @for (city of effectiveCities; track city.id) {
+        <div class="time-row">
+          <div class="city-label">
+            <span class="city-flag">{{ city.flag || '🌐' }}</span>
+            <div>
+              <strong>{{ city.name }}</strong>
+              <small>{{ localTimes[city.id] }} · {{ city.timezone.split('/')[1] || city.timezone }}</small>
+            </div>
+          </div>
+          <div class="day-track" [class.selected-row]="selectedCityId === city.id" (pointerdown)="onTrackPointerDown($event)">
+            <div class="night-zone"></div>
+            <div class="work-zone" [style.left.%]="workWindows[city.id].start / 24 * 100" [style.width.%]="workWindows[city.id].duration / 24 * 100">
+              <span>WORK</span>
+            </div>
+            <div class="current-marker" [style.left.%]="currentUtcHour / 24 * 100"></div>
+            <button type="button" class="row-hit-area" (click)="selectCity(city.id)" [attr.aria-label]="'Select ' + city.name"></button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="timeline-handle" [style.left.%]="currentUtcHour / 24 * 100" role="slider"
+      aria-label="Universal time" tabindex="0"
+      [attr.aria-valuenow]="currentUtcHour" aria-valuemin="0" aria-valuemax="24"
+      (pointerdown)="startDrag($event)"
+      (keydown.arrowleft)="nudge(-0.25)" (keydown.arrowright)="nudge(0.25)">
+      <span class="handle-label">{{ formatUtcH(currentUtcHour) }} UTC</span>
+    </div>
+  </div>
+
+  <footer class="overlap-footer">
+    <div class="legend"><span class="legend-dot work"></span>Typical work hours <span class="legend-dot now"></span>Selected instant</div>
+    <div class="city-list">
+      @for (city of effectiveCities; track city.id) {
+        <button type="button" class="city-chip" [class.active]="selectedCityId === city.id" (click)="selectCity(city.id)">
+          {{ city.flag || '🌐' }} {{ city.name }}
+        </button>
+      }
+    </div>
+  </footer>
+</section>

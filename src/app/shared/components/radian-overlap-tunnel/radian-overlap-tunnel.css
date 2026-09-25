@@ -1,0 +1,32 @@
+:host{display:block;width:100%}
+.overlap-panel{background:rgba(8,8,8,.58);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px;color:#f5f5f5}
+.overlap-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:24px}
+.eyebrow{font:700 11px/1 monospace;letter-spacing:.14em;color:#fbbf24;display:flex;align-items:center;gap:8px}
+.eyebrow-mark{font-size:13px}
+h2{margin:8px 0 5px;font-size:20px;letter-spacing:-.02em}
+p{margin:0;color:#858585;font-size:12px}
+.best-window{min-width:170px;padding:10px 12px;border-left:2px solid #f59e0b;background:rgba(245,158,11,.07)}
+.best-window span{display:block;font:700 9px monospace;color:#a1a1a1;letter-spacing:.1em}
+.best-window strong{display:block;margin-top:4px;color:#fbbf24;font:700 13px monospace}
+.timeline-shell{position:relative;padding:30px 10px 8px}
+.timeline-axis{height:18px;position:relative;margin-left:170px;margin-right:8px;color:#666;font:10px monospace}
+.timeline-axis span{position:absolute;transform:translateX(-50%)}
+.timeline-rows{display:flex;flex-direction:column;gap:9px}
+.time-row{display:grid;grid-template-columns:160px 1fr;align-items:center;gap:12px;min-height:46px}
+.city-label{display:flex;align-items:center;gap:9px;min-width:0}
+.city-flag{font-size:18px}.city-label strong{display:block;font-size:12px}.city-label small{display:block;margin-top:2px;color:#666;font:9px monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-track{height:32px;position:relative;border-radius:8px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);overflow:hidden;transition:border-color .15s ease,box-shadow .15s ease}
+.day-track.selected-row{border-color:rgba(245,158,11,.6);box-shadow:0 0 14px rgba(245,158,11,.22);background:rgba(245,158,11,.05)}
+.night-zone{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.32),rgba(255,255,255,.015),rgba(0,0,0,.32))}
+.work-zone{position:absolute;top:5px;bottom:5px;border-radius:5px;background:rgba(245,158,11,.24);border:1px solid rgba(245,158,11,.42);pointer-events:none}
+.work-zone span{font:700 8px monospace;color:#fbbf24;padding-left:7px;line-height:20px;letter-spacing:.08em}
+.current-marker{position:absolute;top:0;bottom:0;width:2px;background:#fbbf24;box-shadow:0 0 10px rgba(245,158,11,.7);transform:translateX(-1px);z-index:3;pointer-events:none}
+.row-hit-area{position:absolute;inset:0;background:transparent;border:0;cursor:pointer}
+.timeline-handle{position:absolute;top:23px;bottom:4px;width:16px;transform:translateX(-8px);z-index:8;cursor:ew-resize}
+.timeline-handle:before{content:"";position:absolute;top:18px;bottom:0;left:7px;width:2px;background:#fbbf24;box-shadow:0 0 12px rgba(245,158,11,.7)}
+.timeline-handle:after{content:"";position:absolute;top:11px;left:2px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 0 14px rgba(245,158,11,.6)}
+.handle-label{position:absolute;top:-2px;left:50%;transform:translate(-50%,-100%);white-space:nowrap;padding:5px 8px;border-radius:7px;background:#f59e0b;color:#090909;font:700 10px monospace}
+.overlap-footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.legend{font:10px monospace;color:#777;display:flex;gap:7px;align-items:center}.legend-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-left:5px}.legend-dot.work{background:#f59e0b}.legend-dot.now{background:#fff}
+.city-list{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.city-chip{padding:6px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:#888;font:10px monospace}.city-chip.active{border-color:rgba(245,158,11,.4);color:#fbbf24;background:rgba(245,158,11,.08)}
+@media(max-width:700px){.overlap-panel{padding:15px}.overlap-head{flex-direction:column}.time-row{grid-template-columns:1fr;gap:5px}.timeline-axis{margin-left:0}.timeline-shell{padding-top:30px}.overlap-footer{align-items:flex-start;flex-direction:column}.city-list{justify-content:flex-start}}

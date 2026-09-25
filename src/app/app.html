@@ -1,0 +1,246 @@
+<!-- Living substrates are route-scoped so heavy canvas animation never runs
+     behind calculators, maps or other non-visual product pages. -->
+@if (showReactiveSky()) {
+  <app-reactive-sky></app-reactive-sky>
+} @else if (showDeepSpace()) {
+  <app-deep-space-backdrop></app-deep-space-backdrop>
+}
+
+<!-- Whole Page Glass Substrate Layer: Sits directly on top of living background graphics -->
+<div 
+  class="full-page-glass-substrate"
+  [class.backdrop-blur-xl]="glassThemeService.isGlassEnabled()"
+  [class.glass-active]="glassThemeService.isGlassEnabled()"
+  [class.glass-inactive]="!glassThemeService.isGlassEnabled()">
+</div>
+
+<div class="app-layout" [class.sky-background-active]="showReactiveSky()" (click)="closeMenus()">
+
+  <!-- Universal Top Header -->
+  <header class="universal-top-header">
+    
+    <!-- Left: Brand Logo + Expandable Observatories Dropdown + Subtle Navigation Links -->
+    <div class="header-left">
+      
+      <!-- Brand Logo (Solar/Lunar + Live Weather Reactive Circular Orb) -->
+      <a routerLink="/" class="brand-link" (click)="closeMenus()" [attr.title]="badgeTooltip()">
+        <div 
+          class="brand-badge"
+          [class.brand-badge-sun]="isDaytime()"
+          [class.brand-badge-moon]="!isDaytime()"
+          [class.weather-rain]="weatherClass() === 'weather-rain'"
+          [class.weather-storm]="weatherClass() === 'weather-storm'"
+          [class.weather-snow]="weatherClass() === 'weather-snow'"
+          [class.weather-fog]="weatherClass() === 'weather-fog'"
+          [class.weather-cloudy]="weatherClass() === 'weather-cloudy'"
+          [class.weather-clear]="weatherClass() === 'weather-clear'"
+          [attr.aria-label]="badgeTooltip()">
+          <span class="brand-symbol">2π</span>
+          <span class="celestial-halo" aria-hidden="true"></span>
+          <span class="weather-reactive-sheen" aria-hidden="true"></span>
+        </div>
+        <div class="brand-text-col">
+          <span class="brand-title">2piClock</span>
+          <span class="brand-sub">2PICLOCK.COM</span>
+        </div>
+      </a>
+
+      <div class="header-divider"></div>
+
+      <!-- Expandable Observatories Menu -->
+      <div class="relative" (click)="$event.stopPropagation()">
+        <button 
+          type="button" 
+          (click)="toggleNavMenu()"
+          class="btn-observatories"
+          [class.menu-open]="showNavMenu()"
+          title="Browse All Observatories & Tools">
+          <mat-icon class="obs-icon">grid_view</mat-icon>
+          <span class="hidden md:inline font-sans">Observatories</span>
+          <mat-icon class="chevron-icon" [class.rotate]="showNavMenu()">expand_more</mat-icon>
+        </button>
+
+        <!-- Expandable Directory Dropdown -->
+        @if (showNavMenu()) {
+          <div class="nav-directory-menu">
+            @for (category of navCategories; track category.title) {
+              <div class="nav-cat-group">
+                <div class="nav-cat-title">
+                  <mat-icon>{{ category.icon }}</mat-icon>
+                  <span>{{ category.title }}</span>
+                </div>
+                <div class="nav-cat-items">
+                  @for (item of category.items; track item.label) {
+                    <button 
+                      type="button" 
+                      class="nav-cat-btn"
+                      (click)="navigateMenu(item)">
+                      <mat-icon class="item-icon">{{ item.icon }}</mat-icon>
+                      <div class="flex flex-col min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="item-label">{{ item.label }}</span>
+                          @if (item.tag) {
+                            <span class="item-tag">· {{ item.tag }}</span>
+                          }
+                        </div>
+                        <span class="item-desc">{{ item.desc }}</span>
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Subtle Basic Navigation Links on the Left -->
+      <nav class="hidden lg:flex items-center gap-0.5 text-xs" aria-label="Primary">
+        <a routerLink="/" routerLinkActive="nav-main-active" [routerLinkActiveOptions]="{exact:true}" class="nav-main-link"><span>Sky</span></a>
+        <a routerLink="/time" routerLinkActive="nav-main-active" class="nav-main-link"><span>Time</span></a>
+        <a routerLink="/world" routerLinkActive="nav-main-active" class="nav-main-link"><span>World</span></a>
+        <a routerLink="/astronomy" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
+        <a routerLink="/radio" routerLinkActive="nav-main-active" class="nav-main-link"><span>Radio</span></a>
+      </nav>
+
+    </div>
+
+    <!-- Right: Obvious Country / Location Changer & Action Buttons -->
+    <div class="header-right">
+
+      <!-- Obvious Country / Location Change Pill -->
+      <div class="relative" (click)="$event.stopPropagation()">
+        <button 
+          type="button" 
+          (click)="toggleLocationDropdown()"
+          class="location-pill-btn"
+          [class.menu-open]="showLocationDropdown()"
+          title="Click to change country or city">
+          <!-- Country Flag -->
+          <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'flag-header'"></app-country-flag>
+          
+          <!-- City & Country Label -->
+          <div class="flex flex-col text-left leading-tight min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="loc-name-label">{{ selectedLocation().name }}</span>
+              <span class="loc-country-label hidden md:inline">{{ selectedLocation().country }}</span>
+            </div>
+            <div class="loc-time-row">
+              <span>{{ localTime() }}</span>
+              <span class="text-slate-500 hidden sm:inline">·</span>
+              <span class="text-slate-400 hidden sm:inline">{{ selectedLocation().timezone }}</span>
+            </div>
+          </div>
+
+          <!-- Obvious "Change" Chevron -->
+          <mat-icon class="chevron-icon" [class.rotate]="showLocationDropdown()">expand_more</mat-icon>
+        </button>
+
+        <!-- Location Search & Country Switcher Dropdown -->
+        @if (showLocationDropdown()) {
+          <div class="location-dropdown-menu">
+            <!-- Search Input Bar -->
+            <div class="search-input-wrap">
+              <mat-icon class="search-icon-dim">search</mat-icon>
+              <input 
+                type="text" 
+                [value]="searchQuery()" 
+                (input)="onSearchInput($event)"
+                placeholder="Search city or country..."
+                class="location-search-input" />
+              @if (searchQuery()) {
+                <button type="button" class="btn-clear-search" (click)="clearSearch()">
+                  <mat-icon class="text-xs">close</mat-icon>
+                </button>
+              }
+              <button 
+                type="button" 
+                (click)="detectGPS()" 
+                class="btn-gps-trigger" 
+                title="Use GPS Coordinates">
+                <mat-icon class="text-xs">{{ isLocating() ? 'hourglass_empty' : 'my_location' }}</mat-icon>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              class="btn-explore-current"
+              (click)="router.navigate(['/', selectedLocation().id]); closeMenus()">
+              <span>Explore {{ selectedLocation().name }}</span>
+              <mat-icon class="text-sm">arrow_forward</mat-icon>
+            </button>
+
+            <!-- Remote Search Results -->
+            @if (isRemoteSearching()) {
+              <div class="search-loading-row">
+                <mat-icon class="text-sm animate-spin">sync</mat-icon>
+                <span>Searching global cities...</span>
+              </div>
+            }
+
+            @if (remoteLocations().length > 0) {
+              <div class="search-results-list">
+                <span class="search-section-label">Search Results</span>
+                @for (loc of remoteLocations(); track loc.id) {
+                  <button type="button" class="location-item-row" (click)="selectLocation(loc)">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag-item'"></app-country-flag>
+                      <div class="flex flex-col min-w-0">
+                        <span class="loc-item-title">{{ loc.name }}</span>
+                        <span class="loc-item-meta">{{ loc.country }} · {{ loc.timezone }}</span>
+                      </div>
+                    </div>
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Featured Preset Locations by Country -->
+            <div class="preset-locations-scroll">
+              <span class="search-section-label">Featured Cities & Observatories</span>
+              @for (loc of filteredLocations(); track loc.id) {
+                <button 
+                  type="button" 
+                  class="location-item-row"
+                  [class.active]="selectedLocation().id === loc.id"
+                  (click)="selectLocation(loc)">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag-item'"></app-country-flag>
+                    <div class="flex flex-col min-w-0">
+                      <span class="loc-item-title">{{ loc.name }}</span>
+                      <span class="loc-item-meta">{{ loc.country }} · {{ loc.timezone }}</span>
+                    </div>
+                  </div>
+                  @if (selectedLocation().id === loc.id) {
+                    <mat-icon class="text-amber-400 text-sm">check</mat-icon>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- In-App PWA Install Action -->
+      <app-pwa-install></app-pwa-install>
+
+      <!-- Quick GPS Detect Button -->
+      <button 
+        type="button" 
+        (click)="detectGPS()" 
+        class="btn-gps-action" 
+        title="Detect My Location (GPS)">
+        <mat-icon>{{ isLocating() ? 'hourglass_empty' : 'my_location' }}</mat-icon>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Main Viewport Content Stage (flexible, stretches smoothly) -->
+  <main class="main-content-viewport">
+    <router-outlet />
+  </main>
+
+  <!-- Persistent Global Radio Mini-Player -->
+  <app-mini-radio-player />
+</div>

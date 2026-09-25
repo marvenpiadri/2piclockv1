@@ -1,0 +1,61 @@
+{
+  "id": "/",
+  "name": "2piClock – Astronomical World Clock & Living Sky",
+  "short_name": "2piClock",
+  "description": "Living celestial world clock and reactive sky engine accurately rendering real-time solar altitude, lunar phases, twilight gradients, and atmospheric weather above any global coordinate.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05070c",
+  "theme_color": "#05070c",
+  "categories": ["astronomy", "productivity", "utilities", "weather"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sky Window",
+      "url": "/",
+      "description": "Real-time diurnal sky and 2pi dial"
+    },
+    {
+      "name": "Time Converter",
+      "url": "/time/converter",
+      "description": "High-precision global time converter"
+    },
+    {
+      "name": "Stargazing Planner",
+      "url": "/stargazing",
+      "description": "Bortle index and astronomical darkness window"
+    },
+    {
+      "name": "World Radio",
+      "url": "/radio",
+      "description": "Live global terrestrial radio broadcasts"
+    }
+  ]
+}

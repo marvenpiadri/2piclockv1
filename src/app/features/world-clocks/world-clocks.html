@@ -1,0 +1,48 @@
+<div class="world-clocks-page">
+<header class="world-clocks-header">
+ <div><span class="eyebrow">GLOBAL TIME</span><h1>World Clocks</h1><p>Keep the places that matter to you. Choose a clock style, pin cities, and they stay here.</p></div>
+ <div class="clock-actions">
+  <div class="clock-style" role="group" aria-label="Clock style">
+   <button type="button" [class.active]="style()==='digital'" (click)="setStyle('digital')">Digital</button>
+   <button type="button" [class.active]="style()==='analog'" (click)="setStyle('analog')">Analog</button>
+  </div>
+  <div class="clock-count">{{clockCount()}} clocks</div>
+ </div>
+</header>
+<section class="clock-toolbar">
+ <div class="clock-search"><mat-icon>search</mat-icon><input [value]="locationSearch()" (input)="onLocationSearch($any($event.target).value)" placeholder="Search a city or country to pin" aria-label="Search a city or country">@if(isSearching()){<span>Searching…</span>}</div>
+ <small>Drag a clock to reorder</small>
+</section>
+@if(locationSearch().trim().length>=2){<div class="location-results">
+ @for(loc of locationResults();track loc.id){<div class="location-result"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag'"></app-country-flag><span><b>{{loc.name}}</b><small>{{loc.country}} · {{loc.timezone}}</small></span>@if(isPinned(loc.id)){<button type="button" class="pin-action pinned" (click)="removeLocation(loc.id)" aria-label="Remove pinned clock"><mat-icon>check</mat-icon></button>}@else{<button type="button" class="pin-action" (click)="pinLocation(loc)" aria-label="Pin clock"><mat-icon>add</mat-icon></button>}</div>}
+ @if(!isSearching()&&locationResults().length===0){<span class="search-status">No matching locations.</span>}
+</div>}
+<section class="clock-list" cdkDropList (cdkDropListDropped)="dropClock($event)" aria-label="Pinned world clocks">
+ @for(clock of displayedClocks();track clock.location.id){
+ <article class="world-clock" cdkDrag>
+  <div class="clock-location">
+   <div class="drag-handle" cdkDragHandle title="Drag to reorder"><mat-icon>drag_indicator</mat-icon></div>
+   <app-country-flag [countryCode]="clock.location.countryCode" [customClass]="'flag'"></app-country-flag>
+   <button type="button" class="location-name" (click)="selectLocation(clock.location)"><strong>{{clock.location.name}}</strong><span>{{clock.location.country}} · {{clock.offset}}</span></button>
+   <button type="button" class="remove-clock" (click)="removeLocation(clock.location.id)" aria-label="Remove clock"><mat-icon>close</mat-icon></button>
+  </div>
+  @if(style()==='digital'){
+   <div class="digital-clock" [attr.aria-label]="clock.location.name+' '+clock.time">
+    <div class="digital-time">{{clock.time}}<span class="digital-seconds">:{{clock.second.toString().padStart(2,'0')}}</span></div>
+    <div class="digital-footer"><span>{{clock.date}}</span><span>{{clock.isDay?'DAY':'NIGHT'}}</span></div>
+   </div>
+  } @else {
+   <div class="analog-clock" [attr.aria-label]="clock.location.name+' '+clock.time">
+    <span class="marker marker-12">12</span><span class="marker marker-3">3</span><span class="marker marker-6">6</span><span class="marker marker-9">9</span>
+    <span class="hand hour-hand" [style.transform]="'translateX(-50%) rotate('+((clock.hour+clock.minute/60)*30)+'deg)'"></span>
+    <span class="hand minute-hand" [style.transform]="'translateX(-50%) rotate('+((clock.minute+clock.second/60)*6)+'deg)'"></span>
+    <span class="second-hand" [style.transform]="'translateX(-50%) rotate('+(clock.second*6)+'deg)'"></span>
+    <span class="clock-center"></span>
+   </div>
+   <div class="analog-readout">{{clock.time}}:{{clock.second.toString().padStart(2,'0')}} <span>{{clock.date}}</span></div>
+  }
+ </article>
+ }
+</section>
+<section class="add-clock-hint"><mat-icon>add_circle_outline</mat-icon><div><strong>Build your own world clock</strong><span>Search above and pin the cities you want. Your clock list is saved on this device.</span></div></section>
+</div>

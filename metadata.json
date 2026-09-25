@@ -1,0 +1,13 @@
+{
+  "name": "2PiClock",
+  "description": "2PiClock — Astronomical World Clock, Celestial Ephemeris & Living Reactive Sky Engine",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "REAL_TIME_ASTRONOMY",
+    "WORLD_CLOCKS",
+    "WEATHER_ATMOSPHERE",
+    "REACTIVE_SKY"
+  ]
+}

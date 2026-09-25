@@ -1,0 +1,145 @@
+<div class="weather-studio-page p-4 sm:p-6 max-w-7xl mx-auto flex flex-col gap-6 text-slate-100">
+  
+  <!-- Page Header Glass Bar -->
+  <div class="page-header p-4 sm:p-5 rounded-3xl bg-slate-950/85 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'w-8 h-5 rounded-sm shadow-md'"></app-country-flag>
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg sm:text-xl font-extrabold text-white tracking-tight leading-none">
+            Atmospheric Physics & Weather Simulation Studio
+          </h1>
+          <span class="text-[11px] font-mono font-bold text-cyan-400">
+            · Open-Meteo & Particle Engine
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Real-time tropospheric simulator reacting to clouds, precipitation, fog scattering, frost icing, and electrical storms in {{ selectedLocation().name }}, {{ selectedLocation().country }}.
+        </p>
+      </div>
+    </div>
+
+    @if (overrideConfig().active) {
+      <button 
+        type="button"
+        class="reset-live-btn px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/20" 
+        (click)="resetToLiveWeather()">
+        <mat-icon class="text-sm">sync</mat-icon>
+        <span>Reset to Live Weather</span>
+      </button>
+    }
+  </div>
+
+  <!-- Flagship Visual Weather Aggressiveness Indicator & Dynamic Particle Visualizer -->
+  <app-weather-aggressiveness-visualizer></app-weather-aggressiveness-visualizer>
+
+  <!-- Atmospheric Condition Preset Cards -->
+  <section class="conditions-section p-4 sm:p-6 rounded-3xl bg-slate-950/85 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col gap-4">
+    <div class="section-heading flex items-center gap-2 text-sm font-bold text-white uppercase font-mono tracking-wider">
+      <mat-icon class="text-amber-400">tune</mat-icon>
+      <span>Select Atmospheric Condition Preset</span>
+    </div>
+
+    <div class="presets-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      @for (c of conditions; track c.id) {
+        <button 
+          type="button"
+          class="condition-card p-3 rounded-2xl border transition-all cursor-pointer flex flex-col gap-2 text-left" 
+          [class.bg-amber-500\/15]="weather().condition === c.id"
+          [class.border-amber-400\/50]="weather().condition === c.id"
+          [class.shadow-lg]="weather().condition === c.id"
+          [class.shadow-amber-500\/10]="weather().condition === c.id"
+          [class.bg-white\/\[0\.03\]]="weather().condition !== c.id"
+          [class.border-white\/10]="weather().condition !== c.id"
+          [class.hover:bg-white\/\[0\.08\]]="weather().condition !== c.id"
+          (click)="setCondition(c.id)">
+          
+          <div class="c-icon-row flex items-center justify-between">
+            <app-weather-icon class="c-icon" [condition]="c.id" [icon]="c.icon" [label]="c.label" size="md"></app-weather-icon>
+            @if (weather().condition === c.id) {
+              <span class="active-badge font-mono text-[9px] px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold">ACTIVE</span>
+            }
+          </div>
+
+          <div class="c-label text-xs font-bold text-white">{{ c.label }}</div>
+          <div class="c-desc text-[10px] text-slate-400 leading-tight">{{ c.desc }}</div>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Interactive Atmosphere Tuning Controls Grid -->
+  <div class="controls-matrix-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+    
+    <!-- Cloud Cover Tuning -->
+    <div class="control-card p-4 rounded-3xl bg-slate-950/85 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col gap-3">
+      <div class="ctrl-header flex items-center gap-2 text-xs font-bold text-white font-mono uppercase">
+        <mat-icon class="text-sky-400 text-base">cloud</mat-icon>
+        <span>Cloud Cover Density</span>
+      </div>
+
+      <div class="slider-row flex items-center gap-3">
+        <input 
+          type="range" 
+          min="0" 
+          max="100" 
+          [value]="weather().cloudCoverPct" 
+          (input)="setCloudCover($event)"
+          class="param-slider flex-1 cursor-pointer accent-amber-400" />
+        <span class="slider-val font-mono font-bold text-amber-300 text-sm min-w-[40px] text-right">{{ weather().cloudCoverPct }}%</span>
+      </div>
+
+      <p class="ctrl-tip text-[11px] text-slate-400 leading-normal">
+        Modulates sky opacity, solar corona diffusion, and star occlusion in real time across the 2Pi sky horizon.
+      </p>
+    </div>
+
+    <!-- Precipitation Tuning -->
+    <div class="control-card p-4 rounded-3xl bg-slate-950/85 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col gap-3">
+      <div class="ctrl-header flex items-center gap-2 text-xs font-bold text-white font-mono uppercase">
+        <mat-icon class="text-blue-400 text-base">water_drop</mat-icon>
+        <span>Precipitation Rate</span>
+      </div>
+
+      <div class="slider-row flex items-center gap-3">
+        <input 
+          type="range" 
+          min="0" 
+          max="100" 
+          [value]="weather().precipitationPct" 
+          (input)="setPrecipitation($event)"
+          class="param-slider flex-1 cursor-pointer accent-amber-400" />
+        <span class="slider-val font-mono font-bold text-amber-300 text-sm min-w-[40px] text-right">{{ weather().precipitationPct }}%</span>
+      </div>
+
+      <p class="ctrl-tip text-[11px] text-slate-400 leading-normal">
+        Controls raindrop or snowflake particle velocity, streak density, and splash explosions on the canvas.
+      </p>
+    </div>
+
+    <!-- Wind Velocity Tuning -->
+    <div class="control-card p-4 rounded-3xl bg-slate-950/85 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col gap-3">
+      <div class="ctrl-header flex items-center gap-2 text-xs font-bold text-white font-mono uppercase">
+        <mat-icon class="text-cyan-400 text-base">air</mat-icon>
+        <span>Wind Vector Velocity</span>
+      </div>
+
+      <div class="slider-row flex items-center gap-3">
+        <input 
+          type="range" 
+          min="0" 
+          max="120" 
+          [value]="weather().windSpeedKmh" 
+          (input)="setWindSpeed($event)"
+          class="param-slider flex-1 cursor-pointer accent-amber-400" />
+        <span class="slider-val font-mono font-bold text-amber-300 text-sm min-w-[50px] text-right">{{ weather().windSpeedKmh }} <span class="text-[10px]">km/h</span></span>
+      </div>
+
+      <p class="ctrl-tip text-[11px] text-slate-400 leading-normal">
+        Drives directional particle tilt, turbulence shear, and wind gust intensity in the canvas visualizer.
+      </p>
+    </div>
+
+  </div>
+
+</div>

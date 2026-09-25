@@ -1,0 +1,1051 @@
+<div class="sky-report">
+  <!-- Subtle Header on the Left (no two divs with two heavy glass backgrounds) -->
+  <header class="sky-header">
+    <div class="sky-header-left">
+      @if (skyPage === 'time') {
+        <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
+        <h1>Living Sky Horizon · {{ selectedLocation().name }}</h1>
+        <p>{{ localDate() }} · {{ timezoneDisplay() }} · Solar & Lunar 2π Coordinate</p>
+      } @else if (skyPage === 'weather') {
+        <span class="section-eyebrow">METEOROLOGY · {{ selectedLocation().name }}</span>
+        <h1>Atmospheric Weather</h1>
+        <p>Live conditions, telemetry, and 24-hour predictive trend.</p>
+      } @else if (skyPage === 'astronomy') {
+        <span class="section-eyebrow">ASTRONOMICAL EPHEMERIS · {{ selectedLocation().name }}</span>
+        <h1>Celestial Altitude & Azimuth</h1>
+        <p>Solar zenith, lunar phases, golden hour and twilight intervals.</p>
+      } @else if (skyPage === 'tonight') {
+        <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
+        <h1>Tonight's Sky</h1>
+        <p>Moonlight, twilight and conditions for observing the night sky.</p>
+      } @else {
+        <span class="section-eyebrow">GLOBAL CLOCKS</span>
+        <h1>World Observatories</h1>
+        <p>Precise local time and solar offsets across planetary zones.</p>
+      }
+    </div>
+
+    <div class="sky-header-right">
+
+      @if (activeAlerts().length > 0) {
+        <button type="button" class="icon-action" (click)="openAlertsModal()" title="Weather alerts">
+          <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
+        </button>
+      }
+      <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
+        <mat-icon>settings</mat-icon><span>Settings</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Subtle Sub-Navigation on the Left (Border-bottom, no heavy floating glass div) -->
+  <nav class="sky-navigation" aria-label="Sky Sub-Views">
+    <a [routerLink]="['/', selectedLocation().id]" [class.active]="skyPage === 'time'">
+      <mat-icon class="text-sm">schedule</mat-icon>
+      <span>Now</span>
+    </a>
+    <a [routerLink]="['/', selectedLocation().id, 'weather']" [class.active]="skyPage === 'weather'">
+      <mat-icon class="text-sm">cloud</mat-icon>
+      <span>Weather</span>
+    </a>
+    <a [routerLink]="['/', selectedLocation().id, 'astronomy']" [class.active]="skyPage === 'astronomy'">
+      <mat-icon class="text-sm">auto_awesome</mat-icon>
+      <span>Astronomy</span>
+    </a>
+    <a [routerLink]="['/', selectedLocation().id, 'tonight']" [class.active]="skyPage === 'tonight'">
+      <mat-icon class="text-sm">dark_mode</mat-icon>
+      <span>Tonight</span>
+    </a>
+    <a routerLink="/world" [class.active]="skyPage === 'world'">
+      <mat-icon class="text-sm">public</mat-icon>
+      <span>World</span>
+    </a>
+  </nav>
+
+  <main class="sky-page">
+    @if (skyPage === 'time') {
+      <section class="sky-time-layout" [class.panel-collapsed]="!isRightPanelExpanded()">
+        <div class="time-column">
+          <div class="time-stage">
+            <div class="polar-clock-container">
+              <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="Celestial clock">
+                <defs>
+                  <filter id="sunGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <filter id="moonGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <circle cx="0" cy="0" r="148" [attr.fill]="isBrightSky() ? 'rgba(8,12,20,.68)' : 'rgba(8,8,8,.38)'" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
+                <circle cx="0" cy="0" r="132" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".8"/>
+                <circle cx="0" cy="0" r="116" fill="none" stroke="rgba(245,158,11,.28)" stroke-width="1" stroke-dasharray="2 4"/>
+                @for (hour of [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]; track hour) {
+                  <g [attr.transform]="'rotate(' + (hour * 15) + ')'">
+                    <line x1="0" [attr.y1]="hour % 6 === 0 ? '-148' : (hour % 3 === 0 ? '-142' : '-138')" x2="0" y2="-132"
+                      [attr.stroke]="hour % 6 === 0 ? 'rgba(245,158,11,.95)' : 'rgba(255,255,255,.28)'"
+                      [attr.stroke-width]="hour % 6 === 0 ? '2' : '1'"/>
+                  </g>
+                }
+                <text x="0" y="-152" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle" class="clock-svg-num">12:00</text>
+                <text x="152" y="3" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" class="clock-svg-num">18:00</text>
+                <text x="0" y="158" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle" class="clock-svg-num">00:00</text>
+                <text x="-152" y="3" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="end" class="clock-svg-num">06:00</text>
+                <line x1="-128" y1="0" x2="128" y2="0" stroke="rgba(245,158,11,.45)" stroke-width="1" stroke-dasharray="3 3"/>
+                <text x="-124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700">EAST</text>
+                <text x="124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700" text-anchor="end">WEST</text>
+                <g [attr.transform]="'rotate(' + (localDayFraction() * 360 - 180) + ')'">
+                  <line x1="0" y1="0" x2="0" y2="-122" stroke="rgba(245,158,11,.9)" stroke-width="2"/>
+                  <circle cx="0" cy="-122" r="9" fill="#f59e0b" filter="url(#sunGlowFilter)"/>
+                  <circle cx="0" cy="-122" r="3.5" fill="#fff"/>
+                </g>
+                <g [attr.transform]="'rotate(' + moonHandRotation() + ')'">
+                  <line x1="0" y1="0" x2="0" y2="-96" stroke="rgba(186,230,253,.85)" stroke-width="1.8" stroke-dasharray="3 2"/>
+                  <circle cx="0" cy="-96" r="7" fill="#38bdf8" filter="url(#moonGlowFilter)" [attr.opacity]="0.4 + celestial().moon.illuminationFraction * 0.6"/>
+                  <circle cx="0" cy="-96" r="3" fill="#f8fafc"/>
+                </g>
+                <circle cx="0" cy="0" r="78" fill="rgba(8,8,8,.94)" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
+              </svg>
+              <div class="clock-readout">
+                <div class="clock-time">{{ localTime() }}</div>
+                <div class="clock-date">{{ timezoneDisplay() }}</div>
+                <div class="clock-state">{{ getTwilightLabel(celestial().twilightState) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="time-controls">
+            @if (!isLive()) {
+              <button type="button" class="live-return" (click)="setLive()"><i></i> Live</button>
+            } @else {
+              <span class="live-status"><i></i> Live</span>
+            }
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunrise')"><span>Sunrise</span><b>{{ formatTime(celestial().solarEvents.sunrise) }}</b></button>
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('noon')"><span>Noon</span><b>{{ formatTime(celestial().solarEvents.solarNoon) }}</b></button>
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunset')"><span>Sunset</span><b>{{ formatTime(celestial().solarEvents.sunset) }}</b></button>
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('midnight')"><span>Midnight</span><b>00:00</b></button>
+          </div>
+
+          <div class="time-scrubber">
+            <div class="scrubber-head"><span>TIME MACHINE</span><span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span></div>
+            <input type="range" min="0" max="1" step="0.0001" [value]="localDayFraction()" (input)="onScrubberInput($event)" aria-label="Time of day"/>
+            <div class="scrubber-labels"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+          </div>
+        </div>
+
+        @if (isRightPanelExpanded()) {
+          <aside class="home-info-panel environmental-deck" aria-label="Environmental telemetry deck">
+            <div class="deck-header">
+              <div class="deck-header-info">
+                <div class="deck-title-row">
+                  <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'deck-flag'"></app-country-flag>
+                  <div>
+                    <h2>{{ selectedLocation().name }}</h2>
+                    <span class="deck-subtitle">{{ selectedLocation().country }} · {{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</span>
+                  </div>
+                </div>
+              </div>
+              <div class="deck-header-actions">
+                <button type="button" class="deck-unit-btn" (click)="weatherService.toggleFahrenheit()" [title]="'Switch to °' + (isFahrenheit() ? 'C' : 'F')">
+                  °{{ isFahrenheit() ? 'F' : 'C' }}
+                </button>
+                <button type="button" class="deck-collapse-btn" (click)="toggleRightPanel()" title="Collapse environmental panel">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Segmented Deck Navigation Tabs -->
+            <div class="deck-nav-tabs" role="tablist">
+              <button type="button" [class.active]="activeDeckTab() === 'weather'" (click)="setDeckTab('weather')" role="tab">
+                <mat-icon>cloud</mat-icon>
+                <span>Weather</span>
+              </button>
+              <button type="button" [class.active]="activeDeckTab() === 'astronomy'" (click)="setDeckTab('astronomy')" role="tab">
+                <mat-icon>auto_awesome</mat-icon>
+                <span>Astronomy</span>
+              </button>
+              <button type="button" [class.active]="activeDeckTab() === 'observations'" (click)="setDeckTab('observations')" role="tab">
+                <mat-icon>query_stats</mat-icon>
+                <span>Insights</span>
+              </button>
+            </div>
+
+            <div class="deck-scroll-container">
+              <!-- TAB 1: WEATHER -->
+              @if (activeDeckTab() === 'weather') {
+                <div class="deck-tab-pane">
+                  <div class="deck-weather-hero">
+                    <div class="deck-weather-main">
+                      <div class="deck-temperature-readout">
+                        <span class="temp-val">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</span>
+                        <span class="temp-unit">{{ isFahrenheit() ? 'F' : 'C' }}</span>
+                      </div>
+                      <div class="deck-weather-desc">
+                        <h3>{{ weather().conditionLabel }}</h3>
+                        <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
+                      </div>
+                    </div>
+                    <app-weather-icon class="deck-hero-icon" [condition]="weather().condition" [label]="weather().conditionLabel" [isDay]="weather().isDay" size="lg"></app-weather-icon>
+                  </div>
+
+                  <!-- 6-Metric Atmospheric Telemetry Grid -->
+                  <div class="deck-metrics-grid">
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>water_drop</mat-icon> RAIN CHANCE</span>
+                      <strong>{{ weather().precipitationPct }}%</strong>
+                      <small>{{ weather().precipitationPct > 30 ? 'Rain probable' : 'Dry conditions' }}</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>air</mat-icon> WIND ({{ windCompass() }})</span>
+                      <strong>{{ weather().windSpeedKmh }} km/h</strong>
+                      <small>Gusts {{ weather().windGustKmh ?? weather().windSpeedKmh }} km/h</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>opacity</mat-icon> HUMIDITY</span>
+                      <strong>{{ weather().humidityPct }}%</strong>
+                      <small>Dew pt {{ isFahrenheit() ? dewPointF() : dewPointC() }}°</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>speed</mat-icon> BAROMETER</span>
+                      <strong>{{ weather().pressureHpa }} hPa</strong>
+                      <small>{{ weather().pressureHpa > 1013 ? 'High pressure' : 'Low pressure' }}</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><app-weather-icon icon="cloudy" label="Cloud cover" size="sm"></app-weather-icon> CLOUD COVER</span>
+                      <strong>{{ weather().cloudCoverPct }}%</strong>
+                      <small>{{ weather().cloudCoverPct < 25 ? 'Clear sky' : weather().cloudCoverPct < 70 ? 'Partly cloudy' : 'Overcast' }}</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>visibility</mat-icon> VISIBILITY</span>
+                      <strong>{{ weather().visibilityKm }} km</strong>
+                      <small>{{ weather().visibilityKm >= 10 ? 'Optimal range' : 'Hazy atmosphere' }}</small>
+                    </div>
+                  </div>
+
+                  <!-- UV Index Banner -->
+                  <div class="deck-banner-card">
+                    <div class="banner-left">
+                      <span class="metric-label"><app-weather-icon icon="uv-index" label="UV index" size="sm"></app-weather-icon> UV INDEX</span>
+                      <strong>Index {{ weather().uvIndex }} · {{ uvRiskLevel().label }}</strong>
+                    </div>
+                    <span class="banner-advice">{{ uvRiskLevel().advice }}</span>
+                  </div>
+
+                  <!-- 24-Hour Hourly Timeline Strip -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">24-HOUR HOURLY OUTLOOK</span>
+                      <span class="group-meta">Local Time</span>
+                    </div>
+                    <div class="deck-hourly-strip">
+                      @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
+                        <div class="deck-hour-item">
+                          <span class="hour-time">{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
+                          <app-weather-icon class="hour-icon" [condition]="item.weather.condition" [label]="item.weather.conditionLabel" [isDay]="item.weather.isDay" size="sm"></app-weather-icon>
+                          <strong class="hour-temp">{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
+                          <span class="hour-rain">{{ item.weather.precipitationPct }}%</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- 7-Day Forecast Cards -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">7-DAY FORECAST</span>
+                      <span class="group-meta">High / Low</span>
+                    </div>
+                    <div class="deck-week-list">
+                      @for (day of weeklyForecast(); track day.key) {
+                        <div class="deck-week-row">
+                          <span class="week-name">{{ day.label }}</span>
+                          <div class="week-condition">
+                            <app-weather-icon [condition]="day.condition" [label]="day.condition" size="sm"></app-weather-icon>
+                            <span>{{ day.condition }}</span>
+                          </div>
+                          <span class="week-rain">{{ day.precipitationPct }}% rain</span>
+                          <div class="week-temps">
+                            <b>{{ isFahrenheit() ? day.highF : day.highC }}°</b>
+                            <small>{{ isFahrenheit() ? day.lowF : day.lowC }}°</small>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 2: ASTRONOMY -->
+              @if (activeDeckTab() === 'astronomy') {
+                <div class="deck-tab-pane">
+                  <!-- Solar Coordinates Card -->
+                  <div class="deck-astro-card">
+                    <div class="astro-card-head">
+                      <span class="metric-label"><mat-icon>sunny</mat-icon> SOLAR EPHEMERIS</span>
+                      <span class="astro-badge">{{ getTwilightLabel(celestial().twilightState) }}</span>
+                    </div>
+                    <div class="astro-data-row">
+                      <div><span>Solar Altitude</span><strong>{{ celestial().sun.altitudeDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Azimuth</span><strong>{{ celestial().sun.azimuthDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Day Length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong></div>
+                      <div><span>Solar Noon</span><strong>{{ formatTime(celestial().solarEvents.solarNoon) }}</strong></div>
+                    </div>
+                    <!-- Daylight Progress Bar -->
+                    <div class="daylight-progress-wrap">
+                      <div class="progress-labels">
+                        <span>Sunrise {{ formatTime(celestial().solarEvents.sunrise) }}</span>
+                        <span>Daylight {{ solarProgress() }}%</span>
+                        <span>Sunset {{ formatTime(celestial().solarEvents.sunset) }}</span>
+                      </div>
+                      <div class="progress-bar-track">
+                        <div class="progress-bar-fill" [style.width.%]="solarProgress()"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Lunar Coordinates Card -->
+                  <div class="deck-astro-card">
+                    <div class="astro-card-head">
+                      <span class="metric-label"><mat-icon>nightlight_round</mat-icon> LUNAR EPHEMERIS</span>
+                      <span class="astro-badge">{{ celestial().moon.phaseName }}</span>
+                    </div>
+                    <div class="astro-data-row">
+                      <div><span>Illumination</span><strong>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}%</strong></div>
+                      <div><span>Moon Altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Azimuth</span><strong>{{ celestial().moon.azimuthDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Earth Distance</span><strong>{{ formatMoonDistance(celestial().moon.distanceKm) }} km</strong></div>
+                    </div>
+                  </div>
+
+                  <!-- Twilight Phases Detailed Schedule -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">TWILIGHT & SOLAR WINDOWS</span>
+                      <span class="group-meta">Civil / Nautical / Astro</span>
+                    </div>
+                    <div class="twilight-schedule-table">
+                      <div class="twilight-row"><span>Civil Dawn</span><strong>{{ formatTime(celestial().solarEvents.civilDawn) }}</strong></div>
+                      <div class="twilight-row"><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
+                      <div class="twilight-row"><span>Golden Hour (Evening)</span><strong>{{ formatTime(celestial().solarEvents.goldenHourEvening.start) }}</strong></div>
+                      <div class="twilight-row"><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
+                      <div class="twilight-row"><span>Civil Dusk</span><strong>{{ formatTime(celestial().solarEvents.civilDusk) }}</strong></div>
+                      <div class="twilight-row"><span>Nautical Dusk</span><strong>{{ formatTime(celestial().solarEvents.nauticalDusk) }}</strong></div>
+                      <div class="twilight-row"><span>Astronomical Night</span><strong>{{ formatTime(celestial().solarEvents.astronomicalDusk) }}</strong></div>
+                    </div>
+                  </div>
+
+                  <div class="deck-actions-group">
+                    <button type="button" class="deck-primary-btn" (click)="openEventsPanel()">
+                      <mat-icon>event</mat-icon>
+                      <span>Explore Astronomical Events Calendar</span>
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 3: INSIGHTS & D3 TRENDS -->
+              @if (activeDeckTab() === 'observations') {
+                <div class="deck-tab-pane">
+                  <!-- Starlight Seeing & Observation Rating -->
+                  <div class="deck-insight-card">
+                    <div class="insight-head">
+                      <div>
+                        <span class="metric-label"><mat-icon>star</mat-icon> STARGAZING SCORE</span>
+                        <h4>{{ starlightScore().rating }}</h4>
+                      </div>
+                      <div class="score-circle">
+                        <span>{{ starlightScore().score }}</span>
+                        <small>/100</small>
+                      </div>
+                    </div>
+                    <p class="insight-advice">{{ starlightScore().advice }}</p>
+                  </div>
+
+                  <!-- Outdoor Comfort Index -->
+                  <div class="deck-insight-card">
+                    <div class="insight-head">
+                      <div>
+                        <span class="metric-label"><mat-icon>directions_run</mat-icon> OUTDOOR COMFORT INDEX</span>
+                        <h4>{{ comfortIndex().label }}</h4>
+                      </div>
+                      <div class="score-circle score-comfort" [style.borderColor]="comfortIndex().color">
+                        <span>{{ comfortIndex().score }}</span>
+                        <small>/100</small>
+                      </div>
+                    </div>
+                    <p class="insight-advice">{{ comfortIndex().activity }}</p>
+                  </div>
+
+                  <!-- Visual Atmospheric Stratification & Cloud Deck Diagram -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">ATMOSPHERIC STRATIFICATION & CLOUDS</span>
+                      <span class="group-meta">Vertical Profile</span>
+                    </div>
+                    <div class="atmos-layer-diagram">
+                      <div class="atmos-layer">
+                        <span class="layer-name">Stratosphere</span>
+                        <span class="layer-alt">> 12 km · Stable Air</span>
+                      </div>
+                      <div class="atmos-layer" [style.opacity]="0.35 + (weather().cloudCoverHighPct / 100) * 0.65">
+                        <span class="layer-name">High Cirrus ({{ weather().cloudCoverHighPct }}%)</span>
+                        <div class="cloud-visual-graphic"></div>
+                      </div>
+                      <div class="atmos-layer" [style.opacity]="0.35 + (weather().cloudCoverMidPct / 100) * 0.65">
+                        <span class="layer-name">Mid Altocumulus ({{ weather().cloudCoverMidPct }}%)</span>
+                        <div class="cloud-visual-graphic"></div>
+                      </div>
+                      <div class="atmos-layer" [style.opacity]="0.35 + (weather().cloudCoverLowPct / 100) * 0.65">
+                        <span class="layer-name">Low Stratus / Cumulus ({{ weather().cloudCoverLowPct }}%)</span>
+                        <div class="cloud-visual-graphic"></div>
+                      </div>
+                      <div class="atmos-layer">
+                        <span class="layer-name">Surface Level</span>
+                        <span class="layer-alt">Freezing Line: {{ weather().freezingLevelM ? weather().freezingLevelM.toFixed(0) + 'm' : 'N/A' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </aside>
+        } @else {
+          <div class="collapsed-deck-dock">
+            <button type="button" class="expand-deck-btn" (click)="toggleRightPanel()" title="Expand Environmental Deck">
+              <mat-icon>chevron_left</mat-icon>
+              <span>ENVIRONMENTAL DECK</span>
+            </button>
+          </div>
+        }
+      </section>
+    }
+
+    @if (skyPage === 'weather') {
+      <section class="report-page weather-page">
+        <div class="weather-current">
+          <div class="weather-current-copy">
+            <span class="section-eyebrow">CURRENT CONDITIONS</span>
+            <div class="weather-temperature">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°<small>{{ isFahrenheit() ? 'F' : 'C' }}</small></div>
+            <h2>{{ weather().conditionLabel }}</h2>
+            <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
+          </div>
+          <app-weather-icon class="weather-current-icon" [condition]="weather().condition" [label]="weather().conditionLabel" [isDay]="weather().isDay" size="lg"></app-weather-icon>
+        </div>
+
+        <div class="weather-stats">
+          <div><span>Rain chance</span><strong>{{ weather().precipitationPct }}%</strong></div>
+          <div><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong></div>
+          <div><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong></div>
+          <div><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong></div>
+          <div><span>Pressure</span><strong>{{ weather().pressureHpa }} hPa</strong></div>
+          <div><span>UV index</span><strong>{{ weather().uvIndex }}</strong></div>
+        </div>
+        <div class="weather-stats weather-stats-expanded">
+          <div><span>Dew point</span><strong>{{ isFahrenheit() ? dewPointF() : dewPointC() }}°</strong></div>
+          <div><span>Precipitation</span><strong>{{ weather().precipitationMm.toFixed(1) }} mm</strong></div>
+          <div><span>Rain</span><strong>{{ weather().rainMm.toFixed(1) }} mm</strong></div>
+          <div><span>Showers</span><strong>{{ weather().showersMm.toFixed(1) }} mm</strong></div>
+          <div><span>Snowfall</span><strong>{{ weather().snowfallCm.toFixed(1) }} cm</strong></div>
+          <div><span>Snow depth</span><strong>{{ weather().snowDepthCm.toFixed(1) }} cm</strong></div>
+          <div><span>Low cloud</span><strong>{{ weather().cloudCoverLowPct }}%</strong></div>
+          <div><span>Mid cloud</span><strong>{{ weather().cloudCoverMidPct }}%</strong></div>
+          <div><span>High cloud</span><strong>{{ weather().cloudCoverHighPct }}%</strong></div>
+          <div><span>Freezing level</span><strong>{{ weather().freezingLevelM ? weather().freezingLevelM.toFixed(0) + ' m' : '—' }}</strong></div>
+          <div><span>Sea-level pressure</span><strong>{{ weather().seaLevelPressureHpa || '—' }} hPa</strong></div>
+          <div><span>Conditions</span><strong>{{ weather().isDay ? 'Day' : 'Night' }}</strong></div>
+        </div>
+
+        <section class="weather-section-block">
+          <div class="section-heading-row"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h2>Hourly</h2></div><span>Local time</span></div>
+          <div class="hourly-forecast">
+            @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
+              <div class="hour-item">
+                <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
+                <app-weather-icon [condition]="item.weather.condition" [label]="item.weather.conditionLabel" [isDay]="item.weather.isDay" size="sm"></app-weather-icon>
+                <strong>{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
+                <small>{{ item.weather.precipitationPct }}%</small>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="weather-section-block">
+          <div class="section-heading-row"><div><span class="section-eyebrow">7 DAY OUTLOOK</span><h2>Forecast</h2></div><span>High / low · rain</span></div>
+          <div class="weekly-forecast">
+            @for (day of weeklyForecast(); track day.key) {
+              <div class="week-day">
+                <strong>{{ day.label }}</strong>
+                <app-weather-icon [condition]="day.condition" [label]="day.condition" size="sm"></app-weather-icon>
+                <span>{{ day.condition }}</span>
+                <div><b>{{ isFahrenheit() ? day.highF : day.highC }}°</b><small>{{ isFahrenheit() ? day.lowF : day.lowC }}°</small></div>
+                <em>{{ day.precipitationPct }}% rain</em>
+              </div>
+            }
+          </div>
+        </section>
+      </section>
+    }
+
+    @if (skyPage === 'tonight') {
+      <section class="report-page tonight-page">
+        
+        <!-- Header Strip: Title and Primary View Switcher (Celestial Sky Dome vs. Precision Analog Clock) -->
+        <div class="tonight-header-strip">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center border border-indigo-500/30">
+              <mat-icon class="text-xl">dark_mode</mat-icon>
+            </div>
+            <div class="text-left">
+              <span class="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase">NOCTURNAL SKY THEATRE</span>
+              <h2 class="text-xl md:text-2xl font-extrabold text-white font-sans tracking-tight">Tonight's Horizon & Celestial View</h2>
+            </div>
+          </div>
+
+          <!-- View Mode Switch: Celestial View vs Precision Analog Clock -->
+          <div class="flex items-center p-1 rounded-xl bg-black/60 border border-white/10">
+            <button 
+              type="button" 
+              (click)="tonightViewMode.set('celestial')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition"
+              [class.bg-amber-500]="tonightViewMode() === 'celestial'"
+              [class.text-neutral-950]="tonightViewMode() === 'celestial'"
+              [class.text-slate-300]="tonightViewMode() !== 'celestial'"
+              [class.hover:text-white]="tonightViewMode() !== 'celestial'">
+              <mat-icon class="text-sm">flare</mat-icon>
+              <span>Celestial Sky View</span>
+            </button>
+
+            <button 
+              type="button" 
+              (click)="tonightViewMode.set('analog')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition"
+              [class.bg-amber-500]="tonightViewMode() === 'analog'"
+              [class.text-neutral-950]="tonightViewMode() === 'analog'"
+              [class.text-slate-300]="tonightViewMode() !== 'analog'"
+              [class.hover:text-white]="tonightViewMode() !== 'analog'">
+              <mat-icon class="text-sm">schedule</mat-icon>
+              <span>Analog Clock</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode A: Pure Celestial Sun, Moon, and Eclipse Horizon View (No Overlapping Center Text) -->
+        @if (tonightViewMode() === 'celestial') {
+          <div class="tonight-stage-card" [class.eclipse-active]="activeEclipseState().isActive">
+            
+            <!-- Eclipse Mode & Simulation Selector -->
+            <div class="w-full flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/50 border border-white/10 mb-6">
+              <div class="flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-full" [style.backgroundColor]="activeEclipseState().color" [class.animate-pulse]="activeEclipseState().isActive"></span>
+                <span class="text-xs font-bold font-mono text-white">{{ activeEclipseState().type }}</span>
+                <span class="text-[11px] font-mono text-slate-400">· Elongation: {{ angularSeparationDeg().toFixed(1) }}°</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button 
+                  type="button" 
+                  (click)="simulatedEclipse.set('none')" 
+                  class="px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition"
+                  [class.bg-amber-500]="simulatedEclipse() === 'none'"
+                  [class.text-neutral-950]="simulatedEclipse() === 'none'"
+                  [class.border-amber-400]="simulatedEclipse() === 'none'"
+                  [class.bg-white/5]="simulatedEclipse() !== 'none'"
+                  [class.text-slate-300]="simulatedEclipse() !== 'none'"
+                  [class.border-white/10]="simulatedEclipse() !== 'none'">
+                  Live Ephemeris
+                </button>
+
+                <button 
+                  type="button" 
+                  (click)="simulatedEclipse.set('solar')" 
+                  class="px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition"
+                  [class.bg-amber-500]="simulatedEclipse() === 'solar'"
+                  [class.text-neutral-950]="simulatedEclipse() === 'solar'"
+                  [class.border-amber-400]="simulatedEclipse() === 'solar'"
+                  [class.bg-white/5]="simulatedEclipse() !== 'solar'"
+                  [class.text-slate-300]="simulatedEclipse() !== 'solar'"
+                  [class.border-white/10]="simulatedEclipse() !== 'solar'">
+                  Solar Eclipse
+                </button>
+
+                <button 
+                  type="button" 
+                  (click)="simulatedEclipse.set('lunar')" 
+                  class="px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition"
+                  [class.bg-rose-500]="simulatedEclipse() === 'lunar'"
+                  [class.text-white]="simulatedEclipse() === 'lunar'"
+                  [class.border-rose-400]="simulatedEclipse() === 'lunar'"
+                  [class.bg-white/5]="simulatedEclipse() !== 'lunar'"
+                  [class.text-slate-300]="simulatedEclipse() !== 'lunar'"
+                  [class.border-white/10]="simulatedEclipse() !== 'lunar'">
+                  Blood Moon
+                </button>
+              </div>
+            </div>
+
+            <!-- Unobstructed Clean SVG Canvas Dome (100% Centered, Zenith Open) -->
+            <div class="tonight-dome-viewport">
+              <svg class="tonight-celestial-svg" viewBox="-160 -160 320 320" aria-label="Celestial sky dome with sun, moon, and eclipse alignment">
+                <defs>
+                  <!-- Sun Corona Flare Filter -->
+                  <filter id="solarCoronaGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="6" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <!-- Lunar Glow Filter -->
+                  <filter id="lunarSilverGlow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <!-- Eclipse Diamond Ring Filter -->
+                  <filter id="eclipseCoronaFlare" x="-80%" y="-80%" width="260%" height="260%">
+                    <feGaussianBlur stdDeviation="12" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <!-- Lunar Blood Moon Gradient -->
+                  <radialGradient id="bloodMoonGradient" cx="40%" cy="40%" r="60%">
+                    <stop offset="0%" stop-color="#fca5a5" />
+                    <stop offset="45%" stop-color="#dc2626" />
+                    <stop offset="85%" stop-color="#7f1d1d" />
+                    <stop offset="100%" stop-color="#450a0a" />
+                  </radialGradient>
+                  <!-- Standard Moon Gradient -->
+                  <radialGradient id="lunarSurfaceGradient" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="40%" stop-color="#f1f5f9" />
+                    <stop offset="75%" stop-color="#cbd5e1" />
+                    <stop offset="100%" stop-color="#64748b" />
+                  </radialGradient>
+                  <!-- Sun Gradient -->
+                  <radialGradient id="solarDiskGradient" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stop-color="#fffbeb" />
+                    <stop offset="30%" stop-color="#fde047" />
+                    <stop offset="70%" stop-color="#f59e0b" />
+                    <stop offset="100%" stop-color="#d97706" />
+                  </radialGradient>
+                </defs>
+
+                <!-- Deep Sky Outer Background Ring -->
+                <circle cx="0" cy="0" r="148" fill="rgba(6, 9, 15, 0.94)" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.2" />
+                
+                <!-- Altitude Rings (Nadir: 140, Horizon: 100, 30°: 66, 60°: 33, Zenith: 0) -->
+                <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(245, 158, 11, 0.45)" stroke-width="1.5" stroke-dasharray="4 3" />
+                <circle cx="0" cy="0" r="66" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
+                <circle cx="0" cy="0" r="33" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
+                
+                <!-- Zenith Center Point (Pure and Unobstructed) -->
+                <circle cx="0" cy="0" r="2.5" fill="rgba(255, 255, 255, 0.5)" />
+                <text x="0" y="-6" fill="rgba(255, 255, 255, 0.4)" font-size="6" font-family="monospace" text-anchor="middle">ZENITH (+90°)</text>
+
+                <!-- Cardinal Compass Markings -->
+                <text x="0" y="-136" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">N</text>
+                <text x="138" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700">E</text>
+                <text x="0" y="144" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">S</text>
+                <text x="-142" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="end">W</text>
+                <text x="104" y="-98" fill="rgba(245,158,11,0.6)" font-size="6.5" font-family="monospace">0° HORIZON</text>
+
+                <!-- Star Scatter in Night Dome -->
+                <g opacity="0.65">
+                  <circle cx="-60" cy="-70" r="1" fill="#fff" opacity="0.8"/>
+                  <circle cx="45" cy="-85" r="1.2" fill="#fff" opacity="0.9"/>
+                  <circle cx="-30" cy="-40" r="0.8" fill="#93c5fd" opacity="0.7"/>
+                  <circle cx="70" cy="-30" r="1.1" fill="#fde68a" opacity="0.85"/>
+                  <circle cx="-80" cy="-20" r="0.9" fill="#fff" opacity="0.6"/>
+                  <circle cx="20" cy="-60" r="1" fill="#fff" opacity="0.75"/>
+                  <circle cx="-15" cy="-90" r="1.4" fill="#fff" opacity="0.9"/>
+                  <circle cx="85" cy="-65" r="0.9" fill="#fff" opacity="0.7"/>
+                </g>
+
+                <!-- Sun & Moon Connection Line (Angular Elongation Arc) -->
+                <line [attr.x1]="sunCanvasPos().x" [attr.y1]="sunCanvasPos().y"
+                      [attr.x2]="moonCanvasPos().x" [attr.y2]="moonCanvasPos().y"
+                      stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.2" stroke-dasharray="3 3" />
+
+                <!-- ================= THE SUN ================= -->
+                <g [attr.transform]="'translate(' + sunCanvasPos().x + ',' + sunCanvasPos().y + ')'">
+                  @if (activeEclipseState().category === 'solar') {
+                    <!-- Solar Eclipse Dynamic Chromosphere & Diamond Ring Corona -->
+                    <circle cx="0" cy="0" r="24" fill="none" stroke="#fef08a" stroke-width="4" filter="url(#eclipseCoronaFlare)" opacity="0.95" />
+                    <circle cx="0" cy="0" r="17" fill="#f59e0b" filter="url(#solarCoronaGlow)" opacity="0.8" />
+                    <!-- Sun Prominences / Flare Rays -->
+                    @for (ray of [0, 45, 90, 135, 180, 225, 270, 315]; track ray) {
+                      <line x1="0" y1="-15" x2="0" y2="-26" [attr.transform]="'rotate(' + ray + ')'" stroke="#fef08a" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+                    }
+                    <circle cx="0" cy="0" r="13" fill="url(#solarDiskGradient)" />
+                  } @else {
+                    <!-- Standard Radiant Solar Orb -->
+                    <circle cx="0" cy="0" r="19" fill="none" stroke="rgba(245, 158, 11, 0.35)" stroke-width="2" stroke-dasharray="2 3" />
+                    <circle cx="0" cy="0" r="14" fill="url(#solarDiskGradient)" filter="url(#solarCoronaGlow)" [attr.opacity]="sunCanvasPos().isAboveHorizon ? 1 : 0.45" />
+                    <circle cx="0" cy="0" r="4.5" fill="#ffffff" [attr.opacity]="sunCanvasPos().isAboveHorizon ? 0.95 : 0.4" />
+                  }
+                  <!-- Sun Label -->
+                  <text x="0" y="26" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">
+                    SUN ({{ sunAltitude().toFixed(1) }}°)
+                  </text>
+                </g>
+
+                <!-- ================= THE MOON ================= -->
+                <g [attr.transform]="'translate(' + moonCanvasPos().x + ',' + moonCanvasPos().y + ')'">
+                  @if (activeEclipseState().category === 'solar') {
+                    <!-- Solar Eclipse: Moon's Black Silhouette (New Moon Umbra passing in front of Sun) -->
+                    <circle cx="0" cy="0" r="13.2" fill="#05070c" stroke="#fef08a" stroke-width="1.5" />
+                    <text x="0" y="-20" fill="#fef08a" font-size="7.5" font-family="monospace" font-weight="800" text-anchor="middle">
+                      MOON UMBRA
+                    </text>
+                  } @else if (activeEclipseState().category === 'lunar') {
+                    <!-- Lunar Eclipse: Blood Moon in Earth's Umbra -->
+                    <circle cx="0" cy="0" r="18" fill="rgba(220, 38, 38, 0.35)" filter="url(#eclipseCoronaFlare)" />
+                    <circle cx="0" cy="0" r="12" fill="url(#bloodMoonGradient)" stroke="#f87171" stroke-width="1.2" />
+                    <text x="0" y="24" fill="#fca5a5" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">
+                      BLOOD MOON ({{ moonAltitude().toFixed(1) }}°)
+                    </text>
+                  } @else {
+                    <!-- Standard Geometric Lunar Phase -->
+                    <circle cx="0" cy="0" r="16" fill="none" stroke="rgba(148, 163, 184, 0.25)" stroke-width="1.5" />
+                    <circle cx="0" cy="0" r="12" fill="url(#lunarSurfaceGradient)" filter="url(#lunarSilverGlow)" [attr.opacity]="0.35 + celestial().moon.illuminationFraction * 0.65" />
+                    <!-- Phase Terminator Shadow Overlay -->
+                    <circle cx="0" cy="0" r="12" fill="rgba(10, 14, 23, 0.88)" [attr.opacity]="1 - celestial().moon.illuminationFraction" />
+                    <circle cx="0" cy="0" r="3" fill="#ffffff" opacity="0.85" />
+                    <!-- Moon Label -->
+                    <text x="0" y="24" fill="#e2e8f0" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">
+                      MOON ({{ moonAltitude().toFixed(1) }}°)
+                    </text>
+                  }
+                </g>
+              </svg>
+            </div>
+          </div>
+        }
+
+        <!-- Mode B: Precision Astronomical Analog Clock for Timing Focus -->
+        @if (tonightViewMode() === 'analog') {
+          <div class="tonight-stage-card">
+            <div class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-black/50 border border-white/10 mb-6">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-amber-400">schedule</mat-icon>
+                <span class="text-xs font-bold font-mono text-white">Astronomical Precision Analog Time</span>
+              </div>
+              <span class="text-xs font-mono text-amber-300 font-bold">{{ selectedLocation().name }} · {{ selectedLocation().timezone }}</span>
+            </div>
+
+            <div class="py-6 flex flex-col items-center justify-center">
+              <div class="w-64 h-64 md:w-72 md:h-72 p-3 rounded-full bg-slate-950/90 border-2 border-amber-500/30 shadow-2xl flex items-center justify-center">
+                <app-analog-clock 
+                  [timezone]="selectedLocation().timezone" 
+                  [activeDate]="activeDate()"
+                  [latitude]="selectedLocation().latitude"
+                  [longitude]="selectedLocation().longitude">
+                </app-analog-clock>
+              </div>
+
+              <!-- Analog Clock Digital Readout Bar -->
+              <div class="mt-6 flex flex-wrap items-center justify-center gap-3 font-mono text-xs">
+                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
+                  <span class="text-[10px] text-slate-400 block uppercase">LOCAL TIME</span>
+                  <strong class="text-white text-base font-bold">{{ localTime() }}</strong>
+                </div>
+                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
+                  <span class="text-[10px] text-slate-400 block uppercase">CALENDAR DATE</span>
+                  <strong class="text-amber-300 text-base font-bold">{{ localDate() }}</strong>
+                </div>
+                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
+                  <span class="text-[10px] text-slate-400 block uppercase">SOLAR NOON</span>
+                  <strong class="text-indigo-200 text-base font-bold">{{ formatTime(celestial().solarEvents.solarNoon) }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Dedicated Dual Focus: Sun Tonight vs. Moon Tonight Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full my-4">
+          
+          <!-- Sun Focus Card -->
+          <div class="p-6 rounded-3xl bg-slate-900/80 border border-amber-500/20 backdrop-blur-xl shadow-xl">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                  <mat-icon class="text-lg">wb_sunny</mat-icon>
+                </div>
+                <div>
+                  <h3 class="font-bold text-base text-white font-sans">The Sun Tonight</h3>
+                  <span class="text-[11px] font-mono text-amber-300">Solar Position & Twilight Horizon</span>
+                </div>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                {{ sunAltitude() >= 0 ? 'Above Horizon' : 'Below Horizon' }}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3.5 my-4 text-xs font-mono">
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">SOLAR ALTITUDE</span>
+                <strong class="text-white text-sm">{{ sunAltitude().toFixed(2) }}°</strong>
+              </div>
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">SOLAR AZIMUTH</span>
+                <strong class="text-white text-sm">{{ sunAzimuth().toFixed(1) }}°</strong>
+              </div>
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">SUNSET TIME</span>
+                <strong class="text-amber-300 text-sm">{{ formatTime(celestial().solarEvents.sunset) }}</strong>
+              </div>
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">TOTAL DAYLIGHT</span>
+                <strong class="text-white text-sm">{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Moon Focus Card -->
+          <div class="p-6 rounded-3xl bg-slate-900/80 border border-indigo-400/20 backdrop-blur-xl shadow-xl">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
+                  <mat-icon class="text-lg">nightlight_round</mat-icon>
+                </div>
+                <div>
+                  <h3 class="font-bold text-base text-white font-sans">The Moon Tonight</h3>
+                  <span class="text-[11px] font-mono text-indigo-300">{{ celestial().moon.phaseName }}</span>
+                </div>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
+                {{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% Illuminated
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3.5 my-4 text-xs font-mono">
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">MOON ALTITUDE</span>
+                <strong class="text-white text-sm">{{ moonAltitude().toFixed(2) }}°</strong>
+              </div>
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">MOON AZIMUTH</span>
+                <strong class="text-white text-sm">{{ moonAzimuth().toFixed(1) }}°</strong>
+              </div>
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">EARTH DISTANCE</span>
+                <strong class="text-indigo-200 text-sm">{{ formatMoonDistance(celestial().moon.distanceKm) }} km</strong>
+              </div>
+              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-slate-400 block text-[10px]">LUNAR AGE</span>
+                <strong class="text-white text-sm">{{ celestial().moon.ageDays.toFixed(1) }} days</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Visible Planets in Tonight's Sky -->
+        @if (visiblePlanetsTonight().length > 0) {
+          <div class="w-full p-6 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl my-2">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-base text-white font-sans flex items-center gap-2">
+                <mat-icon class="text-indigo-400">flare</mat-icon>
+                <span>Bright Naked-Eye Planets in Tonight's Sky</span>
+              </h3>
+              <span class="text-xs font-mono text-emerald-400 font-semibold">{{ visiblePlanetsTonight().length }} Planets Above Horizon</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              @for (planet of visiblePlanetsTonight(); track planet.name) {
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div class="flex items-center justify-between">
+                    <strong class="text-sm font-bold text-white">{{ planet.name }}</strong>
+                    <span class="text-[10px] font-mono text-slate-400">Mag {{ planet.magnitude.toFixed(1) }}</span>
+                  </div>
+                  <div class="mt-2 flex items-center justify-between text-xs font-mono text-indigo-300">
+                    <span>Alt: {{ planet.altitudeDeg.toFixed(1) }}°</span>
+                    <span>Az: {{ planet.azimuthDeg.toFixed(0) }}°</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Twilight & Nightfall Horizon Progression -->
+        <div class="w-full p-6 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl my-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-base text-white font-sans flex items-center gap-2">
+              <mat-icon class="text-amber-400">timelapse</mat-icon>
+              <span>Tonight's Twilight & Horizon Progression</span>
+            </h3>
+            <span class="text-xs font-mono text-slate-400">Solar Elevation Boundaries</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+            @for (step of tonightTwilightSequence(); track step.name) {
+              <div class="p-3.5 rounded-2xl bg-white/5 border border-white/5 text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">{{ step.name }}</span>
+                <strong class="text-sm font-mono text-amber-300 block my-1">{{ step.time }}</strong>
+                <span class="text-[9px] font-mono text-slate-400 block">{{ step.alt }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="astronomy-actions my-4">
+          <a [routerLink]="['/', selectedLocation().id, 'stargazing']" class="primary-report-button">
+            <span>Stargazing & Darkness Planner</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </a>
+          <a [routerLink]="['/', selectedLocation().id, 'eclipses']" class="secondary-report-button">
+            <span>Eclipse Predictor</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </a>
+          <a [routerLink]="['/', selectedLocation().id]" class="secondary-report-button">
+            <span>Back to Live Sky</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </a>
+        </div>
+      </section>
+    }
+
+    @if (skyPage === 'astronomy') {
+      <section class="report-page astronomy-page">
+        <!-- Classical Astronomy Suite Overview -->
+        <div class="astronomy-hero" [class.eclipse-active]="activeEclipseState().isActive">
+          <div class="astronomy-sky-dome-wrapper">
+            <svg class="celestial-dome-svg" viewBox="-160 -160 320 320" aria-label="Celestial sky dome with sun and moon coordinates">
+              <circle cx="0" cy="0" r="148" fill="rgba(6, 9, 15, 0.88)" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.2" />
+              <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(245, 158, 11, 0.45)" stroke-width="1.5" stroke-dasharray="4 3" />
+              <circle cx="0" cy="0" r="66" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
+              <circle cx="0" cy="0" r="33" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
+              <text x="0" y="-136" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">N</text>
+              <text x="138" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700">E</text>
+              <text x="0" y="144" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">S</text>
+              <text x="-142" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="end">W</text>
+              <g [attr.transform]="'translate(' + sunCanvasPos().x + ',' + sunCanvasPos().y + ')'">
+                <circle cx="0" cy="0" r="13" fill="#f59e0b" />
+                <text x="0" y="22" fill="#fbbf24" font-size="7.5" font-family="monospace" font-weight="700" text-anchor="middle">SUN ({{ sunAltitude().toFixed(1) }}°)</text>
+              </g>
+              <g [attr.transform]="'translate(' + moonCanvasPos().x + ',' + moonCanvasPos().y + ')'">
+                <circle cx="0" cy="0" r="11" fill="#cbd5e1" />
+                <text x="0" y="22" fill="#e2e8f0" font-size="7.5" font-family="monospace" font-weight="700" text-anchor="middle">MOON ({{ moonAltitude().toFixed(1) }}°)</text>
+              </g>
+            </svg>
+            <div class="astronomy-now-badge">
+              <span class="eyebrow">{{ getTwilightLabel(celestial().twilightState) }}</span>
+              <strong class="time-val">{{ localTime() }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="astro-grid">
+          <div><span>Moon phase</span><strong>{{ celestial().moon.phaseName }}</strong><small>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</small></div>
+          <div><span>Moon altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong><small>{{ formatMoonDistance(celestial().moon.distanceKm) }} km away</small></div>
+          <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong><small>Local time</small></div>
+          <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></div>
+          <div><span>Day length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong><small>Sun above horizon</small></div>
+          <div><span>Solar altitude</span><strong>{{ celestial().sun.altitudeDeg.toFixed(1) }}°</strong><small>Current position</small></div>
+        </div>
+
+        <div class="astronomy-actions">
+          <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
+          <a [routerLink]="['/', selectedLocation().id]" class="secondary-report-button">Back to Now <mat-icon>arrow_forward</mat-icon></a>
+        </div>
+      </section>
+    }
+
+    @if (skyPage === 'world') {
+      <section class="report-page world-page">
+        <div class="world-events-hero">
+          <span class="section-eyebrow">WORLD EVENTS · {{ selectedLocation().name }}</span>
+          <h2>Time, Sun & Sacred Horizons</h2>
+          <p>Local clocks now connect to daily solar windows and location-aware observances.</p>
+        </div>
+
+        <div class="world-event-grid">
+          <article class="world-event-card">
+            <span class="world-event-kicker">ISLAMIC TIMES</span>
+            @if (worldEvents.nextPrayer(activeDate()); as prayer) {
+              <strong>{{ prayer.time }}</strong><span>Next {{ prayer.name }}</span>
+            } @else {
+              <strong>—</strong><span>Prayer data unavailable</span>
+            }
+            <div class="world-event-mini">
+              <span>Fajr {{ worldEvents.prayerTimes()['Fajr'] || '—' }}</span>
+              <span>Maghrib {{ worldEvents.prayerTimes()['Maghrib'] || '—' }}</span>
+            </div>
+            <small>Source: Aladhan · Muslim World League method</small>
+          </article>
+
+          <article class="world-event-card">
+            <span class="world-event-kicker">SHABBAT HORIZON</span>
+            @if (worldEvents.shabbatEvents()[0]; as shabbat) {
+              <strong>{{ worldEvents.formatTime(shabbat.date, selectedLocation().timezone) }}</strong>
+              <span>{{ shabbat.title }}</span>
+            } @else {
+              <strong>—</strong><span>No upcoming Shabbat marker</span>
+            }
+            <small>Source: Hebcal · candle lighting / Havdalah</small>
+          </article>
+
+          <article class="world-event-card">
+            <span class="world-event-kicker">CROSS-BORDER TIME</span>
+            <strong>{{ worldEvents.timezoneOffsetMinutes(activeDate(), selectedLocation().timezone) / 60 }}h</strong>
+            <span>UTC offset · {{ selectedLocation().timezone }}</span>
+            <div class="world-event-mini">
+              <span>Compare with UTC</span>
+              <span>Political clock</span>
+            </div>
+            <small>Computed from the IANA timezone database</small>
+          </article>
+
+          <article class="world-event-card">
+            <span class="world-event-kicker">GOLDEN / BLUE HOUR</span>
+            <strong>{{ worldEvents.formatTime(worldEvents.solarWindows().goldenEvening, selectedLocation().timezone) }}</strong>
+            <span>Evening golden hour</span>
+            <div class="world-event-mini">
+              <span>Blue {{ worldEvents.formatTime(worldEvents.solarWindows().blueEvening, selectedLocation().timezone) }}</span>
+              <span>Sunset {{ worldEvents.formatTime(worldEvents.solarWindows().sunset, selectedLocation().timezone) }}</span>
+            </div>
+            <small>Source: <a href="https://sunrise-sunset.org/" target="_blank" rel="noopener noreferrer">Sunrise-Sunset.org</a> v2</small>
+          </article>
+        </div>
+
+        <div class="world-clock-list">
+          <div class="world-clock local-world-clock"><div><span class="world-city">Here</span><small>{{ selectedLocation().name }}</small></div><strong>{{ localTime() }}</strong><span>{{ timezoneDisplay() }}</span></div>
+          @for (city of worldClockCities; track city.name) {
+            <div class="world-clock"><div><span class="world-city">{{ city.name }}</span><small>{{ formatWorldDay(city.zone) }}</small></div><strong>{{ formatWorldTime(city.zone) }}</strong><span>{{ city.zone.split('/').pop()?.replace('_', ' ') }}</span></div>
+          }
+        </div>
+        <a routerLink="/world" class="secondary-report-button">Open full world clock <mat-icon>arrow_forward</mat-icon></a>
+      </section>
+    }
+  </main>
+
+  @if (isDrawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="sky-drawer">
+      <div class="drawer-header"><div><span>2piClock</span><strong>{{ selectedLocation().name }}</strong></div><button type="button" (click)="closeDrawer()" title="Close"><mat-icon>close</mat-icon></button></div>
+      <div class="drawer-content">
+        <div class="drawer-tabs"><button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Location</button><button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button></div>
+        @if (activeDrawerTab() === 'locations') {
+          <div class="location-list"><input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />@for (loc of filteredDrawerLocations(); track loc.name + loc.country) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}</div>
+        } @else {
+          <div class="drawer-report">
+            <span class="section-eyebrow">CURRENT WEATHER</span>
+            <strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong>
+            <span>Feels like {{ weather().feelsLikeC }}°C</span>
+            <span>Humidity {{ weather().humidityPct }}%</span>
+            <span>Wind {{ weather().windSpeedKmh }} km/h</span>
+            <span>Cloud {{ weather().cloudCoverPct }}%</span>
+            <div class="drawer-visualizer-container mt-3">
+              <app-weather-bar-chart></app-weather-bar-chart>
+            </div>
+          </div>
+        }
+      </div>
+    </aside>
+  }
+
+  @if (showEventsPanel()) { <app-astronomy-events-panel (closePanelEvent)="closeEventsPanel()"></app-astronomy-events-panel> }
+  @if (showAlertsModal()) { <app-weather-alerts-modal (closeModalEvent)="closeAlertsModal()"></app-weather-alerts-modal> }
+  @if (showSettingsModal()) { <app-settings-modal (closeModalEvent)="closeSettingsModal()"></app-settings-modal> }
+  @if (showShareModal()) { <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal> }
+</div>

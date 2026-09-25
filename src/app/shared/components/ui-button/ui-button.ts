@@ -1,0 +1,3 @@
+import {ChangeDetectionStrategy,Component,EventEmitter,Input,Output} from '@angular/core';
+@Component({selector:'app-ui-button',standalone:true,changeDetection:ChangeDetectionStrategy.OnPush,templateUrl:'./ui-button.html',styleUrl:'./ui-button.css'})
+export class UiButtonComponent{ @Input() variant:'primary'|'secondary'|'ghost'|'danger'='secondary'; @Input() size:'sm'|'md'|'lg'='md'; @Input() type:'button'|'submit'|'reset'='button'; @Input() disabled=false; @Output() clicked=new EventEmitter<MouseEvent>();}

@@ -1,0 +1,296 @@
+<div class="ephemeris-page">
+  <div class="page-header glass-panel">
+    <div>
+      <h1 class="page-title">Astronomical Ephemeris & Solar Dynamics</h1>
+      <p class="page-subtitle">24-hour solar altitude curve, twilight geometries, photography golden hours, and lunar cycles for {{ selectedLocation().name }}</p>
+    </div>
+  </div>
+
+  <!-- Real-Time Astronomy Details & Visual Moon Phase Indicator -->
+  <app-astronomy-details></app-astronomy-details>
+
+  <!-- 24-Hour Solar Altitude Curve Chart -->
+  <section class="chart-section glass-panel">
+    <div class="section-title-row">
+      <div class="section-title">
+        <mat-icon>show_chart</mat-icon>
+        <span>24-Hour Solar Elevation Profile</span>
+      </div>
+      <div class="chart-legend font-mono">
+        <span class="legend-item"><span class="dot daylight"></span> Day (>0°)</span>
+        <span class="legend-item"><span class="dot twilight"></span> Civil Twilight (0° to -6°)</span>
+        <span class="legend-item"><span class="dot night"></span> Night (<-18°)</span>
+      </div>
+    </div>
+
+    <div class="svg-chart-container">
+      <svg viewBox="0 0 800 260" class="elevation-chart-svg" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="solarPathGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.9"/>
+            <stop offset="50%" stop-color="#fb923c" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.6"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Background Twilight Bands -->
+        <!-- Horizon line (Alt 0° is y=130) -->
+        <!-- Day band (Alt > 0°: y=30 to 130) -->
+        <rect x="40" y="30" width="720" height="100" fill="rgba(245, 158, 11, 0.08)" />
+        <!-- Civil Twilight (Alt 0° to -6°: y=130 to 136.6) -->
+        <rect x="40" y="130" width="720" height="7" fill="rgba(236, 72, 153, 0.1)" />
+        <!-- Nautical/Astro Twilight (Alt -6° to -18°: y=137 to 150) -->
+        <rect x="40" y="137" width="720" height="13" fill="rgba(99, 102, 241, 0.1)" />
+        <!-- Deep Night (Alt < -18°: y=150 to 230) -->
+        <rect x="40" y="150" width="720" height="80" fill="rgba(2, 6, 23, 0.3)" />
+
+        <!-- Grid Lines -->
+        <!-- 0° Horizon Line -->
+        <line x1="40" y1="130" x2="760" y2="130" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 4" />
+        <text x="35" y="134" fill="#f59e0b" font-family="var(--font-mono)" font-size="10" text-anchor="end">0°</text>
+
+        <!-- +45° Line -->
+        <line x1="40" y1="80" x2="760" y2="80" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
+        <text x="35" y="84" fill="#94a3b8" font-family="var(--font-mono)" font-size="10" text-anchor="end">+45°</text>
+
+        <!-- -45° Line -->
+        <line x1="40" y1="180" x2="760" y2="180" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
+        <text x="35" y="184" fill="#94a3b8" font-family="var(--font-mono)" font-size="10" text-anchor="end">-45°</text>
+
+        <!-- Vertical Hour Grid Lines (every 4h) -->
+        @for (h of [0, 4, 8, 12, 16, 20, 24]; track h) {
+          <line [attr.x1]="40 + (h / 24) * 720" y1="30" [attr.x2]="40 + (h / 24) * 720" y2="230" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1" />
+          <text [attr.x]="40 + (h / 24) * 720" y="248" fill="#94a3b8" font-family="var(--font-mono)" font-size="10" text-anchor="middle">
+            {{ h.toString().padStart(2, '0') }}:00
+          </text>
+        }
+
+        <!-- Solar Altitude Curve -->
+        <path [attr.d]="chartSvgPath()" fill="none" stroke="url(#solarPathGrad)" stroke-width="3" stroke-linecap="round" />
+
+        <!-- Current Sun Position Marker -->
+        <circle [attr.cx]="currentSunPointOnChart().x" [attr.cy]="currentSunPointOnChart().y" r="6" fill="#f59e0b" stroke="#ffffff" stroke-width="2" />
+        <circle [attr.cx]="currentSunPointOnChart().x" [attr.cy]="currentSunPointOnChart().y" r="12" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.6" />
+      </svg>
+    </div>
+  </section>
+
+  <!-- Ephemeris Data Matrix Grid -->
+  <div class="ephemeris-matrix-grid">
+    <!-- Solar Milestones Card -->
+    <div class="matrix-card glass-panel">
+      <div class="card-header">
+        <mat-icon>wb_sunny</mat-icon>
+        <span>Solar Event Milestones</span>
+      </div>
+      <div class="milestones-list">
+        <div class="milestone-row">
+          <span class="m-label">Astronomical Dawn</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.astronomicalDawn) }}</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Nautical Dawn</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.nauticalDawn) }}</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Civil Dawn</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.civilDawn) }}</span>
+        </div>
+        <div class="milestone-row highlight">
+          <span class="m-label">Official Sunrise (0°)</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.sunrise) }}</span>
+        </div>
+        <div class="milestone-row highlight">
+          <span class="m-label">Solar Noon (Culmination)</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.solarNoon) }}</span>
+        </div>
+        <div class="milestone-row highlight">
+          <span class="m-label">Official Sunset (0°)</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.sunset) }}</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Civil Dusk</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.civilDusk) }}</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Astronomical Dusk</span>
+          <span class="m-val font-mono">{{ formatTime(celestial().solarEvents.astronomicalDusk) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Solar Geometry & Radiation Details -->
+    <div class="matrix-card glass-panel">
+      <div class="card-header">
+        <mat-icon>explore</mat-icon>
+        <span>Coordinates & Solar Geometry</span>
+      </div>
+      <div class="milestones-list">
+        <div class="milestone-row">
+          <span class="m-label">Solar Declination</span>
+          <span class="m-val font-mono">{{ celestial().sun.declinationDeg >= 0 ? '+' : '' }}{{ celestial().sun.declinationDeg.toFixed(2) }}°</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Right Ascension</span>
+          <span class="m-val font-mono">{{ celestial().sun.rightAscensionDeg.toFixed(2) }}°</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Equation of Time</span>
+          <span class="m-val font-mono">{{ celestial().sun.equationOfTimeMinutes >= 0 ? '+' : '' }}{{ celestial().sun.equationOfTimeMinutes.toFixed(2) }} min</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Earth-Sun Distance</span>
+          <span class="m-val font-mono">{{ celestial().sun.distanceAU.toFixed(5) }} AU</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Day Length</span>
+          <span class="m-val font-mono">{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</span>
+        </div>
+        <div class="milestone-row">
+          <span class="m-label">Solar Hour Angle</span>
+          <span class="m-val font-mono">{{ celestial().solarHourAngleDeg.toFixed(1) }}°</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Astronomical Seasons & Equinoxes -->
+    <div class="matrix-card glass-panel">
+      <div class="card-header">
+        <mat-icon>calendar_today</mat-icon>
+        <span>Equinox & Solstice Calendar</span>
+      </div>
+      <div class="milestones-list">
+        @for (season of astronomicalSeasons(); track season.name) {
+          <div class="season-item">
+            <div class="season-name-row">
+              <span class="s-name">{{ season.name }}</span>
+              <span class="s-date font-mono">{{ season.date }}</span>
+            </div>
+            <div class="s-desc">{{ season.desc }}</div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual-Engine Solar Validation & Planetary Ephemeris Section -->
+  <div class="space-y-6 mt-6">
+    <!-- Dual-Engine Scientific Cross-Check Card -->
+    <section class="glass-panel p-5 rounded-2xl bg-slate-900/80 border border-amber-500/30">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-amber-500">verified</mat-icon>
+          <div>
+            <h2 class="font-mono text-sm font-bold text-amber-400 uppercase tracking-wider">
+              Dual-Engine Solar Validation (Observatory Quality Control)
+            </h2>
+            <p class="text-xs text-slate-400">
+              Cross-validating high-precision Astronomy Engine (NOAA / Meeus) against SunCalc algorithm in real time.
+            </p>
+          </div>
+        </div>
+        <div class="validation-badge flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-xs"
+          [class.bg-emerald-500/10]="solarCrossCheck().isValidated"
+          [class.border-emerald-500/30]="solarCrossCheck().isValidated"
+          [class.text-emerald-300]="solarCrossCheck().isValidated"
+          [class.bg-amber-500/10]="!solarCrossCheck().isValidated"
+          [class.border-amber-500/30]="!solarCrossCheck().isValidated"
+          [class.text-amber-300]="!solarCrossCheck().isValidated">
+          <mat-icon class="text-sm">{{ solarCrossCheck().isValidated ? 'check_circle' : 'warning' }}</mat-icon>
+          <span>{{ solarCrossCheck().isValidated ? 'SCIENTIFIC CONSENSUS (Δ < 0.2°)' : 'SUB-ARC MINUTE VARIANCE' }}</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+        <div class="engine-box bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div class="text-[10px] uppercase text-amber-500 font-bold mb-1">Primary Engine: Astronomy Engine</div>
+          <div class="text-slate-300">Altitude: <span class="font-bold text-white">{{ solarCrossCheck().astronomyEngineAltitudeDeg >= 0 ? '+' : '' }}{{ solarCrossCheck().astronomyEngineAltitudeDeg.toFixed(3) }}°</span></div>
+          <div class="text-slate-300">Azimuth: <span class="font-bold text-white">{{ solarCrossCheck().astronomyEngineAzimuthDeg.toFixed(3) }}°</span></div>
+        </div>
+
+        <div class="engine-box bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div class="text-[10px] uppercase text-amber-500 font-bold mb-1">Cross-Check Engine: SunCalc</div>
+          <div class="text-slate-300">Altitude: <span class="font-bold text-white">{{ solarCrossCheck().sunCalcAltitudeDeg >= 0 ? '+' : '' }}{{ solarCrossCheck().sunCalcAltitudeDeg.toFixed(3) }}°</span></div>
+          <div class="text-slate-300">Azimuth: <span class="font-bold text-white">{{ solarCrossCheck().sunCalcAzimuthDeg.toFixed(3) }}°</span></div>
+        </div>
+
+        <div class="engine-box bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div class="text-[10px] uppercase text-emerald-400 font-bold mb-1">Consensus Delta Variance</div>
+          <div class="text-slate-300">Δ Altitude: <span class="font-bold text-emerald-300">{{ solarCrossCheck().altitudeDeltaDeg.toFixed(4) }}°</span></div>
+          <div class="text-slate-300">Δ Azimuth: <span class="font-bold text-emerald-300">{{ solarCrossCheck().azimuthDeltaDeg.toFixed(4) }}°</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planetary Horizons Ephemeris Table -->
+    <section class="glass-panel p-5 rounded-2xl bg-slate-900/80 border border-amber-500/25">
+      <div class="flex items-center gap-2 mb-4">
+        <mat-icon class="text-amber-500">planets</mat-icon>
+        <div>
+          <h2 class="font-mono text-sm font-bold text-amber-400 uppercase tracking-wider">
+            Planetary Horizons & Ephemeris Table
+          </h2>
+          <p class="text-xs text-slate-400">
+            Real-time planetary coordinates, apparent magnitudes, and horizon visibility for {{ selectedLocation().name }}
+          </p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left font-mono text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-[10px] uppercase text-slate-400">
+              <th class="py-2.5 px-3">Celestial Body</th>
+              <th class="py-2.5 px-3">Altitude</th>
+              <th class="py-2.5 px-3">Azimuth</th>
+              <th class="py-2.5 px-3">Right Ascension</th>
+              <th class="py-2.5 px-3">Declination</th>
+              <th class="py-2.5 px-3">Distance (AU)</th>
+              <th class="py-2.5 px-3">Magnitude</th>
+              <th class="py-2.5 px-3 text-right">Visibility</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            @for (planet of planetaryPositions(); track planet.name) {
+              <tr class="hover:bg-slate-800/30 transition-colors">
+                <td class="py-3 px-3 font-bold text-white flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full" [class.bg-amber-400]="planet.visible" [class.bg-slate-600]="!planet.visible"></span>
+                  <span>{{ planet.name }}</span>
+                </td>
+                <td class="py-3 px-3" [class.text-amber-300]="planet.visible" [class.text-slate-500]="!planet.visible">
+                  {{ planet.altitudeDeg >= 0 ? '+' : '' }}{{ planet.altitudeDeg.toFixed(1) }}°
+                </td>
+                <td class="py-3 px-3 text-slate-300">
+                  {{ planet.azimuthDeg.toFixed(1) }}°
+                </td>
+                <td class="py-3 px-3 text-slate-400">
+                  {{ planet.rightAscensionHours.toFixed(2) }}h
+                </td>
+                <td class="py-3 px-3 text-slate-400">
+                  {{ planet.declinationDeg >= 0 ? '+' : '' }}{{ planet.declinationDeg.toFixed(2) }}°
+                </td>
+                <td class="py-3 px-3 text-slate-300">
+                  {{ planet.distanceAu.toFixed(3) }}
+                </td>
+                <td class="py-3 px-3 text-slate-300">
+                  {{ planet.magnitude >= 0 ? '+' : '' }}{{ planet.magnitude.toFixed(1) }}
+                </td>
+                <td class="py-3 px-3 text-right">
+                  <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold"
+                    [class.bg-emerald-500/20]="planet.visible"
+                    [class.text-emerald-300]="planet.visible"
+                    [class.border]="planet.visible"
+                    [class.border-emerald-500/30]="planet.visible"
+                    [class.bg-slate-800]="!planet.visible"
+                    [class.text-slate-500]="!planet.visible">
+                    {{ planet.visible ? 'Visible Above Horizon' : 'Below Horizon' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<div class="orbital-world-container">
+  <div #globeContainer class="orbital-globe-viewport"></div>
+  <div class="orbital-ambient-overlay"></div>
+  
+  <!-- Subtle Telemetry HUD in top/bottom corners for orbital world perspective -->
+  <div class="orbital-hud-bar">
+    <div class="orbital-hud-item font-mono">
+      <span class="hud-dot live"></span>
+      <span class="hud-label">GLOBE PROJECTION:</span>
+      <span class="hud-val text-sky-400">MapLibre GL 3D Sphere</span>
+    </div>
+    <div class="orbital-hud-item font-mono hidden sm:flex">
+      <span class="hud-label">OBSERVER:</span>
+      <span class="hud-val text-amber-300">{{ selectedLocation().name }} ({{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°)</span>
+    </div>
+    <div class="orbital-hud-item font-mono">
+      <span class="hud-label">SOLAR ZENITH:</span>
+      <span class="hud-val text-amber-400">Subsolar {{ subsolarPoint().latitude.toFixed(1) }}° / {{ subsolarPoint().longitude.toFixed(1) }}°</span>
+    </div>
+  </div>
+</div>

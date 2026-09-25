@@ -1,0 +1,504 @@
+<div class="astro-suite-container">
+  
+  <!-- Header & Navigation Tabs -->
+  <div class="suite-header">
+    <div class="suite-title-row">
+      <div class="suite-title-group">
+        <div class="suite-kicker flex items-center gap-2 text-xs font-mono text-amber-400">
+          <mat-icon class="text-xs w-3.5 h-3.5">flare</mat-icon>
+          <span>CELESTIAL CALCULATOR & EPHEMERIS</span>
+          <span class="text-slate-600">·</span>
+          <span class="text-slate-400">NOAA & MEEUS</span>
+        </div>
+        <h1>Astronomy · {{ selectedLocation().name }}</h1>
+        <p>A live observatory for the Sun, Moon, daylight, twilight and the sky above {{ selectedLocation().name }}.</p>
+      </div>
+      <div class="suite-actions">
+        <button type="button" class="btn-share" (click)="copyShareLink()" title="Copy Deep-Link URL">
+          <mat-icon>share</mat-icon>
+          <span>Share Calculation</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Global Parameters Bar -->
+    <div class="global-params-bar">
+      <div class="param-item">
+        <label>Location</label>
+        <select [ngModel]="selectedLocation().id" (ngModelChange)="setLocationById($event)">
+          @for (loc of allPresets; track loc.id) {
+            <option [value]="loc.id">{{ loc.name }} ({{ loc.country }}) · {{ loc.latitude.toFixed(2) }}°, {{ loc.longitude.toFixed(2) }}°</option>
+          }
+        </select>
+      </div>
+      <div class="param-item">
+        <label>Observation Date</label>
+        <input type="date" [ngModel]="selectedDate()" (ngModelChange)="selectedDate.set($event)" />
+      </div>
+      <div class="param-item">
+        <label>Local Time</label>
+        <input type="time" [ngModel]="selectedTime()" (ngModelChange)="selectedTime.set($event)" />
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    @if (copyNotification()) {
+      <div class="notification-toast">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ copyNotification() }}</span>
+      </div>
+    }
+
+    <!-- Tab Bar -->
+    <div class="suite-tabs">
+      <button type="button" [class.active]="activeTab() === 'overview'" (click)="setTab('overview')">
+        <mat-icon>auto_awesome</mat-icon>
+        <span>Sky Overview</span>
+      </button>
+      <button type="button" [class.active]="activeTab() === 'solar'" (click)="setTab('solar')">
+        <mat-icon>wb_sunny</mat-icon>
+        <span>Solar Calculator</span>
+      </button>
+      <button type="button" [class.active]="activeTab() === 'daylight'" (click)="setTab('daylight')">
+        <mat-icon>wb_twilight</mat-icon>
+        <span>Daylight & Twilight</span>
+      </button>
+      <button type="button" [class.active]="activeTab() === 'moon'" (click)="setTab('moon')">
+        <mat-icon>nightlight_round</mat-icon>
+        <span>Moon Calculator</span>
+      </button>
+      <button type="button" [class.active]="activeTab() === 'events'" (click)="setTab('events')">
+        <mat-icon>event</mat-icon>
+        <span>Astronomical Events & "When Is?"</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content Sections -->
+  <div class="suite-content">
+
+    <!-- OBSERVATORY OVERVIEW -->
+    @if (activeTab() === 'overview') {
+      <div class="observatory-overview">
+        <div class="observatory-hero">
+          <div class="observatory-copy">
+            <span class="observatory-kicker">LIVE CELESTIAL STATE</span>
+            <h2>{{ solarResult().solarPos.altitudeDeg > 0 ? 'The Sun is above the horizon' : 'The Sun is below the horizon' }}</h2>
+            <p>
+              {{ selectedLocation().name }} · {{ formatTime(solarResult().solarEvents.solarNoon) }} solar noon ·
+              {{ daylightResult().dayLengthFormatted }} of daylight
+            </p>
+          </div>
+          <div class="observatory-time">
+            <span>LOCAL OBSERVATION</span>
+            <strong>{{ formatTime(parsedInstant()) }}</strong>
+            <small>{{ selectedDate() }} · {{ selectedLocation().timezone }}</small>
+          </div>
+        </div>
+
+        <div class="observatory-grid">
+          <div class="observatory-card sun-card">
+            <div class="obs-card-head"><span>SUN</span><mat-icon>wb_sunny</mat-icon></div>
+            <strong>{{ solarResult().solarPos.altitudeDeg.toFixed(1) }}°</strong>
+            <small>{{ getCompassHeading(solarResult().solarPos.azimuthDeg) }} · azimuth {{ solarResult().solarPos.azimuthDeg.toFixed(1) }}°</small>
+            <div class="obs-meter"><i [style.width.%]="sunAltitudePercent(solarResult().solarPos.altitudeDeg)"></i></div>
+          </div>
+
+          <div class="observatory-card moon-card">
+            <div class="obs-card-head"><span>MOON</span><mat-icon>nightlight_round</mat-icon></div>
+            <strong>{{ moonResult().lunarPos.phaseName }}</strong>
+            <small>{{ (moonResult().lunarPos.illuminationFraction * 100).toFixed(1) }}% illuminated · {{ moonResult().lunarPos.altitudeDeg.toFixed(1) }}° altitude</small>
+            <div class="obs-meter moon-meter"><i [style.width.%]="moonResult().lunarPos.illuminationFraction * 100"></i></div>
+          </div>
+
+          <div class="observatory-card">
+            <div class="obs-card-head"><span>LIGHT</span><mat-icon>wb_twilight</mat-icon></div>
+            <strong>{{ daylightResult().dayLengthFormatted }}</strong>
+            <small>daylight · {{ daylightResult().nightLengthFormatted }} night</small>
+            <div class="obs-times">
+              <span>RISE <b>{{ formatTime(daylightResult().solarEvents.sunrise) }}</b></span>
+              <span>SET <b>{{ formatTime(daylightResult().solarEvents.sunset) }}</b></span>
+            </div>
+          </div>
+
+          <div class="observatory-card">
+            <div class="obs-card-head"><span>TWILIGHT</span><mat-icon>gradient</mat-icon></div>
+            <strong>{{ formatTime(daylightResult().solarEvents.civilDusk) }}</strong>
+            <small>civil dusk · astronomical dusk {{ formatTime(daylightResult().solarEvents.astronomicalDusk) }}</small>
+            <div class="obs-times">
+              <span>DAWN <b>{{ formatTime(daylightResult().solarEvents.civilDawn) }}</b></span>
+              <span>DUSK <b>{{ formatTime(daylightResult().solarEvents.civilDusk) }}</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sky-horizon-panel">
+          <div class="sky-horizon-head">
+            <span>CELESTIAL HORIZON</span>
+            <small>Altitude · current observation</small>
+          </div>
+          <div class="sky-horizon">
+            <div class="horizon-line"></div>
+            <div class="horizon-label horizon-n">N</div>
+            <div class="horizon-label horizon-e">E</div>
+            <div class="horizon-label horizon-s">S</div>
+            <div class="horizon-label horizon-w">W</div>
+            <div class="celestial-marker sun-marker"
+              [style.left.%]="horizonLeft(solarResult().solarPos.azimuthDeg)"
+              [style.bottom.%]="horizonBottom(solarResult().solarPos.altitudeDeg)">
+              <i></i><span>Sun</span>
+            </div>
+            <div class="celestial-marker moon-marker"
+              [style.left.%]="horizonLeft(moonResult().lunarPos.azimuthDeg)"
+              [style.bottom.%]="horizonBottom(moonResult().lunarPos.altitudeDeg)">
+              <i></i><span>Moon</span>
+            </div>
+          </div>
+          <div class="horizon-scale"><span>0° horizon</span><span>45°</span><span>90° zenith</span></div>
+        </div>
+
+        <div class="observatory-actions">
+          <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>
+          <button type="button" (click)="setTab('daylight')"><mat-icon>wb_twilight</mat-icon> Daylight & Twilight</button>
+          <button type="button" (click)="setTab('moon')"><mat-icon>nightlight_round</mat-icon> Moon</button>
+          <button type="button" (click)="setTab('events')"><mat-icon>event</mat-icon> Events</button>
+        </div>
+      </div>
+    }
+
+    <!-- 1. SOLAR CALCULATOR -->
+    @if (activeTab() === 'solar') {
+      <div class="tool-pane">
+        <div class="pane-grid-2col">
+          <!-- Solar Position Specs -->
+          <div class="tool-card">
+            <h3>
+              <mat-icon>explore</mat-icon>
+              <span>Instantaneous Solar Coordinates</span>
+            </h3>
+
+            <div class="solar-stats-grid">
+              <div class="stat-cell">
+                <span>SOLAR ALTITUDE</span>
+                <strong [class.text-amber-400]="solarResult().solarPos.altitudeDeg > 0">
+                  {{ solarResult().solarPos.altitudeDeg.toFixed(2) }}°
+                </strong>
+                <small>{{ solarResult().solarPos.altitudeDeg > 0 ? 'Above Horizon' : 'Below Horizon' }}</small>
+              </div>
+              <div class="stat-cell">
+                <span>SOLAR AZIMUTH</span>
+                <strong>{{ solarResult().solarPos.azimuthDeg.toFixed(2) }}°</strong>
+                <small>{{ getCompassHeading(solarResult().solarPos.azimuthDeg) }}</small>
+              </div>
+              <div class="stat-cell">
+                <span>SOLAR ZENITH</span>
+                <strong>{{ solarResult().solarPos.zenithDeg.toFixed(2) }}°</strong>
+                <small>Angle from Overhead</small>
+              </div>
+              <div class="stat-cell">
+                <span>DECLINATION (δ)</span>
+                <strong>{{ solarResult().solarPos.declinationDeg.toFixed(2) }}°</strong>
+                <small>Ecliptic Tilt</small>
+              </div>
+              <div class="stat-cell">
+                <span>RIGHT ASCENSION (α)</span>
+                <strong>{{ solarResult().solarPos.rightAscensionDeg.toFixed(2) }}°</strong>
+                <small>Equatorial Coordinate</small>
+              </div>
+              <div class="stat-cell">
+                <span>EQUATION OF TIME</span>
+                <strong>{{ solarResult().solarPos.equationOfTimeMinutes.toFixed(2) }} min</strong>
+                <small>Solar vs Civil Time</small>
+              </div>
+            </div>
+
+            <div class="subsolar-banner">
+              <div class="flex flex-col">
+                <strong>Subsolar Zenith Point (Where Sun is at 90°)</strong>
+                <small>{{ solarResult().subsolarPoint.latitude.toFixed(2) }}°N, {{ solarResult().subsolarPoint.longitude.toFixed(2) }}°E</small>
+              </div>
+              <div class="subsolar-badge">Direct Overhead Sun</div>
+            </div>
+          </div>
+
+          <!-- Solar Events & Trajectory Curve -->
+          <div class="tool-card">
+            <h3>
+              <mat-icon>show_chart</mat-icon>
+              <span>Solar Trajectory & Solar Events</span>
+            </h3>
+
+            <div class="events-summary-row">
+              <div class="event-pill">
+                <span>Sunrise</span>
+                <b>{{ formatTime(solarResult().solarEvents.sunrise) }}</b>
+              </div>
+              <div class="event-pill active-noon">
+                <span>Solar Noon</span>
+                <b>{{ formatTime(solarResult().solarEvents.solarNoon) }}</b>
+                <small>Max Alt: {{ solarResult().solarNoonAltDeg.toFixed(1) }}°</small>
+              </div>
+              <div class="event-pill">
+                <span>Sunset</span>
+                <b>{{ formatTime(solarResult().solarEvents.sunset) }}</b>
+              </div>
+            </div>
+
+            <div class="solar-arc-visual">
+              <div class="arc-header">
+                <span>THE SUN'S PATH</span>
+                <span>Horizon · 0°</span>
+              </div>
+              <div class="solar-arc-stage">
+                <div class="arc-dome"></div>
+                <div class="arc-horizon"></div>
+                <div class="arc-label arc-east">EAST</div>
+                <div class="arc-label arc-west">WEST</div>
+                @for (pt of solarResult().hourlySolarTrajectory; track pt.hour) {
+                  <div class="sun-path-dot"
+                    [class.above]="pt.altitude > 0"
+                    [style.left.%]="trajectoryX(pt.hour)"
+                    [style.top.%]="trajectoryY(pt.altitude)"
+                    [attr.title]="pt.hour + ':00 · ' + pt.altitude.toFixed(0) + '°'">
+                  </div>
+                }
+                <div class="sun-current" [style.left.%]="trajectoryX(solarResult().hourlySolarTrajectory[selectedHour()]?.hour ?? 12)" [style.top.%]="trajectoryY(solarResult().solarPos.altitudeDeg)"></div>
+              </div>
+              <div class="arc-hours">
+                <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 2. DAYLIGHT & TWILIGHT CALCULATOR -->
+    @if (activeTab() === 'daylight') {
+      <div class="tool-pane">
+        <div class="tool-card">
+          <h3>
+            <mat-icon>wb_twilight</mat-icon>
+            <span>Daylight, Twilight & Solar Rhythm</span>
+          </h3>
+
+          <div class="daylight-hero-row">
+            <div class="daylight-hero-card">
+              <span>TOTAL DAYLIGHT DURATION</span>
+              <strong>{{ daylightResult().dayLengthFormatted }}</strong>
+              <small>{{ daylightResult().dayLengthChangeFormatted }} compared to yesterday</small>
+            </div>
+            <div class="daylight-hero-card">
+              <span>NIGHT DURATION</span>
+              <strong>{{ daylightResult().nightLengthFormatted }}</strong>
+              <small>Astronomical darkness & twilights</small>
+            </div>
+            <div class="daylight-hero-card">
+              <span>MORNING GOLDEN HOUR</span>
+              <strong>{{ daylightResult().goldenHourMorningFormatted }}</strong>
+              <small>Soft warm lighting</small>
+            </div>
+            <div class="daylight-hero-card">
+              <span>EVENING GOLDEN HOUR</span>
+              <strong>{{ daylightResult().goldenHourEveningFormatted }}</strong>
+              <small>Optimum photography window</small>
+            </div>
+          </div>
+
+          <!-- 24-Hour Visual Twilight Timeline -->
+          <div class="visual-timeline-box">
+            <div class="timeline-legend">
+              <div class="leg-item"><i class="bg-indigo-950"></i><span>Night (&le; -18°)</span></div>
+              <div class="leg-item"><i class="bg-indigo-800"></i><span>Astro Twilight (-18° to -12°)</span></div>
+              <div class="leg-item"><i class="bg-blue-600"></i><span>Nautical (-12° to -6°)</span></div>
+              <div class="leg-item"><i class="bg-amber-600"></i><span>Civil (-6° to 0°)</span></div>
+              <div class="leg-item"><i class="bg-amber-400"></i><span>Daylight (&gt; 0°)</span></div>
+            </div>
+
+            <div class="timeline-bar-24h">
+              <div class="tl-segment night-pre" [style.width.%]="daylightResult().timelinePercentages.nightPre"></div>
+              <div class="tl-segment astro-dawn" [style.width.%]="daylightResult().timelinePercentages.astronomicalDawn"></div>
+              <div class="tl-segment naut-dawn" [style.width.%]="daylightResult().timelinePercentages.nauticalDawn"></div>
+              <div class="tl-segment civil-dawn" [style.width.%]="daylightResult().timelinePercentages.civilDawn"></div>
+              <div class="tl-segment daylight" [style.width.%]="daylightResult().timelinePercentages.daylight"></div>
+              <div class="tl-segment civil-dusk" [style.width.%]="daylightResult().timelinePercentages.civilDusk"></div>
+              <div class="tl-segment naut-dusk" [style.width.%]="daylightResult().timelinePercentages.nauticalDusk"></div>
+              <div class="tl-segment astro-dusk" [style.width.%]="daylightResult().timelinePercentages.astronomicalDusk"></div>
+              <div class="tl-segment night-post" [style.width.%]="daylightResult().timelinePercentages.nightPost"></div>
+            </div>
+          </div>
+
+          <!-- Twilight Schedule Table -->
+          <div class="twilight-table-grid">
+            <div class="tw-col">
+              <h4>DAWN (MORNING)</h4>
+              <div class="tw-row"><span>Astronomical Dawn</span><b>{{ formatTime(daylightResult().solarEvents.astronomicalDawn) }}</b></div>
+              <div class="tw-row"><span>Nautical Dawn</span><b>{{ formatTime(daylightResult().solarEvents.nauticalDawn) }}</b></div>
+              <div class="tw-row"><span>Civil Dawn</span><b>{{ formatTime(daylightResult().solarEvents.civilDawn) }}</b></div>
+              <div class="tw-row highlight-row"><span>Sunrise</span><b>{{ formatTime(daylightResult().solarEvents.sunrise) }}</b></div>
+            </div>
+            <div class="tw-col">
+              <h4>DUSK (EVENING)</h4>
+              <div class="tw-row highlight-row"><span>Sunset</span><b>{{ formatTime(daylightResult().solarEvents.sunset) }}</b></div>
+              <div class="tw-row"><span>Civil Dusk</span><b>{{ formatTime(daylightResult().solarEvents.civilDusk) }}</b></div>
+              <div class="tw-row"><span>Nautical Dusk</span><b>{{ formatTime(daylightResult().solarEvents.nauticalDusk) }}</b></div>
+              <div class="tw-row"><span>Astronomical Dusk</span><b>{{ formatTime(daylightResult().solarEvents.astronomicalDusk) }}</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 3. MOON CALCULATOR -->
+    @if (activeTab() === 'moon') {
+      <div class="tool-pane">
+        <div class="pane-grid-2col">
+          <!-- Lunar Phase Card -->
+          <div class="tool-card">
+            <h3>
+              <mat-icon>nightlight_round</mat-icon>
+              <span>Lunar Phase & Illumination</span>
+            </h3>
+
+            <div class="moon-hero-panel">
+              <div class="moon-render-wrap">
+                <app-moon-phase-indicator 
+                  [customPhaseName]="moonResult().lunarPos.phaseName" 
+                  [customIllumination]="moonResult().lunarPos.illuminationFraction"
+                  [customAgeDays]="moonResult().lunarPos.ageDays"
+                  [size]="72"
+                  [compact]="true"
+                  [showLabels]="false"
+                  [showDetails]="false">
+                </app-moon-phase-indicator>
+              </div>
+              <div class="moon-hero-info">
+                <div class="phase-name-badge">{{ moonResult().lunarPos.phaseName }}</div>
+                <div class="illumination-number">{{ (moonResult().lunarPos.illuminationFraction * 100).toFixed(1) }}%</div>
+                <span>Lunar Age: <b>{{ moonResult().lunarPos.ageDays.toFixed(1) }} days</b> into synodic cycle</span>
+              </div>
+            </div>
+
+            <div class="lunar-specs-grid">
+              <div class="stat-cell">
+                <span>MOON ALTITUDE</span>
+                <strong [class.text-sky-400]="moonResult().lunarPos.altitudeDeg > 0">
+                  {{ moonResult().lunarPos.altitudeDeg.toFixed(2) }}°
+                </strong>
+                <small>{{ moonResult().lunarPos.altitudeDeg > 0 ? 'Above Horizon' : 'Below Horizon' }}</small>
+              </div>
+              <div class="stat-cell">
+                <span>MOON AZIMUTH</span>
+                <strong>{{ moonResult().lunarPos.azimuthDeg.toFixed(2) }}°</strong>
+                <small>Compass Direction</small>
+              </div>
+              <div class="stat-cell">
+                <span>EARTH DISTANCE</span>
+                <strong>{{ moonResult().lunarPos.distanceKm.toLocaleString() }} km</strong>
+                <small>{{ moonResult().earthDistanceMiles.toLocaleString() }} miles ({{ moonResult().earthRadii }} Earth radii)</small>
+              </div>
+              <div class="stat-cell">
+                <span>MOON POSITION</span>
+                <strong>{{ moonResult().sublunarPoint.latitude.toFixed(2) }}°N, {{ moonResult().sublunarPoint.longitude.toFixed(2) }}°E</strong>
+                <small>Sublunar Zenith</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Major Phases -->
+          <div class="tool-card">
+            <h3>
+              <mat-icon>calendar_view_month</mat-icon>
+              <span>Upcoming Lunar Phase Milestones</span>
+            </h3>
+
+            <div class="phases-timeline-list">
+              @for (phase of moonResult().nextPhases; track phase.date.getTime()) {
+                <div class="phase-milestone-row">
+                  <div class="phase-icon-mini">
+                    <mat-icon>{{ phase.name === 'Full Moon' ? 'brightness_1' : (phase.name === 'New Moon' ? 'radio_button_unchecked' : 'brightness_2') }}</mat-icon>
+                  </div>
+                  <div class="phase-details">
+                    <strong>{{ phase.name }}</strong>
+                    <span>{{ phase.formattedDate }} at {{ phase.formattedTime }}</span>
+                  </div>
+                  <div class="phase-countdown-tag">
+                    <span>{{ phase.daysUntil === 0 ? 'Today' : 'in ' + phase.daysUntil + ' days' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 4. ASTRONOMICAL EVENTS & "WHEN IS?" ENGINE -->
+    @if (activeTab() === 'events') {
+      <div class="tool-pane">
+        <!-- "When Is?" Dynamic Solver -->
+        <div class="tool-card when-is-card">
+          <h3>
+            <mat-icon>help_outline</mat-icon>
+            <span>"When Is...?" Astronomical Query Solver</span>
+          </h3>
+
+          <div class="when-is-controls">
+            <div class="query-select-group">
+              <label>Choose Astronomical Question:</label>
+              <select [ngModel]="whenIsQuery()" (ngModelChange)="setWhenIsQuery($event)">
+                <option value="next-full-moon">When is the Next Full Moon?</option>
+                <option value="next-new-moon">When is the Next New Moon?</option>
+                <option value="spring-equinox">When is the Spring (Vernal) Equinox?</option>
+                <option value="summer-solstice">When is the Summer Solstice (Longest Day)?</option>
+                <option value="autumn-equinox">When is the Autumnal Equinox?</option>
+                <option value="winter-solstice">When is the Winter Solstice (Shortest Day)?</option>
+                <option value="solar-noon">When is Solar Noon today?</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="when-is-result-banner">
+            <div class="when-is-title">{{ whenIsResult().title }}</div>
+            <div class="when-is-time-hero">{{ whenIsResult().formattedDate }} · {{ whenIsResult().formattedTime }}</div>
+            <div class="when-is-relative">{{ whenIsResult().relativeDescription }}</div>
+            <p class="when-is-desc">{{ whenIsResult().detailedExplanation }}</p>
+          </div>
+        </div>
+
+        <!-- Annual Astronomical Calendar -->
+        <div class="tool-card">
+          <div class="year-header-row">
+            <h3>
+              <mat-icon>calendar_today</mat-icon>
+              <span>{{ selectedYear() }} Celestial Events & Ephemeris Calendar</span>
+            </h3>
+            <div class="year-picker">
+              <label>Year:</label>
+              <input type="number" min="1900" max="2100" [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set(+$event)" />
+            </div>
+          </div>
+
+          <div class="events-grid">
+            @for (ev of eventsResult(); track ev.id) {
+              <div class="event-card-item" [class.is-upcoming]="ev.isUpcoming">
+                <div class="event-card-header">
+                  <span class="event-cat-badge">{{ ev.category }}</span>
+                  <small>{{ ev.formattedDate }}</small>
+                </div>
+                <strong>{{ ev.title }}</strong>
+                <div class="event-time-val">{{ ev.formattedTime }}</div>
+                <p>{{ ev.description }}</p>
+                <div class="event-significance">
+                  <mat-icon>info</mat-icon>
+                  <span>{{ ev.significance }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

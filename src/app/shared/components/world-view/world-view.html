@@ -1,0 +1,102 @@
+<div class="world-view-container flex flex-col gap-5 w-full">
+  <!-- Compact world-map controls -->
+  <div class="world-map-toolbar">
+    <div class="world-map-brand">
+      <mat-icon>public</mat-icon>
+      <span>World</span>
+    </div>
+
+    <div class="world-map-actions">
+      <button type="button" class="world-tool" (click)="flyToObserver()" title="Observer location">
+        <mat-icon>my_location</mat-icon><span>Observer</span>
+      </button>
+
+      <div class="world-search">
+        <mat-icon>search</mat-icon>
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchQueryChange($event)"
+          placeholder="Search city or country" aria-label="Search city or country">
+        @if (searchQuery()) {
+          <button type="button" class="world-search-clear" (click)="searchQuery.set('')" aria-label="Clear search"><mat-icon>close</mat-icon></button>
+        }
+        @if (isRemoteSearching()) {
+          <mat-icon class="world-search-spin">sync</mat-icon>
+        }
+        @if (isSearchOpen() === false) {
+          <button type="button" class="world-search-open" (click)="isSearchOpen.set(true)" aria-label="Open location search"><mat-icon>expand_more</mat-icon></button>
+        }
+      </div>
+
+      <button type="button" class="world-tool" [class.active]="showNightTerminator()" (click)="toggleTerminator()" title="Day and night boundary">
+        <mat-icon>brightness_medium</mat-icon><span>Day / Night</span>
+      </button>
+      <button type="button" class="world-tool" [class.active]="showTwilightBands()" (click)="toggleTwilight()" title="Twilight bands">
+        <mat-icon>gradient</mat-icon><span>Twilight</span>
+      </button>
+      <button type="button" class="world-tool" [class.active]="showCelestialGrid()" (click)="toggleCelestialGrid()" title="Latitude lines">
+        <mat-icon>language</mat-icon><span>Grid</span>
+      </button>
+      <button type="button" class="world-tool" [class.active]="showSolarTrack()" (click)="toggleSolarTrack()" title="Solar ground track">
+        <mat-icon>track_changes</mat-icon><span>Sun</span>
+      </button>
+      <button type="button" class="world-tool" [class.active]="showCityLabels()" (click)="toggleCityLabels()" title="World clocks">
+        <mat-icon>schedule</mat-icon><span>Clocks</span>
+      </button>
+      <button type="button" class="world-tool" [class.active]="showTimezoneGrid()" (click)="toggleTimezoneGrid()" title="UTC grid">
+        <mat-icon>grid_on</mat-icon><span>UTC</span>
+      </button>
+      <button type="button" class="world-tool" [class.active]="showWindVectors()" (click)="toggleWindVectors()" title="Wind vectors">
+        <mat-icon>air</mat-icon><span>Wind</span>
+      </button>
+      <button type="button" class="world-tool" (click)="flyToSubsolar()" title="Center on subsolar point">
+        <mat-icon class="sun-tool">wb_sunny</mat-icon><span>Sun point</span>
+      </button>
+      <button type="button" class="world-tool" (click)="flyToSublunar()" title="Center on sublunar point">
+        <mat-icon class="moon-tool">dark_mode</mat-icon><span>Moon point</span>
+      </button>
+      <button type="button" class="world-tool" (click)="resetWorldView()" title="Fit world">
+        <mat-icon>fit_screen</mat-icon><span>Fit</span>
+      </button>
+    </div>
+  </div>
+
+  @if (isSearchOpen() && searchQuery()) {
+    <div class="world-search-results">
+      @for (res of searchResults(); track res.id) {
+        <button type="button" (click)="selectLocation(res)" class="world-search-result">
+          <app-country-flag [countryCode]="res.countryCode" [customClass]="'w-5 h-3.5 rounded-xs'"></app-country-flag>
+          <span><b>{{ res.name }}</b><small>{{ res.country }} · {{ res.timezone.split('/')[1] || res.timezone }}</small></span>
+        </button>
+      }
+      @if (!isRemoteSearching() && searchResults().length === 0) {
+        <span class="world-search-empty">No locations found.</span>
+      }
+    </div>
+  }
+
+  <div class="observatory-strip">
+    <span class="observatory-label"><mat-icon>visibility</mat-icon> Quick places</span>
+    @for (obs of observatories; track obs.id) {
+      <button type="button" (click)="selectObservatory(obs)" class="observatory-chip" title="{{ obs.name }}">
+        <mat-icon>{{ obs.icon }}</mat-icon><span>{{ obs.name }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Primary MapLibre NASA Scientific World Clock Map Stage -->
+  <div class="relative w-full rounded-3xl overflow-hidden border border-white/10 bg-slate-950 shadow-2xl">
+    <!-- Cosmic Backing Grid -->
+    <div class="absolute inset-0 pointer-events-none cosmic-stars-backdrop z-0 opacity-30"></div>
+
+    <!-- MapLibre Map Viewport Container -->
+    <div #globeContainer class="globe-viewport w-full h-[540px] md:h-[640px] lg:h-[720px] relative z-10"></div>
+
+    <!-- Real-Time Wind Speed & Direction Streamline Canvas Overlay -->
+    <canvas 
+      #windCanvas 
+      class="pointer-events-none absolute inset-0 z-15 w-full h-full transition-opacity duration-300"
+      [class.opacity-0]="!showWindVectors()"
+      [class.opacity-95]="showWindVectors()">
+    </canvas>
+  </div>
+
+</div>

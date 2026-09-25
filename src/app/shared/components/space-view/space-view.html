@@ -1,0 +1,500 @@
+<div class="space-view-container flex flex-col gap-5 w-full">
+  <!-- Top Space Observatory Telemetry Banner -->
+  <div class="glass-panel p-4 flex flex-wrap items-center justify-between gap-4 border border-white/10 rounded-2xl bg-slate-900/85 backdrop-blur-xl shadow-xl">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
+        <mat-icon>flare</mat-icon>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-white tracking-wide uppercase font-mono">Deep-Space Celestial Observatory</h2>
+          <span class="text-[11px] font-mono text-amber-400 font-bold">
+            · 3D Celestial Sphere & Keplerian Ephemeris
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Looking outward into the cosmos from <span class="text-amber-300 font-semibold">{{ selectedLocation().name }}</span>: local horizon mesh, celestial equatorial grid, and Keplerian orbital trajectories.
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Coordinates & Quick Tools -->
+    <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+      <div class="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/10 flex items-center gap-2" title="Observer Latitude and Longitude Vector">
+        <span class="text-slate-400">Observer Vector:</span>
+        <span class="text-emerald-400 font-bold">
+          {{ selectedLocation().latitude >= 0 ? selectedLocation().latitude.toFixed(2) + '°N' : (-selectedLocation().latitude).toFixed(2) + '°S' }}
+        </span>
+      </div>
+
+      <div class="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-white/10 flex items-center gap-2" title="Local Sidereal Time (Earth Axial Rotation relative to Vernal Equinox)">
+        <span class="text-sky-400">⏱ LST:</span>
+        <span class="text-sky-300 font-bold">{{ formattedSiderealTime() }}</span>
+      </div>
+
+      <!-- Exporter & Math Framework Action Buttons -->
+      <button 
+        type="button" 
+        (click)="exportGraphicCard()"
+        [disabled]="isExporting()"
+        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+        title="One-Tap Export: Ultra-Premium 1200x630 Celestial Graphic Card">
+        <mat-icon class="text-sm">share</mat-icon>
+        <span>{{ isExporting() ? 'Generating...' : 'Export 1200x630 Card' }}</span>
+      </button>
+
+      <button 
+        type="button" 
+        (click)="showMathDrawer.set(!showMathDrawer())"
+        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 flex items-center gap-1.5 transition-all cursor-pointer"
+        title="View Keplerian Mechanics & Horizon Transformation Formulas">
+        <mat-icon class="text-sm">functions</mat-icon>
+        <span>Formula Matrix</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Export Feedback Banner -->
+  @if (exportSuccessMessage()) {
+    <div class="px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-sm text-emerald-400">check_circle</mat-icon>
+        <span>{{ exportSuccessMessage() }}</span>
+      </div>
+      <button type="button" (click)="exportSuccessMessage.set(null)" class="text-emerald-400 hover:text-white">
+        <mat-icon class="text-sm">close</mat-icon>
+      </button>
+    </div>
+  }
+
+  <!-- Layer Toggles & Camera Lens Presets Bar -->
+  <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-950/80 border border-white/10">
+    <!-- 3 Synchronized Layer Toggles -->
+    <div class="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+      <span class="text-[11px] text-slate-400 uppercase tracking-wider mr-1">Vector Layers:</span>
+
+      <button 
+        type="button" 
+        class="space-tool-btn px-2.5 py-1 rounded-xl text-xs font-mono flex items-center gap-1.5 transition-all"
+        [class.active]="showLocalHorizonMesh()"
+        (click)="showLocalHorizonMesh.set(!showLocalHorizonMesh())"
+        title="Toggle Local Horizon Mesh (Alt-Az grid with observer zenith, nadir, and cardinal compass bearings)">
+        <mat-icon class="text-sm">panorama_horizontal</mat-icon>
+        <span>1. Local Horizon Mesh</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="space-tool-btn px-2.5 py-1 rounded-xl text-xs font-mono flex items-center gap-1.5 transition-all"
+        [class.active]="showEquatorialGrid()"
+        (click)="showEquatorialGrid.set(!showEquatorialGrid())"
+        title="Toggle Equatorial Coordinate Sphere (Right Ascension 0-24h & Declination -80° to +80°)">
+        <mat-icon class="text-sm">grid_4x4</mat-icon>
+        <span>2. Equatorial Sphere (RA/Dec)</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="space-tool-btn px-2.5 py-1 rounded-xl text-xs font-mono flex items-center gap-1.5 transition-all"
+        [class.active]="showEclipticPlane()"
+        (click)="showEclipticPlane.set(!showEclipticPlane())"
+        title="Toggle 23.44° Ecliptic Plane Highway">
+        <mat-icon class="text-sm">timeline</mat-icon>
+        <span>3. Ecliptic Circle (23.44°)</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="space-tool-btn px-2.5 py-1 rounded-xl text-xs font-mono flex items-center gap-1.5 transition-all"
+        [class.active]="showPlanetaryOrbits()"
+        (click)="showPlanetaryOrbits.set(!showPlanetaryOrbits())"
+        title="Toggle 3D Keplerian Planetary Orbital Ellipses">
+        <mat-icon class="text-sm">track_changes</mat-icon>
+        <span>Planetary Orbits</span>
+      </button>
+    </div>
+
+    <!-- Camera Lens Presets -->
+    <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-white/5 text-xs font-mono">
+      <span class="text-[10px] text-slate-400 px-2 uppercase">Camera:</span>
+
+      <button
+        type="button"
+        class="px-2 py-1 rounded-lg transition-all"
+        [class.bg-amber-500]="activeCameraPreset() === 'observer'"
+        [class.text-slate-950]="activeCameraPreset() === 'observer'"
+        [class.font-bold]="activeCameraPreset() === 'observer'"
+        [class.text-slate-300]="activeCameraPreset() !== 'observer'"
+        (click)="setCameraPreset('observer')"
+        title="Observer-Centric Horizontal Horizon Vantage">
+        Local Horizon
+      </button>
+
+      <button
+        type="button"
+        class="px-2 py-1 rounded-lg transition-all"
+        [class.bg-amber-500]="activeCameraPreset() === 'equatorial'"
+        [class.text-slate-950]="activeCameraPreset() === 'equatorial'"
+        [class.font-bold]="activeCameraPreset() === 'equatorial'"
+        [class.text-slate-300]="activeCameraPreset() !== 'equatorial'"
+        (click)="setCameraPreset('equatorial')"
+        title="Equatorial Polar Axis Alignment">
+        Polar
+      </button>
+
+      <button
+        type="button"
+        class="px-2 py-1 rounded-lg transition-all"
+        [class.bg-amber-500]="activeCameraPreset() === 'ecliptic'"
+        [class.text-slate-950]="activeCameraPreset() === 'ecliptic'"
+        [class.font-bold]="activeCameraPreset() === 'ecliptic'"
+        [class.text-slate-300]="activeCameraPreset() !== 'ecliptic'"
+        (click)="setCameraPreset('ecliptic')"
+        title="Ecliptic Solar System Plane Alignment">
+        Ecliptic
+      </button>
+
+      <button
+        type="button"
+        class="px-2 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+        (click)="resetCamera()"
+        title="Reset 3D Camera Angles">
+        <mat-icon class="text-xs">restart_alt</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Primary Interactive 3D Deep Space Celestial Sphere Canvas Viewport -->
+  <div class="relative w-full rounded-3xl overflow-hidden border border-amber-500/20 bg-slate-950 shadow-2xl">
+    <canvas 
+      #celestialCanvas
+      class="celestial-viewport w-full h-[540px] md:h-[640px] lg:h-[720px] block cursor-grab active:cursor-grabbing select-none"
+      (mousedown)="onMouseDown($event)"
+      (mousemove)="onMouseMove($event)"
+      (mouseup)="onMouseUp()"
+      (mouseleave)="onMouseUp()"
+      (wheel)="onWheel($event)"></canvas>
+
+    <!-- Floating HUD Overlay: Selected Body Keplerian Ephemeris Inspector -->
+    <div class="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2 max-w-sm">
+      <div class="glass-panel p-4 rounded-2xl bg-slate-950/90 border border-amber-500/30 backdrop-blur-xl shadow-2xl pointer-events-auto">
+        <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl" [style.color]="activeBodyDetails().color">{{ activeBodyDetails().symbol }}</span>
+            <div>
+              <div class="text-sm font-bold text-white font-mono uppercase tracking-wider">{{ activeBodyDetails().name }}</div>
+              <div class="text-[10px] text-slate-400 font-sans">
+                {{ activeBodyDetails().visible ? 'Visible Above Observer Horizon' : 'Below Horizon (Occulted)' }}
+              </div>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold"
+            [class.bg-emerald-500/20]="activeBodyDetails().visible"
+            [class.text-emerald-300]="activeBodyDetails().visible"
+            [class.border]="activeBodyDetails().visible"
+            [class.border-emerald-500/30]="activeBodyDetails().visible"
+            [class.bg-slate-800]="!activeBodyDetails().visible"
+            [class.text-slate-400]="!activeBodyDetails().visible">
+            {{ activeBodyDetails().visible ? 'IN SKY' : 'SET' }}
+          </span>
+        </div>
+
+        <!-- 3D Coordinate Transformations & Telemetry Grid -->
+        <div class="grid grid-cols-2 gap-2 mt-3 font-mono text-xs">
+          <!-- Horizontal Coordinates -->
+          <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+            <span class="text-[9px] text-amber-400 uppercase font-semibold">Local Altitude (a)</span>
+            <span class="text-xs font-bold" [class.text-amber-300]="activeBodyDetails().altDeg > 0" [class.text-slate-400]="activeBodyDetails().altDeg <= 0">
+              {{ activeBodyDetails().altDeg >= 0 ? '+' : '' }}{{ activeBodyDetails().altDeg.toFixed(2) }}°
+            </span>
+            <span class="text-[8px] text-slate-500">Refracted at {{ selectedLocation().name }}</span>
+          </div>
+
+          <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+            <span class="text-[9px] text-amber-400 uppercase font-semibold">Local Azimuth (A)</span>
+            <span class="text-xs font-bold text-slate-200">
+              {{ activeBodyDetails().azDeg.toFixed(2) }}°
+            </span>
+            <span class="text-[8px] text-slate-500">Clockwise from North (0°)</span>
+          </div>
+
+          <!-- Equatorial Coordinates -->
+          <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+            <span class="text-[9px] text-sky-400 uppercase font-semibold">Right Ascension (α)</span>
+            <span class="text-xs font-bold text-sky-200">
+              {{ (activeBodyDetails().raDeg / 15).toFixed(2) }}h ({{ activeBodyDetails().raDeg.toFixed(1) }}°)
+            </span>
+            <span class="text-[8px] text-slate-500">J2000.0 Celestial Track</span>
+          </div>
+
+          <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+            <span class="text-[9px] text-sky-400 uppercase font-semibold">Declination (δ)</span>
+            <span class="text-xs font-bold text-sky-200">
+              {{ activeBodyDetails().decDeg >= 0 ? '+' : '' }}{{ activeBodyDetails().decDeg.toFixed(2) }}°
+            </span>
+            <span class="text-[8px] text-slate-500">North (+) / South (-) Pole</span>
+          </div>
+
+          <!-- Keplerian Orbital Parameters -->
+          @if (activeBodyDetails().semiMajorAxisAU) {
+            <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+              <span class="text-[9px] text-emerald-400 uppercase font-semibold">Semi-Major Axis (a)</span>
+              <span class="text-xs font-bold text-emerald-200">
+                {{ activeBodyDetails().semiMajorAxisAU?.toFixed(3) }} AU
+              </span>
+              <span class="text-[8px] text-slate-500">e = {{ activeBodyDetails().eccentricity?.toFixed(4) }}</span>
+            </div>
+
+            <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+              <span class="text-[9px] text-emerald-400 uppercase font-semibold">Eccentric Anomaly (E)</span>
+              <span class="text-xs font-bold text-emerald-200">
+                {{ activeBodyDetails().eccentricAnomalyDeg?.toFixed(1) }}°
+              </span>
+              <span class="text-[8px] text-slate-500">M = {{ activeBodyDetails().meanAnomalyDeg?.toFixed(1) }}°</span>
+            </div>
+          }
+
+          <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+            <span class="text-[9px] text-slate-400 uppercase font-semibold">Geocentric Dist</span>
+            <span class="text-xs font-bold text-amber-300">
+              {{ activeBodyDetails().distanceAu.toFixed(3) }} AU
+            </span>
+          </div>
+
+          <div class="flex flex-col p-2 rounded-xl bg-slate-900/70 border border-white/5">
+            <span class="text-[9px] text-slate-400 uppercase font-semibold">Apparent Mag</span>
+            <span class="text-xs font-bold text-slate-200">
+              {{ activeBodyDetails().magnitude >= 0 ? '+' : '' }}{{ activeBodyDetails().magnitude.toFixed(1) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating HUD Overlay: Interaction Instructions -->
+    <div class="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex items-center gap-3">
+      <div class="px-3.5 py-1.5 rounded-xl bg-slate-950/85 border border-white/10 backdrop-blur-md text-[11px] font-mono text-slate-300 flex items-center gap-2 shadow-lg">
+        <mat-icon class="text-xs text-amber-400">3d_rotation</mat-icon>
+        <span>Drag 3D viewport to pivot observer horizon · Scroll to zoom · Click planet below to focus</span>
+      </div>
+    </div>
+
+    <!-- Floating Quick Body Selector Buttons on Canvas -->
+    <div class="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-1.5 bg-slate-950/90 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl">
+      @for (b of allCelestialBodies(); track b.id) {
+        <button
+          type="button"
+          class="px-2.5 py-1 rounded-xl text-xs font-mono transition-all flex items-center gap-1.5 cursor-pointer"
+          [class.bg-amber-500/25]="selectedBodyId() === b.id"
+          [class.border]="selectedBodyId() === b.id"
+          [class.border-amber-400/50]="selectedBodyId() === b.id"
+          [class.text-white]="selectedBodyId() === b.id"
+          [class.text-slate-400]="selectedBodyId() !== b.id"
+          (click)="selectBody(b.id)"
+          [title]="'Center 3D View on ' + b.name">
+          <span [style.color]="b.color" class="font-bold">{{ b.symbol }}</span>
+          <span class="hidden md:inline">{{ b.name }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Theoretical Mathematical Framework & Registry Drawer (Expandable) -->
+  @if (showMathDrawer()) {
+    <div class="glass-panel p-5 rounded-3xl border border-amber-500/30 bg-slate-950/95 flex flex-col gap-4 animate-fade-in shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <mat-icon class="text-amber-400">menu_book</mat-icon>
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider">
+            Mathematical Architecture: Keplerian Mechanics & Local Horizontal Transformations
+          </h3>
+        </div>
+        <button type="button" (click)="showMathDrawer.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon class="text-sm">close</mat-icon>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono text-xs">
+        <!-- Step A: Kepler's Equation -->
+        <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 flex flex-col gap-2.5">
+          <span class="text-amber-400 font-bold uppercase tracking-wider">
+            Step A: Solving Kepler's Equation for Planetary Vectors
+          </span>
+          <p class="text-slate-300 font-sans text-xs leading-relaxed">
+            Computes true orbital positions along the elliptical path using Newton-Raphson boundary iterations without querying external APIs:
+          </p>
+          <div class="p-3 rounded-xl bg-slate-950 border border-amber-500/20 text-amber-300 font-bold text-xs">
+            E_n = E_{{'{n-1}'}} - (E_{{'{n-1}'}} - e · sin(E_{{'{n-1}'}}) - M) / (1 - e · cos(E_{{'{n-1}'}}))
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950 border border-white/5 text-slate-200 text-xs">
+            x_plane = a · (cos E − e), &nbsp; y_plane = a · √(1 − e²) · sin E
+          </div>
+        </div>
+
+        <!-- Step B: Equatorial to Horizontal -->
+        <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 flex flex-col gap-2.5">
+          <span class="text-sky-400 font-bold uppercase tracking-wider">
+            Step B: Transforming Equatorial (RA/Dec) to Local Horizontal (Alt/Az)
+          </span>
+          <p class="text-slate-300 font-sans text-xs leading-relaxed">
+            Converts celestial equatorial coordinates into the observer's local horizon mesh based on latitude (φ) and Local Hour Angle (H = LST − α):
+          </p>
+          <div class="p-3 rounded-xl bg-slate-950 border border-sky-500/20 text-sky-300 font-bold text-xs">
+            sin a = sin δ · sin φ + cos δ · cos φ · cos H
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950 border border-white/5 text-slate-200 text-xs">
+            cos A = (sin δ − sin a · sin φ) / (cos a · cos φ)
+          </div>
+        </div>
+      </div>
+
+      <!-- Registry Metadata Card -->
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 flex flex-col gap-2 text-xs font-mono">
+        <div class="flex items-center justify-between text-slate-400 text-[10px]">
+          <span>REGISTRY SLUG: {{ registryEntry().slug }}</span>
+          <span>CATEGORY: {{ registryEntry().category | uppercase }}</span>
+        </div>
+        <p class="text-slate-300 font-sans text-xs">{{ registryEntry().howItWorks }}</p>
+        <div class="flex flex-wrap gap-1.5 mt-1">
+          @for (kw of registryEntry().keywords; track kw) {
+            <span class="px-2 py-0.5 rounded-md bg-white/5 text-slate-400 text-[10px]">#{{ kw }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Dual-Engine Scientific Solar Validation & Ephemeris Matrix -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+    <!-- Left Column: Dual-Engine NOAA vs SunCalc Consensus -->
+    <div class="lg:col-span-6 flex flex-col gap-4">
+      <div class="glass-panel rounded-2xl border border-amber-500/30 bg-slate-950/95 p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-white/5 pb-2.5">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-emerald-400 text-sm">verified</mat-icon>
+            <span class="text-xs font-bold text-white uppercase tracking-wider font-mono">
+              Dual-Engine Astronomical Consensus
+            </span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+            {{ solarCrossCheck().isValidated ? 'Validated (Δ < 0.25°)' : 'Cross-Checking' }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs font-mono">
+          <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5 flex flex-col gap-1">
+            <span class="text-[10px] text-amber-400 uppercase font-semibold">Primary (NOAA / Meeus)</span>
+            <span class="text-base font-bold text-amber-300">
+              {{ solarCrossCheck().astronomyEngineAltitudeDeg >= 0 ? '+' : '' }}{{ solarCrossCheck().astronomyEngineAltitudeDeg.toFixed(3) }}°
+            </span>
+            <span class="text-[10px] text-slate-400">Azimuth: {{ solarCrossCheck().astronomyEngineAzimuthDeg.toFixed(2) }}°</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5 flex flex-col gap-1">
+            <span class="text-[10px] text-slate-400 uppercase">Cross-Check (SunCalc)</span>
+            <span class="text-base font-bold text-slate-200">
+              {{ solarCrossCheck().sunCalcAltitudeDeg >= 0 ? '+' : '' }}{{ solarCrossCheck().sunCalcAltitudeDeg.toFixed(3) }}°
+            </span>
+            <span class="text-[10px] text-emerald-400 font-semibold">
+              Δ Altitude: {{ solarCrossCheck().altitudeDeltaDeg.toFixed(4) }}° (Sub-Arcmin)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solar Coordinates & Earth Geometry -->
+      <div class="glass-panel rounded-2xl border border-white/10 bg-slate-950/95 p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-white/5 pb-2">
+          <span class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+            <mat-icon class="text-amber-400 text-sm">filter_tilt_shift</mat-icon>
+            Solar Coordinates & Earth-Sun Geometry
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
+            <span class="text-[10px] text-slate-400 uppercase">Declination (δ)</span>
+            <span class="text-sm font-bold text-white">
+              {{ celestial().sun.declinationDeg >= 0 ? '+' : '' }}{{ celestial().sun.declinationDeg.toFixed(2) }}°
+            </span>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
+            <span class="text-[10px] text-slate-400 uppercase">Right Ascension (α)</span>
+            <span class="text-sm font-bold text-white">
+              {{ celestial().sun.rightAscensionDeg.toFixed(2) }}°
+            </span>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
+            <span class="text-[10px] text-slate-400 uppercase">Distance</span>
+            <span class="text-sm font-bold text-amber-300">
+              {{ celestial().sun.distanceAU.toFixed(4) }} AU
+            </span>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
+            <span class="text-[10px] text-slate-400 uppercase">Equation of Time</span>
+            <span class="text-sm font-bold text-amber-300">
+              {{ celestial().sun.equationOfTimeMinutes >= 0 ? '+' : '' }}{{ celestial().sun.equationOfTimeMinutes.toFixed(1) }}m
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: 8 Planetary Bodies Horizon Table -->
+    <div class="lg:col-span-6 glass-panel rounded-2xl border border-white/10 bg-slate-950/95 p-4 flex flex-col gap-3">
+      <div class="flex items-center justify-between border-b border-white/5 pb-2">
+        <span class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+          <mat-icon class="text-sky-400 text-sm">travel_explore</mat-icon>
+          Keplerian Planetary Ephemeris Table
+        </span>
+        <span class="text-[10px] font-mono text-slate-400">Click Row to Center Viewport</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs font-mono text-left">
+          <thead>
+            <tr class="text-[10px] text-slate-400 border-b border-white/10">
+              <th class="pb-1.5 font-normal">BODY</th>
+              <th class="pb-1.5 font-normal">ALTITUDE</th>
+              <th class="pb-1.5 font-normal">AZIMUTH</th>
+              <th class="pb-1.5 font-normal">DISTANCE</th>
+              <th class="pb-1.5 font-normal">MAGNITUDE</th>
+              <th class="pb-1.5 font-normal text-right">STATUS</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            @for (planet of allCelestialBodies(); track planet.id) {
+              <tr 
+                class="hover:bg-white/10 transition-colors cursor-pointer"
+                [class.bg-amber-500/15]="selectedBodyId() === planet.id"
+                (click)="selectBody(planet.id)">
+                <td class="py-2 font-semibold text-white flex items-center gap-1.5">
+                  <span [style.color]="planet.color">{{ planet.symbol }}</span>
+                  <span>{{ planet.name }}</span>
+                </td>
+                <td class="py-2" [class.text-amber-300]="planet.visible" [class.text-slate-400]="!planet.visible">
+                  {{ planet.altDeg >= 0 ? '+' : '' }}{{ planet.altDeg.toFixed(1) }}°
+                </td>
+                <td class="py-2 text-slate-300">{{ planet.azDeg.toFixed(1) }}°</td>
+                <td class="py-2 text-slate-300">{{ planet.distanceAu.toFixed(2) }} AU</td>
+                <td class="py-2 text-slate-300">{{ planet.magnitude >= 0 ? '+' : '' }}{{ planet.magnitude.toFixed(1) }}</td>
+                <td class="py-2 text-right">
+                  @if (planet.visible) {
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
+                      Visible
+                    </span>
+                  } @else {
+                    <span class="text-slate-500 text-[9px]">Set</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

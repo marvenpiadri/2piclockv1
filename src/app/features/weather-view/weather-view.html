@@ -1,0 +1,364 @@
+<div class="weather-view">
+  <!-- MapLibre GL Interactive Map Container -->
+  <div #mapContainer class="weather-map"></div>
+
+  <!-- High-Density Fluid Streamlines Canvas Overlay -->
+  <canvas #particleCanvas class="weather-particles"></canvas>
+
+  <!-- Interactive Pinpoint Spot Crosshair & Floating Inspector Bubble -->
+  @if (selectedSpot(); as spot) {
+    <div
+      class="spot-marker-pin"
+      [style.left.px]="spot.x"
+      [style.top.px]="spot.y">
+      <div class="pin-ring pin-ring-outer"></div>
+      <div class="pin-ring pin-ring-inner"></div>
+      <div class="pin-dot"></div>
+
+      <!-- Floating Windy-style Spot Card -->
+      <div class="spot-card">
+        <div class="spot-card-header">
+          <div class="spot-coords">
+            <strong>{{ spot.latitude > 0 ? spot.latitude.toFixed(2) + '°N' : (spot.latitude * -1).toFixed(2) + '°S' }}, {{ spot.longitude > 0 ? spot.longitude.toFixed(2) + '°E' : (spot.longitude * -1).toFixed(2) + '°W' }}</strong>
+            <small>{{ spot.distanceKm }} km from {{ selectedLocation().name }}</small>
+          </div>
+          <button type="button" class="spot-close-btn" (click)="closeSpot()" title="Dismiss Spot">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="spot-card-body">
+          <div class="spot-temp-row">
+            <div class="spot-temp-col">
+              <span class="spot-temp">{{ spot.temperatureC }}°C</span>
+              <span class="spot-condition">{{ spot.conditionLabel }}</span>
+            </div>
+            <!-- Rotating Meteorological Wind Needle -->
+            <div class="spot-wind-col">
+              <div class="wind-needle-wrap">
+                <mat-icon
+                  class="wind-needle"
+                  [style.transform]="'rotate(' + (spot.windDirectionDeg + 180) + 'deg)'">
+                  navigation
+                </mat-icon>
+              </div>
+              <div class="wind-values">
+                <strong>{{ spot.windSpeedKmh }} <small>km/h</small></strong>
+                <span>{{ spot.windSpeedKnots }} kt · gusts {{ spot.windGustKmh }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="spot-stats-row">
+            <div>
+              <span>Rain rate</span>
+              <strong>{{ spot.precipitationMm }} mm/h</strong>
+            </div>
+            <div>
+              <span>Cloud cover</span>
+              <strong>{{ spot.cloudCoverPct }}%</strong>
+            </div>
+            <div>
+              <span>Pressure</span>
+              <strong>{{ spot.pressureHpa }} hPa</strong>
+            </div>
+          </div>
+
+          <div class="spot-actions">
+            <button type="button" class="adopt-location-btn" (click)="adoptSpotAsActiveLocation()">
+              <mat-icon>add_location_alt</mat-icon>
+              <span>Set as Observatory Location</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Windy Top Control Toolbar -->
+  <header class="weather-toolbar" aria-label="Weather map controls">
+    <div class="toolbar-left">
+      <div class="weather-location-pill">
+        <div class="brand-mark">
+          <mat-icon>cyclone</mat-icon>
+        </div>
+        <div class="location-text">
+          <strong>{{ selectedLocation().name }}</strong>
+          <span>{{ selectedLocation().country }} · {{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</span>
+        </div>
+        <button
+          type="button"
+          class="center-btn"
+          (click)="centerLocation()"
+          title="Center on observatory location">
+          <mat-icon>my_location</mat-icon>
+        </button>
+      </div>
+
+      <div class="weather-location-search">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          [value]="locationSearchQuery()"
+          (input)="onLocationSearch(($any($event.target)).value)"
+          placeholder="Search any city or country"
+          aria-label="Search any city or country" />
+        @if (isLocationSearching()) {
+          <mat-icon class="search-spinner">sync</mat-icon>
+        }
+        @if (locationSearchResults().length) {
+          <div class="weather-search-results">
+            @for (loc of locationSearchResults(); track loc.id) {
+              <button type="button" (click)="selectSearchLocation(loc)">
+                <span class="weather-search-flag">{{ loc.flag }}</span>
+                <span>
+                  <strong>{{ loc.name }}</strong>
+                  <small>{{ loc.country }}</small>
+                </span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Hotspot quick-fly shortcuts -->
+      <div class="hotspots-strip">
+        @for (hotspot of worldHotspots; track hotspot.name) {
+          <button
+            type="button"
+            class="hotspot-pill"
+            (click)="flyToHotspot(hotspot)"
+            [title]="hotspot.label || hotspot.name">
+            {{ hotspot.name }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Weather Layer Switcher -->
+    <div class="weather-layers" role="tablist">
+      @for (layer of layerOptions; track layer.id) {
+        <button
+          type="button"
+          [class.active]="activeLayer() === layer.id"
+          (click)="setLayer(layer.id)"
+          role="tab"
+          [title]="layer.label + ' layer (' + layer.unit + ')'">
+          <mat-icon [class]="'weather-layer-icon weather-layer-' + layer.id">{{ layer.icon }}</mat-icon>
+          <span>{{ layer.label }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="toolbar-right">
+      <button
+        type="button"
+        class="compact-action"
+        [class.active]="isInspectorOpen()"
+        (click)="toggleInspector()"
+        title="Toggle Environmental Inspector">
+        <mat-icon>dashboard_customize</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- Left Environmental Inspector Panel -->
+  @if (isInspectorOpen()) {
+    <aside class="weather-inspector" aria-label="Active region meteorological telemetry">
+      <div class="inspector-header">
+        <div>
+          <span class="inspector-kicker">{{ layerTitle().toUpperCase() }} TELEMETRY</span>
+          <div class="inspector-temperature">{{ liveWeather().temperatureC }}°<small>C</small></div>
+          <div class="inspector-condition">{{ liveWeather().conditionLabel }}</div>
+        </div>
+        <button type="button" class="inspector-close-btn" (click)="toggleInspector()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="inspector-grid">
+        <div>
+          <span>WIND SPEED</span>
+          <b>{{ liveWeather().windSpeedKmh }} km/h</b>
+        </div>
+        <div>
+          <span>GUSTS</span>
+          <b>{{ liveWeather().windGustKmh ?? liveWeather().windSpeedKmh }} km/h</b>
+        </div>
+        <div>
+          <span>PRECIPITATION</span>
+          <b>{{ liveWeather().precipitationPct }}%</b>
+        </div>
+        <div>
+          <span>PRESSURE</span>
+          <b>{{ liveWeather().pressureHpa }} hPa</b>
+        </div>
+        <div>
+          <span>CLOUD COVER</span>
+          <b>{{ liveWeather().cloudCoverPct }}%</b>
+        </div>
+        <div>
+          <span>VISIBILITY</span>
+          <b>{{ liveWeather().visibilityKm }} km</b>
+        </div>
+      </div>
+
+      <div class="inspector-chart-block">
+        <div class="chart-header">
+          <span class="chart-title">ATMOSPHERIC PROFILE</span>
+        </div>
+        <app-weather-bar-chart></app-weather-bar-chart>
+      </div>
+
+      <div class="inspector-source">
+        <span>Model: Open-Meteo GFS / ECMWF Seamless</span>
+        <small>Click anywhere on the map to inspect coordinates</small>
+      </div>
+    </aside>
+  }
+
+  <!-- Windy Altitude Pressure Level Vertical Selector -->
+  <aside class="altitude-bar" aria-label="Altitude pressure levels">
+    <div class="altitude-title">ALTITUDE</div>
+    <div class="altitude-options">
+      @for (alt of altitudeLevels; track alt.id) {
+        <button
+          type="button"
+          class="alt-btn"
+          [class.active]="activeAltitude() === alt.id"
+          (click)="setAltitude(alt.id)"
+          [title]="alt.altitudeLabel">
+          <span class="alt-label">{{ alt.label }}</span>
+          <span class="alt-sub">{{ alt.altitudeLabel.split(' · ')[0] }}</span>
+        </button>
+      }
+    </div>
+  </aside>
+
+  <!-- Windy Interactive Color Scale Legend -->
+  <div class="weather-legend" aria-label="Color scale legend">
+    <div class="legend-header">
+      <span class="legend-title">{{ layerTitle() }}</span>
+      <span class="legend-unit">
+        {{ activeLayer() === 'temperature' ? '°C' : activeLayer() === 'rain' ? 'mm/h' : activeLayer() === 'clouds' ? '%' : activeLayer() === 'pressure' ? 'hPa' : 'km/h' }}
+      </span>
+    </div>
+    <div class="legend-bar" [attr.data-layer]="activeLayer()">
+      <div class="legend-ticks">
+        @if (activeLayer() === 'temperature') {
+          <span>-15°</span><span>0°</span><span>10°</span><span>20°</span><span>30°</span><span>40°</span>
+        } @else if (activeLayer() === 'rain') {
+          <span>0</span><span>0.5</span><span>2</span><span>5</span><span>15</span><span>30+</span>
+        } @else if (activeLayer() === 'clouds') {
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+        } @else if (activeLayer() === 'pressure') {
+          <span>985</span><span>1000</span><span>1013</span><span>1025</span><span>1038</span>
+        } @else {
+          <span>0</span><span>15</span><span>30</span><span>50</span><span>75</span><span>100+</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Expandable Windy Meteogram Strip -->
+  @if (isMeteogramOpen()) {
+    <div class="weather-meteogram-strip" aria-label="72-hour meteogram forecast">
+      <div class="meteogram-header">
+        <div class="meteogram-title">
+          <mat-icon>show_chart</mat-icon>
+          <strong>72-HOUR METEOGRAM OUTLOOK</strong>
+          <span>3-hour interval model projection</span>
+        </div>
+        <button type="button" class="meteogram-close" (click)="toggleMeteogram()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="meteogram-scroll">
+        @for (step of meteogramSteps(); track step.timeMs) {
+          <div class="meteogram-col">
+            <span class="met-day">{{ step.dayLabel }}</span>
+            <span class="met-time">{{ step.timeLabel }}</span>
+            <app-weather-icon class="met-icon" [icon]="step.conditionIcon" [label]="step.conditionIcon" size="md"></app-weather-icon>
+            <span class="met-temp">{{ step.temperatureC }}°</span>
+            <div class="met-wind">
+              <mat-icon
+                class="met-wind-needle"
+                [style.transform]="'rotate(' + (step.windDirectionDeg + 180) + 'deg)'">
+                navigation
+              </mat-icon>
+              <small>{{ step.windSpeedKmh }}</small>
+            </div>
+            <div class="met-rain" [title]="step.precipitationMm + ' mm'">
+              <div class="rain-bar" [style.height.px]="Math.min(30, step.precipitationMm * 6)"></div>
+              <span>{{ step.precipitationMm > 0 ? step.precipitationMm + 'mm' : '—' }}</span>
+            </div>
+            <span class="met-cloud">{{ step.cloudCoverPct }}%</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Windy 72-Hour Forecast Scrubber & Transport Player -->
+  <footer class="weather-timeline" aria-label="Forecast player and scrubber">
+    <div class="timeline-controls">
+      <button
+        type="button"
+        class="transport"
+        (click)="jumpForecast(-1)"
+        title="Step backward 1 hour">
+        <mat-icon>skip_previous</mat-icon>
+      </button>
+      <button
+        type="button"
+        class="transport transport-play"
+        [class.playing]="isPlaying()"
+        (click)="togglePlay()"
+        title="Play / Pause simulation">
+        <mat-icon>{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
+      </button>
+      <button
+        type="button"
+        class="transport"
+        (click)="jumpForecast(1)"
+        title="Step forward 1 hour">
+        <mat-icon>skip_next</mat-icon>
+      </button>
+    </div>
+
+    <div class="timeline-label">
+      <span>FORECAST VALID</span>
+      <strong>{{ activeForecastTime() | date:'EEE, MMM d · HH:mm' }}</strong>
+    </div>
+
+    <!-- Scrubber Slider -->
+    <div class="scrubber-track-wrap">
+      <input
+        type="range"
+        [min]="0"
+        [max]="forecastMax()"
+        [value]="forecastIndex()"
+        (input)="onForecastInput($event)"
+        aria-label="Forecast hour scrubber" />
+    </div>
+
+    <!-- Speed multipliers -->
+    <div class="speed-group" aria-label="Particle speed">
+      <button type="button" [class.active]="particleSpeed() === 1" (click)="setParticleSpeed(1)">1×</button>
+      <button type="button" [class.active]="particleSpeed() === 2" (click)="setParticleSpeed(2)">2×</button>
+      <button type="button" [class.active]="particleSpeed() === 4" (click)="setParticleSpeed(4)">4×</button>
+    </div>
+
+    <!-- Meteogram Toggle Button -->
+    <button
+      type="button"
+      class="meteogram-toggle-btn"
+      [class.active]="isMeteogramOpen()"
+      (click)="toggleMeteogram()"
+      title="Toggle 72-hour meteogram table">
+      <mat-icon>analytics</mat-icon>
+      <span>Meteogram</span>
+    </button>
+  </footer>
+</div>

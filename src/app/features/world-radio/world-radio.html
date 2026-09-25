@@ -1,0 +1,312 @@
+<div class="radio-suite-container">
+  <!-- Header / Kicker -->
+  <header class="radio-header">
+    <div class="radio-title-row">
+      <div class="radio-title-group">
+        <div class="radio-kicker">
+          <mat-icon class="kicker-icon">radio</mat-icon>
+          <span>WORLD RADIO & GLOBAL BROADCASTS</span>
+          <span class="sep">·</span>
+          <span class="subkicker">LISTEN TO EARTH</span>
+        </div>
+        <h1>Planetary Radio Observatory</h1>
+        <p>Live terrestrial and satellite audio streams synchronized with local diurnal cycles, solar trajectories, and lunar phases.</p>
+      </div>
+
+      <!-- Quick Tab Switcher -->
+      <nav class="radio-tabs" aria-label="Radio Navigation">
+        <button 
+          type="button" 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'explore'" 
+          (click)="setTab('explore')">
+          <mat-icon>explore</mat-icon>
+          <span>Explore</span>
+        </button>
+        <button 
+          type="button" 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'map'" 
+          (click)="setTab('map')">
+          <mat-icon>public</mat-icon>
+          <span>Radio Map</span>
+        </button>
+        <button 
+          type="button" 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'favorites'" 
+          (click)="setTab('favorites')">
+          <mat-icon>favorite</mat-icon>
+          <span>Favorites ({{ favorites().length }})</span>
+        </button>
+        <button 
+          type="button" 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'recents'" 
+          (click)="setTab('recents')">
+          <mat-icon>history</mat-icon>
+          <span>Recent</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Player + Location Context Surface -->
+  @if (currentStation()) {
+    <section class="hero-player-surface glass-panel" aria-label="Current Station Player">
+      <div class="player-main-col">
+        <div class="player-status-badge">
+          @if (isLoading()) {
+            <span class="pulse-dot loading"></span>
+            <span class="status-label">BUFFERING STREAM...</span>
+          } @else if (isPlaying()) {
+            <span class="pulse-dot live"></span>
+            <span class="status-label font-mono">LIVE ON AIR</span>
+          } @else {
+            <span class="pulse-dot paused"></span>
+            <span class="status-label">PAUSED</span>
+          }
+          <span class="sep">·</span>
+          <span class="codec-tag font-mono">{{ currentStation()?.codec || 'MP3' }} {{ currentStation()?.bitrate ? (currentStation()?.bitrate + ' kbps') : '' }}</span>
+        </div>
+
+        <div class="station-meta-row">
+          <div class="station-hero-info">
+            <h2 class="station-hero-title">{{ currentStation()?.name }}</h2>
+            <div class="station-hero-loc">
+              <span class="flag-icon">{{ currentStation()?.countryCode }}</span>
+              <span class="city-name">{{ currentStation()?.city }}, {{ currentStation()?.country }}</span>
+              <span class="sep">·</span>
+              <span class="tags-preview">{{ currentStation()?.tags?.slice(0, 3)?.join(' · ') }}</span>
+            </div>
+          </div>
+
+          <div class="player-action-controls">
+            <button 
+              type="button" 
+              class="hero-play-btn" 
+              [attr.aria-label]="isPlaying() ? 'Pause Radio' : 'Play Radio'"
+              (click)="togglePlay()">
+              <mat-icon>{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
+            </button>
+            <button 
+              type="button" 
+              class="icon-action-btn" 
+              [class.fav-active]="isFavorite(currentStation()!)"
+              (click)="toggleFavorite(currentStation()!, $event)"
+              [title]="isFavorite(currentStation()!) ? 'Remove from favorites' : 'Add to favorites'">
+              <mat-icon>{{ isFavorite(currentStation()!) ? 'favorite' : 'favorite_border' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Volume Bar -->
+        <div class="volume-slider-row">
+          <button type="button" class="vol-btn" (click)="toggleMute()" [attr.aria-label]="isMuted() ? 'Unmute' : 'Mute'">
+            <mat-icon>{{ isMuted() || volume() === 0 ? 'volume_off' : (volume() < 0.5 ? 'volume_down' : 'volume_up') }}</mat-icon>
+          </button>
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            [value]="isMuted() ? 0 : volume()" 
+            (input)="setVolume($event)"
+            class="vol-range" 
+            aria-label="Volume Slider" />
+          <span class="vol-pct font-mono">{{ isMuted() ? 'MUTED' : ((volume() * 100).toFixed(0) + '%') }}</span>
+        </div>
+
+        <!-- Error Feedback -->
+        @if (error()) {
+          <div class="stream-error-notice">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ error() }}</span>
+            <button type="button" class="retry-btn" (click)="radioService.playStation(currentStation()!)">
+              <mat-icon>refresh</mat-icon>
+              <span>Retry</span>
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Real-Time Station World Intelligence Box -->
+      @if (playingContext(); as ctx) {
+        <aside class="station-world-intel">
+          <div class="intel-header">
+            <span class="intel-title font-mono">LOCAL WORLD INTELLIGENCE</span>
+            <span class="intel-tz font-mono">{{ ctx.utcOffset }}</span>
+          </div>
+
+          <div class="intel-grid">
+            <div class="intel-card">
+              <span class="intel-lbl">LOCAL TIME</span>
+              <strong class="intel-val font-mono">{{ ctx.localTime }}</strong>
+              <small class="intel-sub">{{ ctx.station.timezone }}</small>
+            </div>
+
+            <div class="intel-card">
+              <span class="intel-lbl">SOLAR STATE</span>
+              <strong class="intel-val font-mono">{{ getSolarAltitudeDisplay(ctx.solarAltitude) }}</strong>
+              <small class="intel-sub uppercase">{{ ctx.astroState }}</small>
+            </div>
+
+            <div class="intel-card">
+              <span class="intel-lbl">MOON PHASE</span>
+              <strong class="intel-val">{{ ctx.moonPhaseName }}</strong>
+              <small class="intel-sub font-mono">{{ (ctx.moonIllumination * 100).toFixed(0) }}% ILLUMINATED</small>
+            </div>
+          </div>
+        </aside>
+      }
+    </section>
+  }
+
+  <!-- Controls & Search Bar -->
+  <section class="radio-filter-toolbar glass-card" aria-label="Search and Filter Radio Stations">
+    <div class="search-input-wrap">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input 
+        type="text" 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event); onSearchChange()"
+        placeholder="Search station, city (e.g. Tokyo, Paris, Casablanca), genre or tag..." 
+        class="radio-search-input" />
+      @if (searchQuery()) {
+        <button type="button" class="clear-search-btn" (click)="searchQuery.set(''); onSearchChange()">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <!-- Continents filter -->
+    <div class="continent-filters">
+      @for (c of continents; track c.id) {
+        <button 
+          type="button" 
+          class="filter-chip" 
+          [class.active]="selectedContinent() === c.id"
+          (click)="setContinent(c.id)">
+          {{ c.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Genre filter -->
+    <div class="genre-filters">
+      @for (g of genres; track g.id) {
+        <button 
+          type="button" 
+          class="genre-chip" 
+          [class.active]="selectedGenre() === g.id"
+          (click)="setGenre(g.id)">
+          {{ g.label }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- TAB 1: EXPLORE / LIST -->
+  @if (activeTab() === 'explore' || activeTab() === 'favorites' || activeTab() === 'recents') {
+    <section class="stations-grid-section" aria-label="Station List">
+      <div class="section-title-row">
+        <h3 class="section-title">
+          @if (activeTab() === 'favorites') {
+            Favorite Stations ({{ filteredStations().length }})
+          } @else if (activeTab() === 'recents') {
+            Recently Played Streams ({{ filteredStations().length }})
+          } @else {
+            Live Global Broadcast Streams ({{ filteredStations().length }})
+          }
+        </h3>
+        <span class="status-summary font-mono text-xs text-slate-400">
+          Showing {{ filteredStations().length }} live directory streams
+        </span>
+      </div>
+
+      @if (filteredStations().length === 0) {
+        <div class="empty-state-card glass-card">
+          <mat-icon class="empty-icon">radio_button_unchecked</mat-icon>
+          <h4>No radio stations found</h4>
+          <p>Try searching for a different city, country or musical genre.</p>
+          <button type="button" class="reset-filter-btn" (click)="searchQuery.set(''); selectedGenre.set('all'); selectedContinent.set('all'); onSearchChange()">
+            Reset All Filters
+          </button>
+        </div>
+      } @else {
+        <div class="stations-grid">
+          @for (station of filteredStations(); track station.id) {
+            <article 
+              class="station-card glass-card" 
+              [class.is-playing]="currentStation()?.id === station.id && isPlaying()"
+              (click)="playStation(station)">
+              
+              <div class="card-top-row">
+                <div class="loc-badge font-mono">
+                  <span>{{ station.city }}</span>
+                  <span class="sep">·</span>
+                  <span class="country-text">{{ station.country }}</span>
+                </div>
+                <button 
+                  type="button" 
+                  class="card-fav-btn" 
+                  [class.fav-active]="isFavorite(station)"
+                  (click)="toggleFavorite(station, $event)"
+                  [title]="isFavorite(station) ? 'Remove from favorites' : 'Add to favorites'">
+                  <mat-icon>{{ isFavorite(station) ? 'favorite' : 'favorite_border' }}</mat-icon>
+                </button>
+              </div>
+
+              <div class="card-main">
+                <h4 class="station-name">{{ station.name }}</h4>
+                <div class="station-tags">
+                  @for (t of station.tags.slice(0, 3); track t) {
+                    <span class="tag-pill">{{ t }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <div class="station-tech-info font-mono text-xs text-slate-400">
+                  <span>{{ station.codec || 'MP3' }}</span>
+                  @if (station.bitrate) {
+                    <span class="sep">·</span>
+                    <span>{{ station.bitrate }}k</span>
+                  }
+                </div>
+                <div class="card-play-action">
+                  @if (currentStation()?.id === station.id && isPlaying()) {
+                    <div class="mini-eq-bars">
+                      <span class="bar bar-1"></span>
+                      <span class="bar bar-2"></span>
+                      <span class="bar bar-3"></span>
+                    </div>
+                  } @else {
+                    <mat-icon class="play-indicator-icon">play_circle_outline</mat-icon>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- TAB 2: RADIO MAP — same map backbone, radio-specific data layer -->
+  @if (activeTab() === 'map') {
+    <section class="radio-map-section glass-panel" aria-label="Radio Map">
+      <div class="map-container-header">
+        <div>
+          <h3 class="map-title">Radio Map</h3>
+          <p class="map-subtitle text-xs text-slate-400">Explore live broadcasts geographically. The map is shared with the World and Weather experiences; only the data layer changes.</p>
+        </div>
+        <div class="map-legend font-mono text-xs text-slate-400">
+          <span><span class="node-sample available"></span> Live station</span>
+          <span>{{ allStations().length }} stations</span>
+        </div>
+      </div>
+      <div #radioMapContainer class="radio-map-canvas" aria-label="Interactive world radio map"></div>
+    </section>
+  }
+</div>

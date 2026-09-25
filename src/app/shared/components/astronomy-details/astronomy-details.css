@@ -1,0 +1,47 @@
+.astronomy-details-root {
+  container-type: inline-size;
+  container-name: astro-details;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Solar Triad: Responsive Container Layout */
+.solar-triad-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+}
+
+@container astro-details (min-width: 620px) {
+  .solar-triad-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+  }
+}
+
+/* Lower Section Split: Responsive Container Layout */
+.lower-split-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@container astro-details (min-width: 680px) {
+  .lower-split-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* Photographic / Twilight Steps */
+.twilight-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+@container astro-details (max-width: 360px) {
+  .twilight-steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
