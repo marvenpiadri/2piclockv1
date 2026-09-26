@@ -835,3 +835,6 @@
   background: rgba(255, 255, 255, .075) !important;
   border-color: rgba(255, 255, 255, .18) !important;
 }
+
+.share-time-tool { display:inline-flex; align-items:center; justify-content:center; gap:5px; }
+.share-time-tool mat-icon { font-size:14px; width:14px; height:14px; }
