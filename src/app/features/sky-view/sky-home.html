@@ -29,27 +29,26 @@
           <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
         </button>
       }
-      <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
+      <nav class="sky-header-navigation" aria-label="Sky Sub-Views">
+        <a [routerLink]="['/', selectedLocation().id]" [class.active]="skyPage === 'time'">
+          <mat-icon>schedule</mat-icon>
+          <span>Now</span>
+        </a>
+        <a [routerLink]="['/', selectedLocation().id, 'weather']" [class.active]="skyPage === 'weather'">
+          <mat-icon>cloud</mat-icon>
+          <span>Weather</span>
+        </a>
+        <a [routerLink]="['/', selectedLocation().id, 'tonight']" [class.active]="skyPage === 'tonight'">
+          <mat-icon>dark_mode</mat-icon>
+          <span>Tonight</span>
+        </a>
+      </nav>
+
+            <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
         <mat-icon>settings</mat-icon><span>Settings</span>
       </button>
     </div>
   </header>
-
-  <!-- Subtle Sub-Navigation on the Left (Border-bottom, no heavy floating glass div) -->
-  <nav class="sky-navigation" aria-label="Sky Sub-Views">
-    <a [routerLink]="['/', selectedLocation().id]" [class.active]="skyPage === 'time'">
-      <mat-icon class="text-sm">schedule</mat-icon>
-      <span>Now</span>
-    </a>
-    <a [routerLink]="['/', selectedLocation().id, 'weather']" [class.active]="skyPage === 'weather'">
-      <mat-icon class="text-sm">cloud</mat-icon>
-      <span>Weather</span>
-    </a>
-    <a [routerLink]="['/', selectedLocation().id, 'tonight']" [class.active]="skyPage === 'tonight'">
-      <mat-icon class="text-sm">dark_mode</mat-icon>
-      <span>Tonight</span>
-    </a>
-  </nav>
 
   <main class="sky-page">
     @if (skyPage === 'time') {
