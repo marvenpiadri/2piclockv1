@@ -1,3 +1,4 @@
+@import "./styles/_tokens.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 @font-face {
@@ -16,52 +17,45 @@
    ========================================================================== */
 
 :root {
-  /* Color Palette */
-  /* Shared with DooMath: exact dark structural palette + math orange. */
-  --2pi-amber: #f97316;
-  --2pi-amber-bright: #fb923c;
-  --2pi-amber-soft: rgba(245, 158, 11, 0.14);
-  --2pi-amber-glow: rgba(245, 158, 11, 0.25);
-  
+  /* 2piClock aliases: all shared UI tokens resolve through the DooMath token system. */
+  --2pi-amber: var(--color-math-orange);
+  --2pi-amber-bright: var(--color-math-orange);
+  --2pi-amber-soft: var(--color-math-orange-light);
+  --2pi-amber-glow: var(--color-math-orange-medium);
   --2pi-cyan: #06b6d4;
   --2pi-cyan-soft: rgba(6, 182, 212, 0.12);
   --2pi-emerald: #10b981;
   --2pi-emerald-soft: rgba(16, 185, 129, 0.12);
   --2pi-sky: #38bdf8;
   --2pi-indigo: #6366f1;
-  
-  /* Obsidian Space Neutrals */
-  --2pi-night: #0d1117;
-  --2pi-canvas: #0d1117;
-  --2pi-surface: rgba(13, 17, 23, 0.88);
-  --2pi-surface-solid: #161b22;
-  --2pi-surface-elevated: rgba(22, 27, 34, 0.94);
-  --2pi-surface-input: rgba(13, 17, 23, 0.94);
-  
-  /* Borders & Dividers */
-  --2pi-border: rgba(255, 255, 255, 0.08);
-  --2pi-border-strong: rgba(255, 255, 255, 0.15);
-  --2pi-border-accent: rgba(245, 158, 11, 0.35);
-  
-  /* Typography Colors */
-  --2pi-text: #f8fafc;
-  --2pi-text-secondary: #cbd5e1;
-  --2pi-muted: #94a3b8;
-  --2pi-muted-dark: #64748b;
-  --2pi-text-on-sky: #f8fafc;
-  --2pi-text-on-sky-secondary: #d7dee8;
-  --2pi-text-on-sky-muted: #b9c3d0;
-  
-  /* Fonts */
-  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
-  
-  /* Radii */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
+
+  --2pi-night: var(--color-canvas);
+  --2pi-canvas: var(--color-canvas);
+  --2pi-surface: var(--color-surface);
+  --2pi-surface-solid: var(--color-surface);
+  --2pi-surface-elevated: var(--color-surface-elevated);
+  --2pi-surface-input: var(--color-input-bg);
+
+  --2pi-border: var(--color-border);
+  --2pi-border-strong: var(--color-border-dark);
+  --2pi-border-accent: var(--color-math-orange-border);
+
+  --2pi-text: var(--color-text-main);
+  --2pi-text-secondary: var(--color-text-secondary);
+  --2pi-muted: var(--color-text-muted);
+  --2pi-muted-dark: var(--color-header-subtext);
+  --2pi-text-on-sky: var(--color-text-main);
+  --2pi-text-on-sky-secondary: var(--color-text-secondary);
+  --2pi-text-on-sky-muted: var(--color-text-muted);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
 }
 
 /* Base reset & layout integrity */
@@ -111,23 +105,33 @@ a {
   background: var(--2pi-amber-bright);
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars — thin, visible and tied to the shared DooMath palette. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-dark) var(--color-canvas);
+}
+
+body {
+  scrollbar-color: var(--color-border-dark) var(--color-canvas);
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-canvas);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 999px;
+  background: var(--color-border-dark);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-canvas);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--color-text-muted);
 }
 
 /* Monospace & Tabular figures */
