@@ -816,9 +816,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     w: number,
     h: number,
     sunAlt: number,
-    planets: PlanetaryPosition[],
-    weather: WeatherData,
-    atmos: AtmosphericState
+    planets: PlanetaryPosition[]
   ): void {
     // Planets are a night-sky feature. Keep them out of daylight and deep
     // atmospheric wash so they never compete with the Sun.
