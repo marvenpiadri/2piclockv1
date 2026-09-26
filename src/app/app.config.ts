@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     { provide: ErrorHandler, useClass: ErrorHandlerService },
     provideAppInitializer(() => {
-      inject(SeoService);
+      inject(SeoService).init();
     }),
   ],
 };
