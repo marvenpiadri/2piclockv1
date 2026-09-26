@@ -11,6 +11,7 @@ import { GlassThemeService } from './core/services/glass-theme.service';
 import { LocationService } from './core/services/location.service';
 import { CelestialService } from './core/services/celestial.service';
 import { SeoService } from './core/services/seo.service';
+import { ErrorHandlerService } from './core/services/error-handler.service';
 import { ObservatoryViewService, ObservatoryView } from './core/services/observatory-view.service';
 import { GeoLocation } from './core/models/location.model';
 import { GeocodingService } from './core/services/geocoding.service';
@@ -54,6 +55,7 @@ export class App {
   private geocodingService = inject(GeocodingService);
   private observatoryViewService = inject(ObservatoryViewService);
   private seoService = inject(SeoService);
+  readonly errorHandler = inject(ErrorHandlerService);
   readonly glassThemeService = inject(GlassThemeService);
   readonly router = inject(Router);
 
