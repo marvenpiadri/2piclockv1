@@ -22,3 +22,4 @@ export * from './weather-bar-chart/weather-bar-chart';
 export * from './mini-radio-player/mini-radio-player';
 
 export * from './weather-icon/weather-icon';
+export * from './celestial-logo/celestial-logo';
