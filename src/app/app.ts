@@ -221,7 +221,7 @@ export class App {
       items: [
         {
           label: 'Sky Window & 2Pi Dial',
-          path: '/',
+          path: '/:location',
           view: 'sky',
           desc: 'Living horizon simulation, diurnal radian vector, and optical twilight gradient.',
           icon: 'radio_button_checked',
@@ -354,7 +354,7 @@ export class App {
         },
         {
           label: 'Wind & Weather Map',
-          path: '/weather',
+          path: '/maps/weather',
           desc: 'Global meteorological maps and live weather observations.',
           icon: 'air'
         }
