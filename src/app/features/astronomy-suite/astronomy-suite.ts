@@ -16,6 +16,7 @@ import { MoonPhaseIndicator } from '../../shared/components/moon-phase-indicator
 import { Title, Meta } from '@angular/platform-browser';
 import { CelestialService } from '../../core/services/celestial.service';
 import { PlanetaryPosition } from '../../core/services/precision-astronomy.service';
+import { computeKeplerianState, KeplerianOrbitalState, getGMST, getJulianCenturies, getJulianDate, JPL_KEPLERIAN_ELEMENTS } from '../../core/astronomy/keplerian-engine';
 
 export type AstronomyTab = 'overview' | 'solar' | 'daylight' | 'moon' | 'events';
 
@@ -99,6 +100,65 @@ export class AstronomySuiteComponent implements OnInit {
   readonly visiblePlanetaryPositions = computed(() =>
     this.planetaryPositions().filter(planet => planet.visible && planet.altitudeDeg > 0)
   );
+
+  readonly selectedPlanet = signal('earth');
+
+  readonly solarSystemStates = computed<KeplerianOrbitalState[]>(() => {
+    const instant = this.parsedInstant();
+    const jd = getJulianDate(instant);
+    const t = getJulianCenturies(jd);
+    const earth = computeKeplerianState('earth', t, { x: 0, y: 0, z: 0 }, this.selectedLocation().latitude, 0);
+    if (!earth) return [];
+    const lst = getGMST(jd, t) + this.selectedLocation().longitude;
+    return Object.keys(JPL_KEPLERIAN_ELEMENTS)
+      .filter(key => key !== 'earth')
+      .map(key => computeKeplerianState(
+        key,
+        t,
+        { x: earth.heliocentricX, y: earth.heliocentricY, z: earth.heliocentricZ },
+        this.selectedLocation().latitude,
+        lst
+      ))
+      .filter((state): state is KeplerianOrbitalState => !!state)
+      .concat(earth);
+  });
+
+  readonly selectedPlanetState = computed(() =>
+    this.solarSystemStates().find(body => body.name.toLowerCase() === this.selectedPlanet()) ?? null
+  );
+
+  solarSystemScale(radiusAu: number): number {
+    const max = 30.1;
+    return 5 + (Math.log1p(Math.max(0, radiusAu)) / Math.log1p(max)) * 44;
+  }
+
+  orbitPath(state: KeplerianOrbitalState): string {
+    const cx = 50;
+    const cy = 50;
+    const points = state.orbitPoints.map(point => {
+      const radius = Math.hypot(point.x, point.y);
+      const angle = Math.atan2(point.y, point.x);
+      const scaled = this.solarSystemScale(radius);
+      return [cx + Math.cos(angle) * scaled, cy + Math.sin(angle) * scaled];
+    });
+    return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`).join(' ') + ' Z';
+  }
+
+  planetX(state: KeplerianOrbitalState): number {
+    const radius = Math.hypot(state.heliocentricX, state.heliocentricY);
+    const angle = Math.atan2(state.heliocentricY, state.heliocentricX);
+    return 50 + Math.cos(angle) * this.solarSystemScale(radius);
+  }
+
+  planetY(state: KeplerianOrbitalState): number {
+    const radius = Math.hypot(state.heliocentricX, state.heliocentricY);
+    const angle = Math.atan2(state.heliocentricY, state.heliocentricX);
+    return 50 + Math.sin(angle) * this.solarSystemScale(radius);
+  }
+
+  selectPlanet(name: string): void {
+    this.selectedPlanet.set(name.toLowerCase());
+  }
 
   readonly planetaryRiseSet = computed(() => {
     const location = this.selectedLocation();
