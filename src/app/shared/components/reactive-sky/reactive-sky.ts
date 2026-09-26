@@ -21,6 +21,9 @@ interface Star {
   flickerSpeed: number;
   flickerPhase: number;
   color: string;
+  raDeg?: number;
+  decDeg?: number;
+  magnitude?: number;
 }
 
 interface CloudParticle {
@@ -164,6 +167,29 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     window.addEventListener('resize', this.resizeHandler, { passive: true });
   }
 
+  private readonly brightStarCatalog: Array<{ name: string; raDeg: number; decDeg: number; magnitude: number; color: string }> = [
+    { name: 'Sirius', raDeg: 101.287, decDeg: -16.716, magnitude: -1.46, color: 'rgba(235,245,255,' },
+    { name: 'Canopus', raDeg: 95.988, decDeg: -52.696, magnitude: -0.74, color: 'rgba(255,245,225,' },
+    { name: 'Arcturus', raDeg: 213.915, decDeg: 19.182, magnitude: -0.05, color: 'rgba(255,225,190,' },
+    { name: 'Vega', raDeg: 279.235, decDeg: 38.784, magnitude: 0.03, color: 'rgba(225,240,255,' },
+    { name: 'Capella', raDeg: 79.172, decDeg: 45.998, magnitude: 0.08, color: 'rgba(255,245,215,' },
+    { name: 'Rigel', raDeg: 78.634, decDeg: -8.202, magnitude: 0.13, color: 'rgba(215,235,255,' },
+    { name: 'Procyon', raDeg: 114.826, decDeg: 5.225, magnitude: 0.34, color: 'rgba(245,245,255,' },
+    { name: 'Achernar', raDeg: 24.429, decDeg: -57.237, magnitude: 0.46, color: 'rgba(225,240,255,' },
+    { name: 'Betelgeuse', raDeg: 88.793, decDeg: 7.407, magnitude: 0.50, color: 'rgba(255,205,175,' },
+    { name: 'Hadar', raDeg: 210.956, decDeg: -60.373, magnitude: 0.61, color: 'rgba(220,235,255,' },
+    { name: 'Altair', raDeg: 297.696, decDeg: 8.868, magnitude: 0.77, color: 'rgba(235,245,255,' },
+    { name: 'Aldebaran', raDeg: 69.996, decDeg: 16.509, magnitude: 0.85, color: 'rgba(255,220,185,' },
+    { name: 'Spica', raDeg: 201.298, decDeg: -11.161, magnitude: 0.97, color: 'rgba(220,235,255,' },
+    { name: 'Antares', raDeg: 247.352, decDeg: -26.432, magnitude: 1.06, color: 'rgba(255,205,180,' },
+    { name: 'Pollux', raDeg: 116.329, decDeg: 28.026, magnitude: 1.14, color: 'rgba(255,240,205,' },
+    { name: 'Fomalhaut', raDeg: 344.413, decDeg: -29.622, magnitude: 1.16, color: 'rgba(225,240,255,' },
+    { name: 'Deneb', raDeg: 310.358, decDeg: 45.280, magnitude: 1.25, color: 'rgba(225,240,255,' },
+    { name: 'Regulus', raDeg: 152.093, decDeg: 11.967, magnitude: 1.35, color: 'rgba(245,245,255,' },
+    { name: 'Castor', raDeg: 113.650, decDeg: 31.888, magnitude: 1.58, color: 'rgba(230,240,255,' },
+    { name: 'Bellatrix', raDeg: 81.283, decDeg: 6.350, magnitude: 1.64, color: 'rgba(220,235,255,' }
+  ];
+
   private initStars(): void {
     const starCount = 320;
     this.stars = [];
@@ -199,6 +225,24 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         flickerSpeed,
         flickerPhase,
         color
+      });
+    }
+
+    // Overlay real bright-star references. Their screen positions are resolved
+    // every frame from the selected observer/date, while the procedural field
+    // preserves the quiet density of a natural night sky.
+    for (const star of this.brightStarCatalog) {
+      this.stars.push({
+        x: 0,
+        y: 0,
+        radius: Math.max(0.9, Math.min(2.4, 2.1 - star.magnitude * 0.3)),
+        baseBrightness: 0.95,
+        flickerSpeed: 0.0015,
+        flickerPhase: Math.random() * Math.PI * 2,
+        color: star.color,
+        raDeg: star.raDeg,
+        decDeg: star.decDeg,
+        magnitude: star.magnitude
       });
     }
   }
@@ -650,8 +694,16 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     for (const star of this.stars) {
       if (star.baseBrightness < extinctionThreshold) continue;
 
-      const sx = star.x * w;
-      const sy = star.y * horizonY;
+      let sx = star.x * w;
+      let sy = star.y * horizonY;
+
+      // Bright reference stars use their actual equatorial coordinates.
+      if (star.raDeg !== undefined && star.decDeg !== undefined) {
+        const projected = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
+        if (!projected || projected.altitude < -8) continue;
+        sx = projected.x;
+        sy = projected.y;
+      }
       const twinkle = 0.82 + Math.sin(time * star.flickerSpeed * windTurbulence + star.flickerPhase) * 0.18;
       const alpha = star.baseBrightness * finalStarAlpha * twinkle;
       if (alpha <= 0.01) continue;
@@ -661,6 +713,45 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       ctx.fillStyle = `${star.color} ${alpha.toFixed(3)})`;
       ctx.fill();
     }
+  }
+
+  private projectStarToSky(
+    raDeg: number,
+    decDeg: number,
+    w: number,
+    horizonY: number
+  ): { x: number; y: number; altitude: number } | null {
+    const date = this.celestialService.activeDate();
+    const location = this.celestialService.selectedLocation();
+    const jd = date.getTime() / 86400000 + 2440587.5;
+    const t = (jd - 2451545.0) / 36525;
+    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)
+      + 0.000387933 * t * t - (t * t * t) / 38710000) % 360;
+    const lst = (gmst + location.longitude + 360) % 360;
+
+    const lat = location.latitude * Math.PI / 180;
+    const dec = decDeg * Math.PI / 180;
+    const hourAngle = (((lst - raDeg) + 540) % 360) - 180;
+    const ha = hourAngle * Math.PI / 180;
+
+    const sinAlt = Math.sin(lat) * Math.sin(dec)
+      + Math.cos(lat) * Math.cos(dec) * Math.cos(ha);
+    const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * 180 / Math.PI;
+    if (altitude < -8) return null;
+
+    const azimuth = (Math.atan2(
+      Math.sin(ha),
+      Math.cos(ha) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+    ) * 180 / Math.PI + 180 + 360) % 360;
+
+    const radius = Math.max(28, 126 - Math.max(-8, Math.min(90, altitude)) * 0.82);
+    const azRad = azimuth * Math.PI / 180;
+    const centerX = w / 2;
+    return {
+      x: centerX + Math.sin(azRad) * radius,
+      y: horizonY - Math.cos(azRad) * radius,
+      altitude
+    };
   }
 
   /**
