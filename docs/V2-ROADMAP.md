@@ -33,15 +33,15 @@ Astronomical objects may be added when they make the sky feel **more alive**. Th
 ## V2.1 — Weather × Sky
 Goal: make weather visibly change the atmosphere rather than only the information cards.
 
-- [ ] Multi-layer cloud depth and coverage
-- [ ] Cloud occlusion of celestial objects
-- [ ] Haze and visibility response
-- [ ] Humidity-driven atmospheric softness
-- [ ] Rain/snow density tied to weather intensity
-- [ ] Storm-light behavior
-- [ ] Weather-driven horizon and twilight scattering
+- [x] Multi-layer cloud depth and coverage
+- [x] Cloud occlusion of celestial objects
+- [x] Haze and visibility response
+- [x] Humidity-driven atmospheric softness
+- [x] Rain/snow density tied to weather intensity
+- [x] Storm-light behavior
+- [x] Weather-driven horizon and twilight scattering
 - [ ] Forecast-to-sky transition preview
-- [ ] Weather failure/loading states that never break the sky
+- [x] Weather failure/loading states that never break the sky
 
 **Visual rule:** weather should modify the atmosphere, not cover it with effects.
 
