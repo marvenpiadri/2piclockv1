@@ -772,7 +772,7 @@ export class SkyHomeComponent {
     const observer = new Astronomy.Observer(
       this.selectedLocation().latitude,
       this.selectedLocation().longitude,
-      this.selectedLocation().elevationM ?? 0
+      this.selectedLocation().elevationMeters ?? 0
     );
     const rise = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, comparisonDate, 1);
     const set = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, comparisonDate, 1);
