@@ -66,7 +66,7 @@ import { CelestialService } from '../../../core/services/celestial.service';
     .center-pin { fill: #f59e0b; }
     .center-core { fill: #fff8dc; }
     .sun-marker { fill: #f59e0b; opacity: .9; }
-    .moon-marker { fill: #cbd5e1; stroke: rgba(255,255,255,.6); stroke-width: .7; }
+    .moon-marker { fill: #f8fafc; stroke: #ffffff; stroke-width: .7; }
   `]
 })
 export class AnalogClockComponent {
