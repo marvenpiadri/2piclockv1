@@ -20,6 +20,7 @@ import { WidgetGeneratorComponent } from './features/widget-generator/widget-gen
 import { WidgetEmbedComponent } from './features/widget-generator/widget-embed';
 import { WorldEventsComponent } from './features/world-events/world-events';
 import { AlertsComponent } from './features/alerts/alerts';
+import { ApiDocsComponent } from './features/api-docs/api-docs';
 
 const resolveRootLocation: CanActivateFn = async () => {
   const locationService = inject(LocationService);
@@ -61,6 +62,7 @@ export const routes: Routes = [
   { path: 'astronomy', component: AstronomySuiteComponent },
   { path: 'tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
   { path: 'events', component: WorldEventsComponent },
+  { path: 'api', component: ApiDocsComponent },
 
   // Astronomical & Stargazing Suites (Option B)
   { path: 'stargazing', component: StargazingPlannerComponent },
