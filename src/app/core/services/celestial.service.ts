@@ -7,6 +7,7 @@ import { PrecisionAstronomyService, SolarCrossCheck, PlanetaryPosition } from '.
 import { getCelestialState, get24HourSolarCurve } from '../astronomy/astronomy-engine';
 import { CelestialState } from '../models/celestial.model';
 import { AtmosphericState, Season } from '../models/weather.model';
+import * as Astronomy from 'astronomy-engine';
 interface VisibleConstellation {
   name: string;
   altitudeDeg: number;
