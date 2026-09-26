@@ -75,11 +75,13 @@ My Sky foundation is in place through the persistent watchlist and location-firs
 ## V2.4 — Earth
 Goal: connect the local sky to the planet.
 
-- [ ] Live day/night map
-- [ ] Twilight terminator
-- [ ] Global sunrise/sunset
-- [ ] World weather integration
-- [ ] World clocks integration
+- [x] Live day/night map
+- [x] Twilight terminator
+- [x] Global sunrise/sunset
+- [x] World weather integration
+- [x] World clocks integration
+
+V2.4 Earth is now implemented as the global Earth instrument: the MapLibre world view follows the exact active instant, renders the day/night boundary and twilight bands, exposes global solar state and world-clock locations, and provides an opt-in live weather layer.
 
 ## V2.5 — Time Machine
 Goal: let users explore the sky across time.
@@ -89,9 +91,11 @@ The Living Sky time engine already supports exact historical/future instants; th
 - [x] Arbitrary date/time
 - [x] Historical skies
 - [x] Future skies
-- [ ] Date comparison
-- [ ] Celestial event exploration
-- [ ] Shareable sky states
+- [x] Date comparison
+- [x] Celestial event exploration
+- [x] Shareable sky states
+
+V2.5 core implementation is now complete. The Time Machine supports arbitrary dates, historical/future skies, compact date comparison with sunrise/sunset/daylight differences, existing celestial event exploration, and shareable sky state.
 
 ## V2.6 — Astronomy
 Goal: give advanced astronomical exploration its own dedicated experience instead of making the Living Sky carry too much information.
