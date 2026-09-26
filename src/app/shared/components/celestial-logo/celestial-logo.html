@@ -27,7 +27,7 @@
       <circle cx="24" cy="24" r="15" fill="url(#logoMoon)"/>
       <g clip-path="url(#moonClip)">
         <rect x="9" y="9" width="30" height="30" fill="#334155"/>
-        <ellipse cx="24" cy="24" [attr.rx]="moonTerminatorRx()" ry="15" fill="url(#logoMoon)"
+        <path [attr.d]="moonLitPath()" fill="url(#logoMoon)"
           [attr.transform]="'rotate(' + moonTerminatorRotation() + ' 24 24)'"/>
         <circle cx="18" cy="17" r="2" fill="#94a3b8" opacity=".25"/>
         <circle cx="29" cy="29" r="2.5" fill="#94a3b8" opacity=".2"/>
