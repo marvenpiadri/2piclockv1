@@ -226,6 +226,18 @@ export class AstronomySuiteComponent implements OnInit {
     return 50 + Math.sin(angle) * 35;
   }
 
+  relationshipLineWidth(raDeg: number, decDeg: number): number {
+    const dx = this.earthSkyNodeX(raDeg) - 50;
+    const dy = this.earthSkyNodeY(decDeg) - 50;
+    return Math.hypot(dx, dy);
+  }
+
+  relationshipLineAngle(raDeg: number, decDeg: number): number {
+    const dx = this.earthSkyNodeX(raDeg) - 50;
+    const dy = this.earthSkyNodeY(decDeg) - 50;
+    return Math.atan2(dy, dx) * 180 / Math.PI;
+  }
+
   earthSkyNodeY(decDeg: number): number {
     const delta = decDeg - this.solarResult().solarPos.declinationDeg;
     return 50 - Math.max(-1, Math.min(1, delta / 90)) * 35;
