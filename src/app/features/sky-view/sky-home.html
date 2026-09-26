@@ -480,8 +480,14 @@
               @for (planet of visiblePlanetsTonight(); track planet.name) {
                 <article class="tonight-planet">
                   <span class="planet-orb"></span>
-                  <div><strong>{{ planet.name }}</strong><small>Magnitude {{ planet.magnitude.toFixed(1) }}</small></div>
-                  <div class="planet-position"><span>{{ planet.altitudeDeg.toFixed(1) }}° alt</span><span>{{ planet.azimuthDeg.toFixed(0) }}° az</span></div>
+                  <div>
+                    <strong>{{ planet.name }}</strong>
+                    <small>Magnitude {{ planet.magnitude.toFixed(1) }}</small>
+                  </div>
+                  <div class="planet-position">
+                    <span>{{ planet.altitudeDeg.toFixed(1) }}° alt · {{ planet.azimuthDeg.toFixed(0) }}° az</span>
+                    <span>Rise {{ formatTime(planet.rise) }} · Set {{ formatTime(planet.set) }}</span>
+                  </div>
                 </article>
               }
             </div>
