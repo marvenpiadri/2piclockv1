@@ -32,9 +32,9 @@ import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine
             {{ linkCopied() ? 'Link copied' : 'Copy sky link' }}
           </button>
           <button type="button" class="secondary" (click)="dismissModal.emit()">Close</button>
-          <button type="button" class="primary" (click)="shareOrDownload()">
-            <mat-icon>{{ canShare() ? 'ios_share' : 'download' }}</mat-icon>
-            {{ canShare() ? 'Share picture' : 'Save picture' }}
+          <button type="button" class="primary" (click)="downloadPng()">
+            <mat-icon>download</mat-icon>
+            Download PNG
           </button>
         </div>
       </section>
@@ -42,21 +42,21 @@ import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine
   `,
   styles: [`
     .share-backdrop { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(2,6,15,.58); backdrop-filter:blur(14px); }
-    .share-modal { width:min(760px,100%); max-height:calc(100vh - 32px); overflow:auto; position:relative; padding:22px; border:1px solid rgba(255,255,255,.18); border-radius:22px; background:rgba(10,16,27,.72); backdrop-filter:blur(28px); box-shadow:0 30px 90px rgba(0,0,0,.3); color:#fff; }
-    .close { position:absolute; top:14px; right:14px; width:32px; height:32px; display:grid; place-items:center; border:0; border-radius:50%; background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); cursor:pointer; }
+    .share-modal { width:min(760px,100%); max-height:calc(100vh - 32px); overflow:auto; position:relative; padding:var(--space-6); border:1px solid var(--color-border); border-radius:var(--radius-2xl); background:var(--color-surface-modal); box-shadow:var(--shadow-modal); color:var(--color-text-main); }
+    .close { position:absolute; top:var(--space-3); right:var(--space-3); width:32px; height:32px; display:grid; place-items:center; border:0; border-radius:var(--radius-full); background:var(--color-surface-hover); color:var(--color-text-muted); cursor:pointer; }
     .close mat-icon { font-size:17px; width:17px; height:17px; }
-    .heading { padding-right:42px; margin-bottom:16px; }
-    .eyebrow { color:#f59e0b; font:700 9px ui-monospace,monospace; letter-spacing:.16em; }
-    h2 { margin:6px 0 6px; font:700 24px/1.1 system-ui,sans-serif; letter-spacing:-.035em; }
-    p { margin:0; color:rgba(255,255,255,.58); font-size:11px; line-height:1.5; }
-    .canvas-frame { width:min(100%,680px); margin:0 auto; aspect-ratio:1200/760; border-radius:16px; overflow:hidden; background:#0b1220; border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 55px rgba(0,0,0,.22); }
+    .heading { padding-right:42px; margin-bottom:var(--space-4); }
+    .eyebrow { color:var(--color-math-orange); font:700 var(--text-xs) var(--font-mono); letter-spacing:.16em; }
+    h2 { margin:var(--space-1) 0 var(--space-1); font:700 var(--text-2xl)/1.1 var(--font-sans); letter-spacing:-.035em; }
+    p { margin:0; color:var(--color-text-muted); font-size:var(--text-xs); line-height:1.5; }
+    .canvas-frame { width:100%; margin:0; aspect-ratio:1200/760; overflow:hidden; background:var(--color-midnight-900); border:0; border-radius:0; box-shadow:none; padding:0; }
     canvas { display:block; width:100%; height:100%; }
-    .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:15px; }
-    .actions button { height:38px; border-radius:10px; padding:0 13px; display:flex; align-items:center; gap:7px; border:1px solid rgba(255,255,255,.12); font:700 10px ui-monospace,monospace; cursor:pointer; }
+    .actions { display:flex; justify-content:flex-end; gap:var(--space-2); margin-top:var(--space-3); }
+    .actions button { height:38px; border-radius:var(--radius-md); padding:0 var(--space-3); display:flex; align-items:center; gap:var(--space-1); border:1px solid var(--color-border); font:700 var(--text-xs) var(--font-mono); cursor:pointer; }
     .actions mat-icon { font-size:16px; width:16px; height:16px; }
-    .secondary { background:rgba(255,255,255,.06); color:rgba(255,255,255,.72); }
-    .primary { background:#f59e0b; color:#251300; border-color:#f59e0b!important; }
-    @media(max-width:520px){ .share-modal{padding:16px;border-radius:18px}.heading{margin-bottom:12px}.actions button{flex:1;justify-content:center} }
+    .secondary { background:var(--color-surface-hover); color:var(--color-text-secondary); }
+    .primary { background:var(--color-math-orange); color:var(--color-text-inverse); border-color:var(--color-math-orange)!important; }
+    @media(max-width:520px){ .share-modal{padding:var(--space-4);border-radius:var(--radius-xl)}.heading{margin-bottom:var(--space-3)}.actions button{flex:1;justify-content:center} }
   `]
 })
 export class ShareExportModalComponent implements AfterViewInit {
@@ -123,23 +123,15 @@ export class ShareExportModalComponent implements AfterViewInit {
     const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
     const moon = celestial.moon;
 
-    // Solid DooMath-like dark foundation with a restrained 2pi amber accent.
-    ctx.fillStyle = '#111827';
+    // Full-bleed dark business card: no outer border, inset frame, or transparent padding.
+    ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#0f172a';
-    this.roundedRect(ctx, 24, 24, w - 48, h - 48, 28);
-    ctx.fill();
 
     const glow = ctx.createRadialGradient(1010, 80, 10, 1010, 80, 360);
-    glow.addColorStop(0, sun.altitudeDeg >= 0 ? 'rgba(245,158,11,.16)' : 'rgba(148,163,184,.11)');
-    glow.addColorStop(1, 'rgba(15,23,42,0)');
+    glow.addColorStop(0, sun.altitudeDeg >= 0 ? 'rgba(249,115,22,.16)' : 'rgba(148,163,184,.11)');
+    glow.addColorStop(1, 'rgba(13,17,23,0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(24, 24, w - 48, h - 48);
-
-    ctx.strokeStyle = 'rgba(245,158,11,.28)';
-    ctx.lineWidth = 2;
-    this.roundedRect(ctx, 24, 24, w - 48, h - 48, 28);
-    ctx.stroke();
+    ctx.fillRect(0, 0, w, h);
 
     // Location header with the real country flag.
     ctx.textAlign = 'left';
@@ -260,20 +252,13 @@ export class ShareExportModalComponent implements AfterViewInit {
     }
   }
 
-  canShare(): boolean {
-    return isPlatformBrowser(this.platformId) && typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-  }
-
-  async shareOrDownload(): Promise<void> {
-    if(!isPlatformBrowser(this.platformId)) return;
-    const canvas=this.canvasRef.nativeElement;
-    const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/png',1));
-    if(!blob) return;
-    const loc=this.locationService.selectedLocation();
-    const file=new File([blob],`2piclock-${loc.id}.png`,{type:'image/png'});
-    if(this.canShare() && typeof navigator.canShare === 'function' && navigator.canShare({files:[file]})){
-      try { await navigator.share({title:`2piClock · ${loc.name}`,text:`Live sky snapshot from 2piClock.com · ${loc.name}`,files:[file]}); return; } catch { /* user cancelled or browser declined */ }
-    }
-    const link=document.createElement('a');link.download=`2piclock-${loc.id}.png`;link.href=canvas.toDataURL('image/png');link.click();
+  downloadPng(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const canvas = this.canvasRef.nativeElement;
+    const loc = this.locationService.selectedLocation();
+    const link = document.createElement('a');
+    link.download = `2piclock-${loc.id}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   }
 }
