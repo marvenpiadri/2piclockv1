@@ -307,7 +307,7 @@
 @media(max-width:900px){.world-event-grid{grid-template-columns:1fr}.weather-stats-expanded{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:520px){.weather-stats-expanded{grid-template-columns:repeat(2,1fr)}}
 
-/* Nocturnal Sky Theatre & Tonight Ephemeris Visualizer */
+
 .tonight-page {
   max-width: 960px;
   margin: 0 auto;
