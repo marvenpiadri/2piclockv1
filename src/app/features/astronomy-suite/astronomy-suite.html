@@ -243,6 +243,100 @@
           </div>
         </section>
 
+        <section class="earth-moon-sun" aria-label="Earth Moon Sun relationship">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">EARTH · MOON · SUN</span>
+              <h3>Three-Body Relationship · {{ selectedDate() }} {{ selectedTime() }}</h3>
+              <p>Geocentric directions and lunar phase at the selected instant. The geometry is intentionally schematic, not to scale.</p>
+            </div>
+            <div class="relationship-readout">
+              <span>ELONGATION</span>
+              <strong>{{ earthMoonSunSeparation().toFixed(1) }}°</strong>
+            </div>
+          </div>
+          <div class="earth-moon-sun-layout">
+            <div class="earth-moon-sun-stage">
+              <div class="sky-ring"></div>
+              <div class="earth-core"><span>EARTH</span></div>
+              <div class="relationship-node sun-node"
+                [style.left.%]="earthSkyNodeX(solarResult().solarPos.rightAscensionDeg)"
+                [style.top.%]="earthSkyNodeY(solarResult().solarPos.declinationDeg)">
+                <i></i><span>SUN</span>
+              </div>
+              <div class="relationship-node moon-node"
+                [style.left.%]="earthSkyNodeX(moonResult().lunarPos.rightAscensionDeg)"
+                [style.top.%]="earthSkyNodeY(moonResult().lunarPos.declinationDeg)">
+                <i></i><span>MOON</span>
+              </div>
+              <div class="relationship-axis sun-axis"></div>
+              <div class="relationship-axis moon-axis"></div>
+            </div>
+            <div class="relationship-detail">
+              <div><span>MOON PHASE</span><strong>{{ moonResult().lunarPos.phaseName }}</strong></div>
+              <div><span>ILLUMINATION</span><strong>{{ (moonResult().lunarPos.illuminationFraction * 100).toFixed(1) }}%</strong></div>
+              <div><span>MOON DISTANCE</span><strong>{{ moonResult().lunarPos.distanceKm.toLocaleString() }} km</strong></div>
+              <div><span>SUN DISTANCE</span><strong>{{ solarResult().solarPos.distanceAU.toFixed(5) }} AU</strong></div>
+              <div><span>PHASE ANGLE</span><strong>{{ moonResult().lunarPos.phaseAngleDeg.toFixed(1) }}°</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="constellation-atlas" aria-label="Constellation atlas">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">CELESTIAL ATLAS</span>
+              <h3>Constellation Map · Equatorial Coordinates</h3>
+              <p>Real right ascension and declination for selected reference stars. This map is a chart, so the denser astronomical treatment stays here rather than in Living Sky.</p>
+            </div>
+            <div class="planet-selector constellation-selector">
+              @for (constellation of constellationCatalog; track constellation.id) {
+                <button type="button" [class.active]="selectedConstellation() === constellation.id" (click)="selectConstellation(constellation.id)">{{ constellation.name }}</button>
+              }
+            </div>
+          </div>
+          <div class="constellation-map-layout">
+            <div class="constellation-map">
+              <div class="map-grid map-grid-ra"></div>
+              <div class="map-grid map-grid-dec"></div>
+              @for (line of selectedConstellationData().lines; track line[0] + line[1]) {
+                @if (constellationStarByName(line[0]); as from) {
+                  @if (constellationStarByName(line[1]); as to) {
+                    <div class="constellation-line"
+                      [style.left.%]="constellationX(from.ra)"
+                      [style.top.%]="constellationY(from.dec)"
+                      [style.width.%]="Math.hypot(constellationX(to.ra) - constellationX(from.ra), constellationY(to.dec) - constellationY(from.dec))"
+                      [style.transform]="'rotate(' + (Math.atan2(constellationY(to.dec) - constellationY(from.dec), constellationX(to.ra) - constellationX(from.ra)) * 180 / Math.PI) + 'deg)'">
+                    </div>
+                  }
+                }
+              }
+              @for (star of selectedConstellationData().stars; track star.name) {
+                <div class="atlas-star"
+                  [style.left.%]="constellationX(star.ra)"
+                  [style.top.%]="constellationY(star.dec)"
+                  [style.width.px]="constellationStarRadius(star.mag)"
+                  [style.height.px]="constellationStarRadius(star.mag)"
+                  [title]="star.name">
+                  <span>{{ star.name }}</span>
+                </div>
+              }
+              <div class="atlas-axis-label atlas-ra-label">RIGHT ASCENSION →</div>
+              <div class="atlas-axis-label atlas-dec-label">DECLINATION ↑</div>
+            </div>
+            <div class="atlas-info">
+              <span class="detail-kicker">{{ selectedConstellationData().name }}</span>
+              <strong>{{ selectedConstellationData().stars.length }} reference stars</strong>
+              <p>Coordinates are plotted in an equatorial frame, independent of local horizon orientation.</p>
+              <dl>
+                @for (star of selectedConstellationData().stars; track star.name) {
+                  <div><dt>{{ star.name }}</dt><dd>{{ (star.ra / 15).toFixed(2) }}h · {{ star.dec.toFixed(1) }}° · mag {{ star.mag.toFixed(1) }}</dd></div>
+                }
+              </dl>
+            </div>
+          </div>
+        </section>
+
         <div class="observatory-actions">
           <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>
           <button type="button" (click)="setTab('daylight')"><mat-icon>wb_twilight</mat-icon> Daylight & Twilight</button>
