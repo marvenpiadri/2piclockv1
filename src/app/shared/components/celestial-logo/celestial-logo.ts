@@ -37,7 +37,9 @@ export class CelestialLogoComponent {
   readonly moonScale = computed(() => 0.98 + this.twilightIntensity() * 0.04);
   readonly moonLitPath = computed(() => this.createMoonLitPath());
   readonly moonTerminatorRotation = computed(() => this.phaseAngle());
-  // Use the calculated solar azimuth rather than a synthetic 24-hour rotation.\n  // This keeps the identity mark tied to the same real sky model as the clock/sky view.\n  readonly sunRotation = computed(() => this.celestial().sun.azimuthDeg);
+  // Use the calculated solar azimuth rather than a synthetic 24-hour rotation.
+  // This keeps the identity mark tied to the same real sky model as the clock/sky view.
+  readonly sunRotation = computed(() => this.celestial().sun.azimuthDeg);
   readonly phaseLabel = computed(() => {
     const phase = this.phaseName();
     return phase ? 'Moon · ' + phase + ' · ' + this.illuminationPercentage() + '% illuminated' : 'Moon';
