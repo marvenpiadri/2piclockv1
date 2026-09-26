@@ -347,11 +347,9 @@ export class SkyHomeComponent {
     this.route.paramMap.subscribe(params => {
       const slug = params.get('location');
       const experience = params.get('experience') as string | null;
-      if (slug) {
-        const found = this.allPresets.find(loc => loc.id === slug);
-        if (found) this.locationService.selectLocation(found);
-      }
-
+      // Location-scoped routes are synchronized by validLocationGuard before
+      // this component renders. Do not select again here or a route change
+      // would clear weather overrides and trigger a duplicate refresh.
       const routeExperience = experience && ['time', 'weather', 'astronomy', 'tonight', 'world'].includes(experience)
         ? experience as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
         : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
