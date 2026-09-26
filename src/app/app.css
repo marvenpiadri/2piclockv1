@@ -49,163 +49,174 @@
   min-width: 32px;
   min-height: 32px;
   aspect-ratio: 1 / 1;
-  border-radius: 50% !important;
+  border-radius: 50%;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-family: var(--font-mono, monospace);
-  font-size: 13px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
-  flex-shrink: 0;
-  overflow: hidden;
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  overflow: visible;
   user-select: none;
+  isolation: isolate;
+  transition:
+    transform 0.35s cubic-bezier(.22,.61,.36,1),
+    filter 0.6s ease;
 }
-
-/* ==========================================================================
-   Base Day (Sun) vs Night (Moon)
-   ========================================================================== */
-
-/* Day / Sun Mode: Radiant Amber & Warm Gold */
-.brand-badge.brand-badge-sun,
-.brand-badge:not(.brand-badge-moon) {
-  background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde047 25%, #f59e0b 65%, #d97706 100%);
-  color: #1c1917;
-  border: 1.5px solid rgba(254, 240, 138, 0.85);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5), 0 2px 8px rgba(217, 119, 6, 0.35);
-}
-
-/* Night / Moon Mode: Luminous Platinum, White & Lunar Silver */
-.brand-badge.brand-badge-moon {
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f1f5f9 35%, #cbd5e1 70%, #94a3b8 100%);
-  color: #0f172a;
-  border: 1.5px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 14px rgba(226, 232, 240, 0.55), 0 2px 8px rgba(148, 163, 184, 0.35);
-}
-
-/* ==========================================================================
-   Live Weather Reactions
-   ========================================================================== */
-
-/* Rain / Drizzle: Aquatic Blue-Glistening Sheen */
-.brand-badge.brand-badge-sun.weather-rain {
-  background: radial-gradient(circle at 35% 35%, #f0fdf4 0%, #7dd3fc 30%, #f59e0b 70%, #d97706 100%);
-  border-color: rgba(186, 230, 253, 0.9);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5), 0 2px 8px rgba(217, 119, 6, 0.35);
-}
-.brand-badge.brand-badge-moon.weather-rain {
-  background: radial-gradient(circle at 35% 35%, #f0f9ff 0%, #93c5fd 35%, #64748b 75%, #334155 100%);
-  border-color: rgba(147, 197, 253, 0.9);
-  box-shadow: 0 0 16px rgba(96, 165, 250, 0.55), 0 2px 8px rgba(30, 41, 59, 0.4);
-}
-
-/* Thunderstorm / Lightning: Atmospheric Storm Indigo & Violet Sheen */
-.brand-badge.brand-badge-sun.weather-storm {
-  background: radial-gradient(circle at 35% 35%, #fef08a 0%, #c084fc 35%, #7c3aed 70%, #4c1d95 100%);
-  color: #ffffff;
-  border-color: rgba(233, 213, 255, 0.9);
-  box-shadow: 0 0 18px rgba(168, 85, 247, 0.65), 0 2px 8px rgba(76, 29, 149, 0.5);
-  animation: badge-lightning-pulse 3s infinite ease-in-out;
-}
-.brand-badge.brand-badge-moon.weather-storm {
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #c084fc 30%, #581c87 75%, #1e1b4b 100%);
-  color: #ffffff;
-  border-color: rgba(233, 213, 255, 0.95);
-  box-shadow: 0 0 18px rgba(192, 132, 252, 0.7), 0 2px 8px rgba(30, 27, 75, 0.5);
-  animation: badge-lightning-pulse 3s infinite ease-in-out;
-}
-
-@keyframes badge-lightning-pulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.15) drop-shadow(0 0 4px rgba(233, 213, 255, 0.8)); }
-}
-
-/* Snow / Blizzard: Crystalline Frost & Diamond Ice */
-.brand-badge.brand-badge-sun.weather-snow {
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e0f2fe 30%, #fbbf24 65%, #d97706 100%);
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 16px rgba(224, 242, 254, 0.65), 0 2px 8px rgba(217, 119, 6, 0.35);
-}
-.brand-badge.brand-badge-moon.weather-snow {
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f1f5f9 35%, #bae6fd 70%, #64748b 100%);
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 18px rgba(186, 230, 253, 0.7), 0 2px 8px rgba(100, 116, 139, 0.35);
-}
-
-/* Fog / Mist / Haze: Soft Frosted Ethereal Diffusion */
-.brand-badge.brand-badge-sun.weather-fog {
-  background: radial-gradient(circle at 35% 35%, #fef3c7 0%, #fde68a 35%, #d97706 75%, #92400e 100%);
-  border-color: rgba(253, 230, 138, 0.75);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
-  filter: contrast(0.92);
-}
-.brand-badge.brand-badge-moon.weather-fog {
-  background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #e2e8f0 40%, #94a3b8 80%, #64748b 100%);
-  border-color: rgba(226, 232, 240, 0.8);
-  box-shadow: 0 0 14px rgba(203, 213, 225, 0.45);
-  filter: contrast(0.92);
-}
-
-/* Cloudy / Overcast: Diffuse Silver Cloud Layer */
-.brand-badge.brand-badge-sun.weather-cloudy {
-  background: radial-gradient(circle at 35% 35%, #fef9c3 0%, #fde047 30%, #ca8a04 65%, #854d0e 100%);
-  border-color: rgba(254, 240, 138, 0.8);
-  box-shadow: 0 0 12px rgba(234, 179, 8, 0.4);
-}
-.brand-badge.brand-badge-moon.weather-cloudy {
-  background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #e2e8f0 35%, #94a3b8 70%, #475569 100%);
-  border-color: rgba(203, 213, 225, 0.85);
-  box-shadow: 0 0 12px rgba(148, 163, 184, 0.45);
-}
-
-/* ==========================================================================
-   Inner Core Symbol & Halos
-   ========================================================================== */
 
 .brand-badge .brand-symbol {
   position: relative;
-  z-index: 2;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  z-index: 4;
+  color: #24170a;
+  font-family: "Dekatron", var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  transform: translateY(-0.5px);
+  text-shadow: 0 1px 1px rgba(255,255,255,.35);
+  transition: color .7s ease, text-shadow .7s ease;
 }
 
+/* The 32px mark stays the same size; only its celestial state changes. */
 .brand-badge .celestial-halo {
   position: absolute;
-  inset: -2px;
+  inset: 3px;
+  z-index: 1;
   border-radius: 50%;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
+  transition:
+    background .9s cubic-bezier(.22,.61,.36,1),
+    box-shadow .9s ease,
+    opacity .9s ease,
+    transform 1.2s cubic-bezier(.22,.61,.36,1);
 }
 
+/* Day: compact real sun, with a restrained amber corona. */
 .brand-badge-sun .celestial-halo {
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(245, 158, 11, 0) 70%);
+  background: radial-gradient(circle at 34% 30%,
+    #fff8cf 0%,
+    #ffe27a 24%,
+    #f8b52b 62%,
+    #d98216 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,218,111,.72),
+    0 0 10px rgba(245,158,11,.48);
 }
 
+.brand-badge-sun .celestial-halo::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background:
+    linear-gradient(0deg, transparent 45%, rgba(251,191,36,.7) 46%, rgba(251,191,36,.7) 54%, transparent 55%),
+    linear-gradient(90deg, transparent 45%, rgba(251,191,36,.7) 46%, rgba(251,191,36,.7) 54%, transparent 55%);
+  opacity: .72;
+  transform: rotate(45deg);
+  transition: transform 1.2s linear, opacity .7s ease;
+}
+
+/* Night: the same 32px identity becomes a small lunar disc/crescent. */
 .brand-badge-moon .celestial-halo {
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(203, 213, 225, 0) 70%);
+  background: radial-gradient(circle at 34% 30%,
+    #ffffff 0%,
+    #edf2f7 34%,
+    #cbd5df 72%,
+    #9aa8b7 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.72),
+    0 0 10px rgba(203,213,225,.48);
 }
 
+.brand-badge-moon .celestial-halo::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(30,41,59,.82);
+  transform: translate(4px,-1px);
+  transition: transform 1.2s cubic-bezier(.22,.61,.36,1), opacity .8s ease;
+  mix-blend-mode: multiply;
+}
+
+.brand-badge-moon .brand-symbol {
+  color: #172033;
+  text-shadow: 0 1px 1px rgba(255,255,255,.6);
+}
+
+/* Weather reacts through the atmosphere instead of replacing the sun/moon identity. */
 .brand-badge .weather-reactive-sheen {
   position: absolute;
-  inset: 0;
+  inset: -1px;
+  z-index: 3;
   border-radius: 50%;
   pointer-events: none;
-  opacity: 0.3;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 60%);
+  opacity: .42;
+  background: linear-gradient(135deg, rgba(255,255,255,.42), transparent 58%);
+  transition: background .8s ease, opacity .8s ease, box-shadow .8s ease;
+}
+
+.brand-badge-sun.weather-rain .weather-reactive-sheen,
+.brand-badge-moon.weather-rain .weather-reactive-sheen {
+  background: linear-gradient(145deg, rgba(125,211,252,.5), transparent 62%);
+  box-shadow: inset 0 -2px 4px rgba(56,189,248,.2);
+}
+
+.brand-badge-sun.weather-cloudy .weather-reactive-sheen {
+  background: linear-gradient(145deg, rgba(203,213,225,.28), rgba(120,113,108,.08) 65%, transparent);
+}
+
+.brand-badge-moon.weather-cloudy .weather-reactive-sheen {
+  background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(71,85,105,.18) 68%, transparent);
+}
+
+.brand-badge-sun.weather-fog .weather-reactive-sheen,
+.brand-badge-moon.weather-fog .weather-reactive-sheen {
+  opacity: .62;
+  background: radial-gradient(circle, rgba(255,255,255,.3), rgba(148,163,184,.08) 58%, transparent 76%);
+}
+
+.brand-badge-sun.weather-snow .weather-reactive-sheen,
+.brand-badge-moon.weather-snow .weather-reactive-sheen {
+  background:
+    radial-gradient(circle at 24% 28%, rgba(255,255,255,.75) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 70% 64%, rgba(255,255,255,.55) 0 1px, transparent 1.5px),
+    linear-gradient(135deg, rgba(224,242,254,.28), transparent 65%);
+}
+
+.brand-badge-sun.weather-storm .celestial-halo,
+.brand-badge-moon.weather-storm .celestial-halo {
+  box-shadow:
+    0 0 0 1px rgba(196,181,253,.55),
+    0 0 12px rgba(124,58,237,.48);
+}
+
+.brand-badge-sun.weather-storm .weather-reactive-sheen,
+.brand-badge-moon.weather-storm .weather-reactive-sheen {
+  background: linear-gradient(135deg, rgba(196,181,253,.3), transparent 55%);
+  animation: badge-storm-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes badge-storm-breathe {
+  0%, 100% { opacity: .3; }
+  50% { opacity: .58; }
 }
 
 .brand-link:hover .brand-badge {
-  transform: scale(1.08) rotate(6deg);
+  transform: scale(1.06);
 }
 
-.brand-link:hover .brand-badge-sun {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.75), 0 3px 10px rgba(217, 119, 6, 0.45);
+.brand-link:hover .brand-badge-sun .celestial-halo::before {
+  transform: rotate(90deg);
 }
 
-.brand-link:hover .brand-badge-moon {
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.85), 0 3px 10px rgba(148, 163, 184, 0.45);
+@media (prefers-reduced-motion: reduce) {
+  .brand-badge,
+  .brand-badge .celestial-halo,
+  .brand-badge .celestial-halo::before,
+  .brand-badge .weather-reactive-sheen {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 .brand-text-col {
