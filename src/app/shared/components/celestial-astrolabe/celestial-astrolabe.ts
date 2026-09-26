@@ -112,7 +112,7 @@ import { TimeControlService } from '../../../core/services/time-control.service'
       .watch-svg { filter:none; }
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CelestialAstrolabeComponent {
   private celestialService = inject(CelestialService);
