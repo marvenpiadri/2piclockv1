@@ -100,15 +100,15 @@ V2.5 core implementation is now complete. The Time Machine supports arbitrary da
 ## V2.6 — Astronomy
 Goal: give advanced astronomical exploration its own dedicated experience instead of making the Living Sky carry too much information.
 
-- [ ] Interactive Solar System view
-- [ ] Planetary orbits and positions
-- [ ] Earth/Moon/Sun relationship view
-- [ ] Celestial coordinate exploration
-- [ ] Detailed constellation map
+- [x] Interactive Solar System view
+- [x] Planetary orbits and positions
+- [x] Earth/Moon/Sun relationship view
+- [x] Celestial coordinate exploration
+- [x] Detailed constellation map
 - [ ] Deep-sky object exploration
-- [ ] Planet rise/set and observing information
-- [ ] Celestial events and alignments
-- [ ] Historical/future astronomical exploration
+- [x] Planet rise/set and observing information
+- [x] Celestial events and alignments
+- [x] Historical/future astronomical exploration
 - [ ] Optional Milky Way / galactic visualization here, where a denser astronomical view is appropriate
 
 ## V2.7 — Platform
