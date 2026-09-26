@@ -49,6 +49,8 @@ export interface SolarEvents {
 export interface LunarPosition {
   altitudeDeg: number;       // Elevation angle above horizon (-90 to +90)
   azimuthDeg: number;        // Compass bearing (0 to 360)
+  declinationDeg: number;    // Geocentric lunar declination
+  rightAscensionDeg: number; // Geocentric lunar right ascension
   phaseName: MoonPhaseName;
   illuminationFraction: number; // 0.0 to 1.0 (e.g. 0.5 for Quarter, 1.0 for Full)
   phaseAngleDeg: number;     // 0 to 180
