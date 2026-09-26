@@ -7,6 +7,14 @@ import { PrecisionAstronomyService, SolarCrossCheck, PlanetaryPosition } from '.
 import { getCelestialState, get24HourSolarCurve } from '../astronomy/astronomy-engine';
 import { CelestialState } from '../models/celestial.model';
 import { AtmosphericState, Season } from '../models/weather.model';
+interface VisibleConstellation {
+  name: string;
+  altitudeDeg: number;
+  azimuthDeg: number;
+  season: string;
+}
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -276,6 +284,55 @@ export class CelestialService {
     );
     return this.cachedPlanetaryPositions;
   });
+
+  /**
+   * Returns a compact observing list based on representative constellation
+   * coordinates. This is intentionally a guide for Tonight, not a dense chart.
+   */
+  getVisibleConstellations(
+    date: Date,
+    latitude: number,
+    longitude: number,
+    minAltitudeDeg = 8
+  ): VisibleConstellation[] {
+    const observer = new Astronomy.Observer(latitude, longitude, 0);
+    const catalog: Array<{ name: string; ra: number; dec: number; season: string }> = [
+      { name: 'Orion', ra: 83.8, dec: 0.0, season: 'Winter' },
+      { name: 'Taurus', ra: 68.0, dec: 15.0, season: 'Winter' },
+      { name: 'Gemini', ra: 102.5, dec: 22.0, season: 'Winter' },
+      { name: 'Leo', ra: 168.0, dec: 15.0, season: 'Spring' },
+      { name: 'Virgo', ra: 190.0, dec: -2.0, season: 'Spring' },
+      { name: 'Scorpius', ra: 250.0, dec: -30.0, season: 'Summer' },
+      { name: 'Sagittarius', ra: 280.0, dec: -25.0, season: 'Summer' },
+      { name: 'Cygnus', ra: 305.0, dec: 40.0, season: 'Summer' },
+      { name: 'Lyra', ra: 280.0, dec: 40.0, season: 'Summer' },
+      { name: 'Aquila', ra: 296.0, dec: 5.0, season: 'Summer' },
+      { name: 'Pegasus', ra: 350.0, dec: 20.0, season: 'Autumn' },
+      { name: 'Andromeda', ra: 10.0, dec: 35.0, season: 'Autumn' },
+      { name: 'Cassiopeia', ra: 10.0, dec: 60.0, season: 'Autumn' },
+      { name: 'Ursa Major', ra: 165.0, dec: 55.0, season: 'Spring' },
+      { name: 'Canis Major', ra: 101.0, dec: -23.0, season: 'Winter' }
+    ];
+
+    return catalog
+      .map(item => {
+        const horizontal = Astronomy.Horizon(
+          date,
+          observer,
+          item.ra / 15,
+          item.dec,
+          'normal'
+        );
+        return {
+          name: item.name,
+          altitudeDeg: horizontal.altitude,
+          azimuthDeg: horizontal.azimuth,
+          season: item.season
+        };
+      })
+      .filter(item => item.altitudeDeg >= minAltitudeDeg)
+      .sort((a, b) => b.altitudeDeg - a.altitudeDeg);
+  }
 
   getPlanetRiseSet(
     body: PlanetaryPosition['body'],
