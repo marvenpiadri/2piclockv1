@@ -642,6 +642,19 @@ export class SkyHomeComponent {
     }
   }
 
+  readonly skyAheadForecast = computed(() => {
+    const now = this.activeDate().getTime();
+    return this.hourlyForecasts()
+      .filter(item => item.timeMs > now + 30 * 60 * 1000)
+      .slice(0, 6);
+  });
+
+  jumpToForecast(timeMs: number): void {
+    const forecastDate = new Date(timeMs);
+    if (Number.isNaN(forecastDate.getTime())) return;
+    this.timeControlService.setSpecificInstant(forecastDate);
+  }
+
   onScrubberInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
