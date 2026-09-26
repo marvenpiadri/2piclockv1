@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterLink } from '@angular/router';
+import * as Astronomy from 'astronomy-engine';
 
 @Component({
   selector: 'app-sky-home',
@@ -239,7 +240,14 @@ export class SkyHomeComponent {
   readonly moonObserving = computed(() => {
     const c = this.celestial();
     const moon = c.moon;
-    const ev = c.lunarEvents;
+    const location = this.selectedLocation();
+    const moonEvents = this.celestialService.getPlanetRiseSet(
+      Astronomy.Body.Moon,
+      this.activeDate(),
+      location.latitude,
+      location.longitude,
+      location.elevationMeters ?? 0
+    );
     const sunAlt = c.sun.altitudeDeg;
     const moonAbove = moon.altitudeDeg > 0;
     const moonInterference = moonAbove ? Math.round(moon.illuminationFraction * 100) : 0;
@@ -254,6 +262,31 @@ export class SkyHomeComponent {
       aboveHorizon: moonAbove,
       interferencePct: sunAlt < -12 ? moonInterference : Math.round(moonInterference * 0.35)
     };
+  });
+
+  readonly visibleConstellations = computed(() =>
+    this.celestialService.getVisibleConstellations(
+      this.activeDate(),
+      this.selectedLocation().latitude,
+      this.selectedLocation().longitude,
+      8
+    )
+  );
+
+  readonly tonightTimeline = computed(() => {
+    const c = this.celestial();
+    const moon = this.moonObserving();
+    const events = [
+      { label: 'Sunset', time: c.solarEvents.sunset, detail: 'Sun reaches the horizon' },
+      { label: 'Civil dusk', time: c.solarEvents.civilDusk, detail: 'Bright stars begin to emerge' },
+      { label: 'Moonrise', time: moon.rise, detail: moon.phaseName + ' · ' + moon.illuminationPct + '% illuminated' },
+      { label: 'Astronomical dusk', time: c.solarEvents.astronomicalDusk, detail: 'Astronomical darkness begins' },
+      { label: 'Astronomical dawn', time: c.solarEvents.astronomicalDawn, detail: 'Astronomical darkness ends' },
+      { label: 'Moonset', time: moon.set, detail: 'Moon drops below the horizon' }
+    ];
+    return events
+      .filter(event => event.time instanceof Date && Number.isFinite(event.time.getTime()))
+      .sort((a, b) => a.time!.getTime() - b.time!.getTime());
   });
 
   readonly tonightTwilightSequence = computed(() => {
