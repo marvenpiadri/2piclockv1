@@ -1,3 +1,4 @@
+.sky-reactive-background{position:fixed!important;inset:0;z-index:0;opacity:.72;pointer-events:none}
 :host{display:block;width:100%;min-height:calc(100vh - 64px);color:#f5f5f5;background:transparent}
 .sky-report{position:relative;min-height:calc(100vh - 64px);overflow:hidden;background:transparent;color:#f5f5f5;transition:color .45s ease}
 .sky-header,.sky-navigation,.sky-page{position:relative;z-index:2}

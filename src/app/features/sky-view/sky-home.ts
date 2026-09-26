@@ -32,6 +32,7 @@ import { WorldEventsService } from '../../core/services/world-events.service';
     RouterLink,
     CountryFlagComponent,
     AnalogClockComponent,
+    ReactiveSkyComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
