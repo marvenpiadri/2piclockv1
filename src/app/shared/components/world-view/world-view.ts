@@ -535,7 +535,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
         const showCel = this.showCelestialGrid();
         const showTrack = this.showSolarTrack();
         const showWeather = this.showWorldWeather();
-        const showWeather = this.showWorldWeather();
 
         if (this.map && this.isMapLoaded()) {
           this.updateTerminatorLayers(date, showNight, showTwilight);
@@ -673,6 +672,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
         this.initTimezoneSource();
         this.initCelestialGridSource();
         this.initSolarTrackSource();
+        this.initWorldWeatherSource();
         this.updateTerminatorLayers(this.activeDate(), this.showNightTerminator(), this.showTwilightBands());
         this.updateTimezoneLayer(this.showTimezoneGrid());
         this.updateCelestialGridLayer(this.showCelestialGrid());
