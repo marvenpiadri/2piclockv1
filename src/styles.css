@@ -17,8 +17,9 @@
 
 :root {
   /* Color Palette */
-  --2pi-amber: #f59e0b;
-  --2pi-amber-bright: #fbbf24;
+  /* Shared with DooMath: exact dark structural palette + math orange. */
+  --2pi-amber: #f97316;
+  --2pi-amber-bright: #fb923c;
   --2pi-amber-soft: rgba(245, 158, 11, 0.14);
   --2pi-amber-glow: rgba(245, 158, 11, 0.25);
   
@@ -30,12 +31,12 @@
   --2pi-indigo: #6366f1;
   
   /* Obsidian Space Neutrals */
-  --2pi-night: #05070c;
-  --2pi-canvas: #07090e;
-  --2pi-surface: rgba(13, 17, 24, 0.78);
-  --2pi-surface-solid: #0d0d0f;
-  --2pi-surface-elevated: rgba(18, 18, 20, 0.88);
-  --2pi-surface-input: rgba(10, 10, 11, 0.82);
+  --2pi-night: #0d1117;
+  --2pi-canvas: #0d1117;
+  --2pi-surface: rgba(13, 17, 23, 0.88);
+  --2pi-surface-solid: #161b22;
+  --2pi-surface-elevated: rgba(22, 27, 34, 0.94);
+  --2pi-surface-input: rgba(13, 17, 23, 0.94);
   
   /* Borders & Dividers */
   --2pi-border: rgba(255, 255, 255, 0.08);
@@ -280,11 +281,11 @@ a:focus-visible {
 
 /* Bright-sky contrast guard: glass stays atmospheric without becoming translucent text-on-sky. */
 .app-layout.sky-background-active .glass-panel {
-  background: rgba(7, 10, 17, 0.86);
+  background: rgba(13, 17, 23, 0.92);
   border-color: rgba(255,255,255,.14);
 }
 .app-layout.sky-background-active .glass-card {
-  background: rgba(9, 12, 19, 0.9);
+  background: rgba(22, 27, 34, 0.94);
   border-color: rgba(255,255,255,.12);
 }
 .app-layout.sky-background-active h1,
