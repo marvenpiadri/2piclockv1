@@ -77,7 +77,7 @@ export class TimeControlService {
 
         if (currentSec !== this.lastEmittedLiveSecond) {
           this.lastEmittedLiveSecond = currentSec;
-          this.liveEpochMs.set(epoch);
+          this.liveEpochMs.set(currentSec * 1000);
         }
 
         // Re-anchor every 30 seconds to absorb system clock corrections
@@ -128,12 +128,13 @@ export class TimeControlService {
     const now = Date.now();
     const perf = this.isBrowser ? performance.now() : 0;
 
-    this.liveAnchorEpochMs = now;
+    const exactSecond = Math.floor(now / 1000) * 1000;
+    this.liveAnchorEpochMs = exactSecond;
     this.liveAnchorPerformanceMs = perf;
     this.lastClockResyncPerformanceMs = perf;
-    this.lastEmittedLiveSecond = Math.floor(now / 1000);
-    this.liveEpochMs.set(now);
-    this.simulatedEpochMs.set(now);
+    this.lastEmittedLiveSecond = Math.floor(exactSecond / 1000);
+    this.liveEpochMs.set(exactSecond);
+    this.simulatedEpochMs.set(exactSecond);
 
     const date = new Date(now);
     this.baseDate.set(date);
