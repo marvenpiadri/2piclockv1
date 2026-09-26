@@ -40,7 +40,7 @@ Goal: make weather visibly change the atmosphere rather than only the informatio
 - [x] Rain/snow density tied to weather intensity
 - [x] Storm-light behavior
 - [x] Weather-driven horizon and twilight scattering
-- [ ] Forecast-to-sky transition preview
+- [x] Forecast-to-sky transition preview
 - [x] Weather failure/loading states that never break the sky
 
 **Visual rule:** weather should modify the atmosphere, not cover it with effects.
@@ -50,7 +50,7 @@ Goal: make weather visibly change the atmosphere rather than only the informatio
 ## V2.2 — Tonight
 Goal: turn Tonight into a practical nightly observing experience without turning the Living Sky into an astronomy interface.
 
-- [ ] Visible planets with rise/set information
+- [x] Visible planets with rise/set information
 - [ ] Visible constellation list
 - [ ] Moon observing conditions
 - [ ] Astronomical darkness timeline
