@@ -739,6 +739,28 @@ export class SkyHomeComponent {
     this.timeControlService.setSpecificInstant(forecastDate);
   }
 
+  readonly activeLocalDateInput = computed(() => {
+    const p = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+    return p.year + '-' + String(p.month).padStart(2, '0') + '-' + String(p.day).padStart(2, '0');
+  });
+
+  setTimeMachineDate(value: string): void {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return;
+    this.timeControlService.setSpecificInstant(
+      this.getZonedDateTime(year, month, day, 12, 0, 0, this.selectedLocation().timezone)
+    );
+  }
+
+  shiftTimeMachineDate(days: number): void {
+    if (!Number.isFinite(days)) return;
+    const current = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+    const carrier = new Date(Date.UTC(current.year, current.month - 1, current.day + Math.trunc(days)));
+    this.setTimeMachineDate(carrier.toISOString().slice(0, 10));
+  }
+
+
   onScrubberInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
