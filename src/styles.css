@@ -280,11 +280,11 @@ a:focus-visible {
 
 /* Bright-sky contrast guard: glass stays atmospheric without becoming translucent text-on-sky. */
 .app-layout.sky-background-active .glass-panel {
-  background: rgba(9, 11, 15, 0.68);
+  background: rgba(7, 10, 17, 0.86);
   border-color: rgba(255,255,255,.14);
 }
 .app-layout.sky-background-active .glass-card {
-  background: rgba(12, 14, 18, 0.72);
+  background: rgba(9, 12, 19, 0.9);
   border-color: rgba(255,255,255,.12);
 }
 .app-layout.sky-background-active h1,
