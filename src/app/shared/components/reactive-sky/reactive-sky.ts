@@ -603,7 +603,17 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 5. Solar Eclipse Darkening
+    // 5. Storm-light response: deep convective cloud cover suppresses
+    // direct sky brightness while retaining the underlying solar/twilight hue.
+    if (this.interp.stormActivity > 0.05) {
+      const stormDarkness = Math.min(0.34, this.interp.stormActivity * 0.34);
+      const stormTarget = sunAlt > -6 ? [28, 38, 54] : [6, 10, 20];
+      zRGB = lerpColor(zRGB, stormTarget, stormDarkness);
+      mRGB = lerpColor(mRGB, stormTarget, stormDarkness * 0.82);
+      hRGB = lerpColor(hRGB, [48, 55, 68], stormDarkness * 0.68);
+    }
+
+    // 6. Solar Eclipse Darkening
     if (this.interp.eclipseObscuration > 0.1) {
       const eclipseDarkness = this.interp.eclipseObscuration;
       const twilightDark = [8, 12, 28];
