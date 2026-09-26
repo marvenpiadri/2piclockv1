@@ -1385,3 +1385,32 @@
   .time-machine-date { gap: 5px; }
   .time-machine-today { display: none; }
 }
+
+
+.tonight-events {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 8px;
+}
+.tonight-events article {
+  display: grid;
+  gap: 4px;
+  padding: 11px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.055);
+}
+.tonight-events article span {
+  font-size: 8px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(249,115,22,.72);
+}
+.tonight-events article strong { font-size: 12px; color: rgba(255,255,255,.78); }
+.tonight-events article small { font-size: 9px; color: rgba(255,255,255,.38); }
+@media (max-width: 820px) {
+  .tonight-events { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 520px) {
+  .tonight-events { grid-template-columns: 1fr; }
+}
