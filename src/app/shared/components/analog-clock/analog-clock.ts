@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
+import { CelestialService } from '../../../core/services/celestial.service';
 
 @Component({
   selector: 'app-analog-clock',
@@ -69,6 +70,7 @@ import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@an
   `]
 })
 export class AnalogClockComponent {
+  private readonly celestialService = inject(CelestialService);
   private readonly timezoneValue = signal('UTC');
   private readonly activeDateValue = signal<Date>(new Date());
 
@@ -153,6 +155,12 @@ export class AnalogClockComponent {
     return { x: 100 + Math.sin(angle) * radius, y: 100 - Math.cos(angle) * radius };
   }
 
-  readonly sunMarker = computed(() => this.marker(0, 0, 78));
-  readonly moonMarker = computed(() => this.marker(180, 0, 68));
+  readonly sunMarker = computed(() => {
+    const s=this.celestialService.celestialState().sun;
+    return this.marker(s.azimuthDeg,s.altitudeDeg,78);
+  });
+  readonly moonMarker = computed(() => {
+    const m=this.celestialService.celestialState().moon;
+    return this.marker(m.azimuthDeg,m.altitudeDeg,68);
+  });
 }
