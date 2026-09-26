@@ -1189,7 +1189,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       const ry = atmos.cloudType === 'cirrus' ? cloud.radiusY * 0.5 : cloud.radiusY;
 
       const grad = ctx.createRadialGradient(cx, cy, ry * 0.2, cx, cy, rx);
-      const alpha = cloud.opacity * (0.4 + cloudCover * 0.6);
+      // Humid air softens and slightly thickens the visible cloud field without turning it opaque.
+      const humiditySoftness = 0.82 + Math.min(1, atmos.humidity) * 0.28;
+      const alpha = cloud.opacity * (0.4 + cloudCover * 0.6) * humiditySoftness;
 
       grad.addColorStop(0, `rgba(${cloudRGB.join(',')}, ${alpha.toFixed(3)})`);
       grad.addColorStop(0.6, `rgba(${cloudRGB.join(',')}, ${(alpha * 0.5).toFixed(3)})`);
@@ -1298,9 +1300,16 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const isDrizzle = precipType === 'drizzle';
     const isSleet = precipType === 'sleet';
 
-    const particleCount = isBlizzard
+    const intensity = Math.max(0, Math.min(1, this.interp.precipIntensity));
+    const baseParticleCount = isBlizzard
       ? 260
       : (precipType === 'downpour' ? 240 : (isDrizzle ? 180 : 120));
+    // Particle density follows measured precipitation intensity rather than
+    // making light rain look as dense as a downpour.
+    const particleCount = Math.max(
+      precipType === 'drizzle' || precipType === 'flurries' ? 8 : 12,
+      Math.floor(baseParticleCount * (0.22 + intensity * 0.78))
+    );
 
     for (let i = 0; i < particleCount; i++) {
       const p = this.precipParticles[i];
