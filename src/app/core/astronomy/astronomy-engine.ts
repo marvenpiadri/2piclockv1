@@ -219,6 +219,7 @@ export function calculateSolarEvents(
   }
 
   let startOfDay: Date;
+  let utcMidnightForLocalDate: Date;
   if (timeZone) {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone,
@@ -227,20 +228,27 @@ export function calculateSolarEvents(
       day: '2-digit'
     }).formatToParts(date);
     const value = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
-    // Solar events belong to the selected location's civil day. Construct
-    // actual local midnight instead of truncating the UTC date, which can
-    // shift the event window by the location's timezone offset.
+    const localYear = value('year');
+    const localMonth = value('month');
+    const localDay = value('day');
+
+    // Keep the civil-day identity in the selected timezone, but perform the
+    // event math from UTC midnight for that same civil date. The solar-noon
+    // formula produces minutes from UTC midnight; adding them to local
+    // midnight would incorrectly introduce the timezone offset a second time.
     startOfDay = zonedDateTimeToInstant(
-      value('year'),
-      value('month'),
-      value('day'),
+      localYear,
+      localMonth,
+      localDay,
       0,
       0,
       0,
       timeZone
     );
+    utcMidnightForLocalDate = new Date(Date.UTC(localYear, localMonth - 1, localDay, 0, 0, 0));
   } else {
     startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+    utcMidnightForLocalDate = startOfDay;
   }
   const jd0 = getJulianDate(startOfDay);
   const t0 = getJulianCenturies(jd0);
@@ -259,7 +267,7 @@ export function calculateSolarEvents(
 
   // Solar noon in UTC minutes from midnight
   const solarNoonMinutes = 720 - 4 * lng - eTimeMin;
-  const noonDate = new Date(startOfDay.getTime() + solarNoonMinutes * 60000);
+  const noonDate = new Date(utcMidnightForLocalDate.getTime() + solarNoonMinutes * 60000);
 
   // Sun declination at noon
   const solarPosAtNoon = calculateSolarPosition(noonDate, lat, lng);
@@ -286,8 +294,8 @@ export function calculateSolarEvents(
     const setMinutes = solarNoonMinutes + deltaMinutes;
 
     return {
-      rise: new Date(startOfDay.getTime() + riseMinutes * 60000),
-      set: new Date(startOfDay.getTime() + setMinutes * 60000)
+      rise: new Date(utcMidnightForLocalDate.getTime() + riseMinutes * 60000),
+      set: new Date(utcMidnightForLocalDate.getTime() + setMinutes * 60000)
     };
   };
 
