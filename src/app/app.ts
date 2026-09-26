@@ -202,16 +202,40 @@ export class App {
           tag: 'Product'
         },
         {
-          label: 'Time & Date Differences',
-          path: '/time',
-          desc: 'Precise time difference solver, calendar date arithmetic, and business days.',
+          label: 'Time Difference',
+          path: '/time/difference',
+          desc: 'Compare the local time offset between two cities and time zones.',
           icon: 'compare_arrows'
         },
         {
-          label: 'Countdowns & Unix Epoch',
-          path: '/time',
-          desc: 'Live high-precision target event countdowns, count-ups, and Unix timestamp engine.',
+          label: 'Duration Calculator',
+          path: '/time/duration',
+          desc: 'Measure the exact elapsed time between two instants.',
+          icon: 'timelapse'
+        },
+        {
+          label: 'Date Difference',
+          path: '/time/date-difference',
+          desc: 'Calculate calendar days, weeks and business-day differences.',
+          icon: 'date_range'
+        },
+        {
+          label: 'Add / Subtract Time',
+          path: '/time/add-subtract',
+          desc: 'Move an exact date and time forward or backward by any interval.',
+          icon: 'add_circle_outline'
+        },
+        {
+          label: 'Countdown',
+          path: '/time/countdown',
+          desc: 'Create a live countdown or count-up for an event.',
           icon: 'hourglass_bottom'
+        },
+        {
+          label: 'Unix Timestamp',
+          path: '/time/unix-timestamp',
+          desc: 'Convert Unix seconds and milliseconds to readable dates and back.',
+          icon: 'terminal'
         }
       ]
     },
@@ -347,6 +371,13 @@ export class App {
       icon: 'air',
       items: [
         {
+          label: 'Weather',
+          path: '/weather',
+          desc: 'Current conditions, hourly outlook and local weather context.',
+          icon: 'cloud',
+          tag: 'Live'
+        },
+        {
           label: 'Real-Time Severe & Astronomical Alerts',
           path: '/alerts',
           desc: 'Live severe weather warnings, geomagnetic storms, eclipses, and visibility alerts.',
@@ -356,8 +387,14 @@ export class App {
         {
           label: 'Atmosphere & Storm Severity',
           path: '/atmosphere',
-          desc: 'Weather Aggressiveness Index, winter frost, barometric pressure, and visibility.',
+          desc: 'Weather severity, visibility, pressure and atmospheric conditions.',
           icon: 'thunderstorm'
+        },
+        {
+          label: 'Astronomical Events',
+          path: '/events',
+          desc: 'A location-aware calendar of celestial and world-time events.',
+          icon: 'event'
         },
       ]
     }
