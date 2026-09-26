@@ -28,6 +28,13 @@ export class CelestialLogoComponent {
     return (altitude + 6) / 12;
   });
   readonly moonOpacity = computed(() => 1 - this.celestialOpacity());
+  readonly twilightIntensity = computed(() => {
+    const altitude = this.sunAltitude();
+    if (altitude <= -6 || altitude >= 6) return 0;
+    return 1 - Math.abs(altitude) / 6;
+  });
+  readonly sunScale = computed(() => 0.98 + this.twilightIntensity() * 0.04);
+  readonly moonScale = computed(() => 0.98 + this.twilightIntensity() * 0.04);
   readonly moonLitPath = computed(() => this.createMoonLitPath());
   readonly moonTerminatorRotation = computed(() => this.phaseAngle());
   // Use the calculated solar azimuth rather than a synthetic 24-hour rotation.\n  // This keeps the identity mark tied to the same real sky model as the clock/sky view.\n  readonly sunRotation = computed(() => this.celestial().sun.azimuthDeg);
