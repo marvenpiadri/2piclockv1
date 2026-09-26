@@ -56,17 +56,17 @@ import { CelestialService } from '../../../core/services/celestial.service';
       margin: 0 auto;
     }
     .analog-svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    .face { fill: rgba(255,255,255,.045); stroke: rgba(255,255,255,.28); stroke-width: 1.2; }
-    .tick { stroke: rgba(255,255,255,.34); stroke-width: 1; stroke-linecap: round; }
-    .tick.major { stroke: rgba(245,158,11,.82); stroke-width: 2; }
-    .number { fill: rgba(255,255,255,.82); font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .hour-hand { stroke: rgba(255,255,255,.96); stroke-width: 5; stroke-linecap: round; }
-    .minute-hand { stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; }
-    .second-hand { stroke: rgba(255,255,255,.72); stroke-width: 1.2; stroke-linecap: round; }
-    .center-pin { fill: #f59e0b; }
-    .center-core { fill: #fff8dc; }
-    .sun-marker { fill: #f59e0b; opacity: .9; }
-    .moon-marker { fill: #f8fafc; stroke: #ffffff; stroke-width: .7; }
+    .face { fill: var(--2pi-surface-elevated); stroke: var(--2pi-border-strong); stroke-width: 1.2; }
+    .tick { stroke: var(--color-text-muted); stroke-width: 1; stroke-linecap: round; }
+    .tick.major { stroke: var(--color-math-orange); stroke-width: 2; }
+    .number { fill: var(--color-text-main); font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .hour-hand { stroke: var(--color-text-main); stroke-width: 5; stroke-linecap: round; }
+    .minute-hand { stroke: var(--color-math-orange); stroke-width: 3; stroke-linecap: round; }
+    .second-hand { stroke: var(--color-text-secondary); stroke-width: 1.2; stroke-linecap: round; }
+    .center-pin { fill: var(--color-math-orange); }
+    .center-core { fill: var(--color-math-orange-light); }
+    .sun-marker { fill: var(--color-math-orange); opacity: .9; }
+    .moon-marker { fill: var(--color-text-main); stroke: var(--color-text-main); stroke-width: .7; }
   `]
 })
 export class AnalogClockComponent {
