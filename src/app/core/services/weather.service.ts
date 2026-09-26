@@ -325,11 +325,16 @@ export class WeatherService {
             if (data.hourly && Array.isArray(data.hourly.time)) {
               const times: string[] = data.hourly.time;
               const hTemps = data.hourly.temperature_2m || [];
+              const hFeels = data.hourly.apparent_temperature || hTemps;
               const hCodes = data.hourly.weather_code || [];
               const hClouds = data.hourly.cloud_cover || [];
               const hWinds = data.hourly.wind_speed_10m || [];
+              const hWindDirs = data.hourly.wind_direction_10m || [];
+              const hGusts = data.hourly.wind_gusts_10m || [];
               const hPrecip = data.hourly.precipitation_probability || [];
               const hHumid = data.hourly.relative_humidity_2m || [];
+              const hVisibility = data.hourly.visibility || [];
+              const hUv = data.hourly.uv_index || [];
               const hPress = data.hourly.surface_pressure || [];
 
               const parsed: { timeMs: number; weather: WeatherData }[] = [];
@@ -340,8 +345,9 @@ export class WeatherService {
                   const hTC = Math.round((hTemps[i] ?? tempC) * 10) / 10;
                   const hTF = Math.round((hTC * 9 / 5 + 32) * 10) / 10;
                   const hWind = Math.round(hWinds[i] ?? 10);
+                  const hGust = Math.round(hGusts[i] ?? hWind);
                   const hPrecipPct = hPrecip[i] ?? 0;
-                  const { score: hScore, label: hLabel } = this.calculateAggressiveness(hCond, hWind, Math.round(hWind * 1.3), hPrecipPct, hTC);
+                  const { score: hScore, label: hLabel } = this.calculateAggressiveness(hCond, hWind, hGust, hPrecipPct, hTC);
 
                   parsed.push({
                     timeMs: tMs,
@@ -350,16 +356,16 @@ export class WeatherService {
                       conditionLabel: this.formatConditionLabel(hCond),
                       temperatureC: hTC,
                       temperatureF: hTF,
-                      feelsLikeC: hTC,
-                      feelsLikeF: hTF,
+                      feelsLikeC: Math.round((hFeels[i] ?? hTC) * 10) / 10,
+                      feelsLikeF: Math.round(((hFeels[i] ?? hTC) * 9 / 5 + 32) * 10) / 10,
                       humidityPct: hHumid[i] ?? 50,
                       cloudCoverPct: hClouds[i] ?? 20,
                       precipitationPct: hPrecipPct,
                       windSpeedKmh: hWind,
-                      windDirectionDeg: 180,
-                      windGustKmh: Math.round(hWind * 1.3),
-                      visibilityKm: 16,
-                      uvIndex: 4,
+                      windDirectionDeg: Number(hWindDirs[i] ?? 180),
+                      windGustKmh: hGust,
+                      visibilityKm: Number.isFinite(hVisibility[i]) ? Math.max(0.1, Math.round((hVisibility[i] / 1000) * 10) / 10) : 16,
+                      uvIndex: Number.isFinite(hUv[i]) ? Math.round(hUv[i] * 10) / 10 : 0,
                       dewPointC: Number.isFinite(data.hourly.dew_point_2m?.[i]) ? Math.round(data.hourly.dew_point_2m[i] * 10) / 10 : hTC,
                       precipitationMm: Number(data.hourly.precipitation?.[i] ?? 0), rainMm: Number(data.hourly.rain?.[i] ?? 0), showersMm: Number(data.hourly.showers?.[i] ?? 0),
                       snowfallCm: Number(data.hourly.snowfall?.[i] ?? 0), snowDepthCm: Number(data.hourly.snow_depth?.[i] ?? 0),
