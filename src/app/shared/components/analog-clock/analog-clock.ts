@@ -104,7 +104,7 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     :host { display:block; width:100%; }
-    .analog-face { width:min(100%,220px); aspect-ratio:1; margin:auto; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .analog-face { width:min(100%,var(--analog-clock-size,220px)); aspect-ratio:1; margin:auto; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
     .analog-svg { width: 100%; height: 100%; overflow: visible; display: block; }
   `]
 })
