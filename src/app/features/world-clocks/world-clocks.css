@@ -325,6 +325,7 @@ h1 {
   text-transform: uppercase;
 }
 
+@media (max-width: 720px) {
   .clock-search {
     width: 100%;
     margin-bottom: 7px;
