@@ -1126,9 +1126,14 @@
 }
 
 .sky-report .sky-header-navigation a.active {
+  color: rgba(240,246,252,.72);
+  background: transparent;
+  box-shadow: none;
+}
+
+.sky-report .sky-header-navigation a.active {
   color: #1c1917;
   background: #f97316;
-  box-shadow: none;
 }
 
 .sky-report .sky-header-navigation mat-icon {
@@ -1152,4 +1157,32 @@
 /* Shared readability scale: launch typography is 15% above the previous baseline. */
 .sky-report {
   font-size: 16px;
+}
+
+
+/* Header navigation: orange is reserved for the active route only. */
+.sky-report .sky-header-navigation a:not(.active) {
+  background: transparent;
+  color: rgba(240,246,252,.72);
+}
+
+.sky-report .sky-header-navigation a:not(.active):hover {
+  background: rgba(255,255,255,.07);
+  color: #fff;
+}
+
+/* Tonight and its information surfaces use the same dark glass language as the rest of the app. */
+.sky-report .tonight,
+.sky-report .tonight-section,
+.sky-report .tonight-card,
+.sky-report .tonight-panel,
+.sky-report .tonight-surface,
+.sky-report .tonight-observatory,
+.sky-report .tonight-metric-card,
+.sky-report .tonight-planet-card {
+  background: rgba(13,17,23,.90);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 10px 35px rgba(0,0,0,.22);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
 }
