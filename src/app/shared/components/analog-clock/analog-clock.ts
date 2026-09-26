@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject } from '@angular/core';
+import { CelestialService } from '../../../core/services/celestial.service';
 
 @Component({
   selector: 'app-analog-clock',
@@ -9,6 +11,11 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="analog-face">
       <svg class="analog-svg" viewBox="0 0 200 200">
+        @if (showCelestialMarkers) {
+          <circle cx="100" cy="100" r="82" fill="none" stroke="rgba(245,158,11,.20)" stroke-width="1" stroke-dasharray="2 4" />
+          <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1" />
+        }
+
         <!-- Pure Outer & Inner Dial Circle -->
         <circle cx="100" cy="100" r="94" fill="#090b10" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2" />
 
@@ -31,6 +38,18 @@ import { CommonModule } from '@angular/common';
         <text x="168" y="100" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">3</text>
         <text x="100" y="168" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">6</text>
         <text x="32" y="100" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">9</text>
+
+        @if (showCelestialMarkers) {
+          <line x1="100" y1="100" [attr.x2]="sunMarker().x" [attr.y2]="sunMarker().y" stroke="rgba(245,158,11,.55)" stroke-width="1.5" stroke-dasharray="4 4" />
+          <g [attr.transform]="'translate(' + sunMarker().x + ',' + sunMarker().y + ')'">
+            <circle r="9" fill="#f59e0b" opacity=".20" /> <circle r="6" fill="#f59e0b" /> <circle r="2.2" fill="#fff7d6" />
+          </g>
+          <line x1="100" y1="100" [attr.x2]="moonMarker().x" [attr.y2]="moonMarker().y" stroke="rgba(186,230,253,.38)" stroke-width="1.2" stroke-dasharray="3 3" />
+          <g [attr.transform]="'translate(' + moonMarker().x + ',' + moonMarker().y + ')'">
+            <circle r="9" fill="#dbeafe" opacity=".10" /> <circle r="6" fill="#dbeafe" stroke="rgba(255,255,255,.45)" stroke-width=".7" />
+            <path [attr.d]="moonPhasePath()" fill="#090b10" opacity=".94" />
+          </g>
+        }
 
         <!-- Hour Hand (WHITE Arrow) -->
         <g>
@@ -96,6 +115,14 @@ import { CommonModule } from '@angular/common';
           />
         </g>
 
+        @if (showDigitalReadout) {
+          <g class="analog-digital-readout">
+            <rect x="55" y="82" width="90" height="36" rx="10" fill="rgba(7,9,13,.90)" stroke="rgba(255,255,255,.14)" />
+            <text x="100" y="98" fill="#f8fafc" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle">{{ localTimeLabel() }}</text>
+            <text x="100" y="110" fill="#f59e0b" font-size="5.5" font-family="monospace" font-weight="700" text-anchor="middle">{{ twilightLabel() }}</text>
+          </g>
+        }
+
         <!-- Center Pin -->
         <circle cx="100" cy="100" r="4" fill="#ef4444" />
         <circle cx="100" cy="100" r="1.5" fill="#ffffff" />
@@ -109,6 +136,8 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class AnalogClockComponent {
+  private readonly celestialService = inject(CelestialService);
+  readonly celestial = this.celestialService.celestialState;
   private readonly timezoneValue = signal('UTC');
   private readonly activeDateValue = signal<Date>(new Date());
 
@@ -130,6 +159,8 @@ export class AnalogClockComponent {
 
   @Input() latitude = 0;
   @Input() longitude = 0;
+  @Input() showCelestialMarkers = false;
+  @Input() showDigitalReadout = false;
 
   readonly minuteTicks = (() => {
     const ticks = [];
@@ -149,6 +180,39 @@ export class AnalogClockComponent {
     }
     return ticks;
   })();
+
+  readonly localTimeLabel = computed(() => {
+    const t = this.parsedTime();
+    return String(t.rawHours).padStart(2, '0') + ':' + String(t.minutes).padStart(2, '0') + ':' + String(t.seconds).padStart(2, '0');
+  });
+
+  readonly twilightLabel = computed(() => this.celestial().twilightState.replaceAll('_', ' '));
+
+  private celestialMarker(azimuthDeg: number, altitudeDeg: number, outerRadius: number) {
+    const altitude = Math.max(-90, Math.min(90, altitudeDeg));
+    const radius = outerRadius - ((altitude + 90) / 180) * (outerRadius - 52);
+    const angle = (azimuthDeg / 360) * Math.PI * 2;
+    return { x: 100 + Math.sin(angle) * radius, y: 100 - Math.cos(angle) * radius };
+  }
+
+  readonly sunMarker = computed(() => {
+    const c = this.celestial();
+    return this.celestialMarker(c.sun.azimuthDeg, c.sun.altitudeDeg, 78);
+  });
+
+  readonly moonMarker = computed(() => {
+    const c = this.celestial();
+    return this.celestialMarker(c.moon.azimuthDeg, c.moon.altitudeDeg, 66);
+  });
+
+  readonly moonPhasePath = computed(() => {
+    const m = this.celestial().moon;
+    const r = 6;
+    const k = Math.max(-1, Math.min(1, Math.cos((m.phaseAngleDeg * Math.PI) / 180)));
+    const sweep = m.phaseName.startsWith('Waning') ? 0 : 1;
+    const x = k * r;
+    return 'M 0,-' + r + ' A ' + r + ',' + r + ' 0 0,1 0,' + r + ' A ' + Math.abs(x || 0.05) + ',' + r + ' 0 0,' + sweep + ' 0,-' + r + ' Z';
+  });
 
   private parsedTime = computed(() => {
     const d = this.activeDateValue();
