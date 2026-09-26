@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import {join} from 'node:path';
 import { PRESET_LOCATIONS } from './app/core/models/location.model';
-import { calculateSolarPosition } from './app/core/astronomy/astronomy-engine';
+import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -32,7 +32,7 @@ const angularApp = new AngularNodeAppEngine();
 const staticSitemapUrls = [
   '/', '/weather', '/astronomy', '/tonight',
   '/world', '/world-clocks', '/events',
-  '/maps/clocks', '/maps/weather', '/maps/radio',
+  '/maps/clocks', '/maps/radio',
   '/time/converter', '/time/difference', '/time/duration',
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
   '/time/unix-timestamp', '/time/world-matrix',
@@ -63,8 +63,42 @@ const buildSitemap = () => {
 
 const apiHeaders = (res: express.Response) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
 };
+
+const resolveApiLocation = (value: unknown) => {
+  if (typeof value !== 'string') return undefined;
+  return PRESET_LOCATIONS.find(item => item.id === value);
+};
+
+const resolveApiDate = (value: unknown): Date | null => {
+  if (typeof value !== 'string' || !value) return new Date();
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : null;
+};
+
+const apiError = (res: express.Response, status: number, code: string, message: string) => {
+  res.status(status).json({ error: { code, message } });
+};
+
+app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));
+
+app.get('/api/v1', (_req, res) => {
+  apiHeaders(res);
+  res.json({
+    name: '2piClock API',
+    version: '1',
+    documentation: 'https://2piclock.com/api',
+    endpoints: [
+      '/api/v1/locations',
+      '/api/v1/solar?location=paris&at=2026-09-26T12:00:00Z',
+      '/api/v1/lunar?location=paris&at=2026-09-26T12:00:00Z',
+      '/api/v1/celestial?location=paris&at=2026-09-26T12:00:00Z',
+      '/api/v1/events?location=paris&date=2026-09-26'
+    ]
+  });
+});
 
 app.get('/api/v1/locations', (_req, res) => {
   apiHeaders(res);
@@ -81,43 +115,46 @@ app.get('/api/v1/locations', (_req, res) => {
   });
 });
 
-app.get('/api/v1/sky', (req, res) => {
+app.get('/api/v1/solar', (req, res) => {
   apiHeaders(res);
-  const locationId = typeof req.query['location'] === 'string' ? req.query['location'] : '';
-  const location = PRESET_LOCATIONS.find(item => item.id === locationId);
-  if (!location) {
-    res.status(404).json({ error: 'Unknown location', code: 'LOCATION_NOT_FOUND' });
-    return;
-  }
-
-  const rawAt = typeof req.query['at'] === 'string' ? req.query['at'] : '';
-  const date = rawAt ? new Date(rawAt) : new Date();
-  if (!Number.isFinite(date.getTime())) {
-    res.status(400).json({ error: 'Invalid at timestamp', code: 'INVALID_TIMESTAMP' });
-    return;
-  }
-
+  const location = resolveApiLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const date = resolveApiDate(req.query['at']);
+  if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
   const solar = calculateSolarPosition(date, location.latitude, location.longitude);
-  res.json({
-    version: '1',
-    generatedAt: new Date().toISOString(),
-    instant: date.toISOString(),
-    location: {
-      id: location.id,
-      name: location.name,
-      country: location.country,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      timezone: location.timezone
-    },
-    sun: {
-      altitudeDeg: Number(solar.altitudeDeg.toFixed(4)),
-      azimuthDeg: Number(solar.azimuthDeg.toFixed(4)),
-      distanceAU: Number(solar.distanceAU.toFixed(8)),
-      rightAscensionDeg: Number(solar.rightAscensionDeg.toFixed(4)),
-      declinationDeg: Number(solar.declinationDeg.toFixed(4))
-    }
-  });
+  res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, solar });
+});
+
+app.get('/api/v1/lunar', (req, res) => {
+  apiHeaders(res);
+  const location = resolveApiLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const date = resolveApiDate(req.query['at']);
+  if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
+  const sun = calculateSolarPosition(date, location.latitude, location.longitude);
+  const lunar = calculateLunarPosition(date, location.latitude, location.longitude, sun);
+  res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, moon: lunar });
+});
+
+app.get('/api/v1/celestial', (req, res) => {
+  apiHeaders(res);
+  const location = resolveApiLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const date = resolveApiDate(req.query['at']);
+  if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
+  const celestial = getCelestialState(date, location.latitude, location.longitude, location.timezone);
+  res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, celestial });
+});
+
+app.get('/api/v1/events', (req, res) => {
+  apiHeaders(res);
+  const location = resolveApiLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const rawDate = typeof req.query['date'] === 'string' ? req.query['date'] : '';
+  const date = rawDate ? new Date(rawDate + 'T12:00:00Z') : new Date();
+  if (!Number.isFinite(date.getTime())) return apiError(res, 400, 'INVALID_DATE', 'Use an ISO date such as 2026-09-26.');
+  const events = calculateSolarEvents(date, location.latitude, location.longitude, location.timezone);
+  res.json({ version: '1', date: rawDate || date.toISOString().slice(0, 10), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, events });
 });
 
 app.get('/robots.txt', (_req, res) => {
