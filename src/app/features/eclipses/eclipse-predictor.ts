@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { LocationService } from '../../core/services/location.service';
+import { TimeControlService } from '../../core/services/time-control.service';
+import * as Astronomy from 'astronomy-engine';
 
 export interface EclipseEvent {
+  id: string;
   date: string;
   type: 'Total Solar' | 'Annular Solar' | 'Partial Solar' | 'Total Lunar' | 'Partial Lunar' | 'Penumbral Lunar';
   category: 'solar' | 'lunar';
@@ -129,66 +132,141 @@ export interface EclipseEvent {
   `]
 })
 export class EclipsePredictorComponent {
-  private locationService = inject(LocationService);
+  private readonly locationService = inject(LocationService);
+  private readonly timeControlService = inject(TimeControlService);
+
   readonly selectedLocation = this.locationService.selectedLocation;
+  readonly activeDate = this.timeControlService.currentActiveDate;
 
-  readonly upcomingEclipses: EclipseEvent[] = [
-    {
-      date: 'August 12, 2026',
-      type: 'Total Solar',
-      category: 'solar',
-      magnitude: 1.0386,
-      duration: '2m 18s',
-      visibilityRegion: 'Greenland, Iceland, Northern Spain, Portugal',
-      pathCoordinates: '65.2° N, 25.2° W',
-      localVisibility: 'Partial (92% Obscuration in Europe)',
-      description: 'The first total solar eclipse visible in mainland Europe since 1999, casting a dark umbra across the Arctic and Iberian Peninsula.'
-    },
-    {
-      date: 'February 6, 2027',
-      type: 'Annular Solar',
-      category: 'solar',
-      magnitude: 0.9281,
-      duration: '7m 51s',
-      visibilityRegion: 'Chile, Argentina, Atlantic Ocean, West Africa',
-      pathCoordinates: '31.3° S, 48.5° W',
-      localVisibility: 'Partial (Southern Hemisphere)',
-      description: 'Striking "Ring of Fire" annular eclipse with the Moon at apogee creating a wide ring around the solar disk.'
-    },
-    {
-      date: 'August 2, 2027',
-      type: 'Total Solar',
-      category: 'solar',
-      magnitude: 1.0790,
-      duration: '6m 23s',
-      visibilityRegion: 'Southern Spain, Morocco, Egypt, Saudi Arabia, Yemen',
-      pathCoordinates: '25.5° N, 33.2° E',
-      localVisibility: 'Total across Luxor & Valley of the Kings',
-      description: 'One of the longest total solar eclipses of the 21st century, passing directly over ancient Egyptian monuments.'
-    },
-    {
-      date: 'March 3, 2026',
-      type: 'Total Lunar',
-      category: 'lunar',
-      magnitude: 1.1507,
-      duration: '58m (Totality)',
-      visibilityRegion: 'Pacific Ocean, Americas, East Asia, Australia',
-      pathCoordinates: '12.4° S, 160.0° W',
-      localVisibility: 'Fully Visible (Blood Moon)',
-      description: 'Deep total lunar eclipse turning the full moon an intense coppery-red due to Rayleigh scattering through Earth atmosphere.'
-    },
-    {
-      date: 'August 28, 2026',
-      type: 'Partial Lunar',
-      category: 'lunar',
-      magnitude: 0.9299,
-      duration: '3h 18m',
-      visibilityRegion: 'Eastern Americas, Europe, Africa, Middle East',
-      pathCoordinates: '9.8° S, 24.1° W',
-      localVisibility: 'Deep Partial (93% in shadow)',
-      description: 'Near-total lunar eclipse with the southern lunar limb entering deep into the Earth umbral cone.'
+  private readonly eclipseCache = new Map<string, EclipseEvent[]>();
+
+  readonly upcomingEclipses = computed(() => {
+    const loc = this.selectedLocation();
+    const start = this.activeDate();
+    const cacheKey = [
+      loc.id,
+      loc.latitude.toFixed(4),
+      loc.longitude.toFixed(4),
+      loc.timezone,
+      start.toISOString().slice(0, 10)
+    ].join('|');
+
+    const cached = this.eclipseCache.get(cacheKey);
+    if (cached) return cached;
+
+    const observer = new Astronomy.Observer(loc.latitude, loc.longitude, 0);
+    const events: EclipseEvent[] = [];
+
+    let solar = Astronomy.SearchLocalSolarEclipse(start, observer);
+    for (let i = 0; i < 4; i++) {
+      events.push(this.mapLocalSolarEclipse(solar, loc));
+      solar = Astronomy.NextLocalSolarEclipse(solar.peak.time, observer);
     }
-  ];
 
-  readonly nextEclipse = computed(() => this.upcomingEclipses[0]);
+    let lunar = Astronomy.SearchLunarEclipse(start);
+    for (let i = 0; i < 4; i++) {
+      events.push(this.mapLunarEclipse(lunar, loc, observer));
+      lunar = Astronomy.NextLunarEclipse(lunar.peak);
+    }
+
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    const result = events.slice(0, 8);
+
+    if (this.eclipseCache.size >= 20) this.eclipseCache.clear();
+    this.eclipseCache.set(cacheKey, result);
+    return result;
+  });
+
+  readonly nextEclipse = computed(() => this.upcomingEclipses()[0] ?? {
+    id: 'none',
+    date: '—',
+    type: 'Partial Lunar' as const,
+    category: 'lunar' as const,
+    magnitude: 0,
+    duration: '—',
+    visibilityRegion: '—',
+    pathCoordinates: '—',
+    localVisibility: 'No upcoming eclipse found',
+    description: 'No eclipse was found in the current search window.'
+  });
+
+  private mapLocalSolarEclipse(
+    eclipse: Astronomy.LocalSolarEclipseInfo,
+    loc: ReturnType<LocationService['selectedLocation']>,
+  ): EclipseEvent {
+    const kind = this.eclipseKindLabel(eclipse.kind);
+    const peakDate = eclipse.peak.time.date;
+    const visible = eclipse.peak.altitude >= 0;
+    const durationMinutes = Math.max(
+      0,
+      (eclipse.partial_end.time.date.getTime() - eclipse.partial_begin.time.date.getTime()) / 60000
+    );
+
+    return {
+      id: `solar-${peakDate.toISOString()}`,
+      date: peakDate.toISOString(),
+      type: `${kind} Solar`,
+      category: 'solar',
+      magnitude: Number(eclipse.obscuration.toFixed(4)),
+      duration: this.formatDuration(durationMinutes),
+      visibilityRegion: `${loc.name} local path`,
+      pathCoordinates: `${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°`,
+      localVisibility: visible
+        ? `Visible at peak · Sun ${eclipse.peak.altitude.toFixed(1)}°`
+        : `Below horizon at peak · Sun ${eclipse.peak.altitude.toFixed(1)}°`,
+      description: visible
+        ? `A ${kind.toLowerCase()} solar eclipse is geometrically visible from ${loc.name} at the peak.`
+        : `A ${kind.toLowerCase()} solar eclipse occurs for this location, but the Sun is below the horizon at peak.`
+    };
+  }
+
+  private mapLunarEclipse(
+    eclipse: Astronomy.LunarEclipseInfo,
+    loc: ReturnType<LocationService['selectedLocation']>,
+    observer: Astronomy.Observer
+  ): EclipseEvent {
+    const peakDate = eclipse.peak.date;
+    const moon = Astronomy.Equator(Astronomy.Body.Moon, peakDate, observer, true, true);
+    const horizontal = Astronomy.Horizon(peakDate, observer, moon.ra, moon.dec, 'normal');
+    const durationMinutes = Math.max(
+      0,
+      (2 * eclipse.sd_penum) || (2 * eclipse.sd_partial) || (2 * eclipse.sd_total)
+    );
+
+    return {
+      id: `lunar-${peakDate.toISOString()}`,
+      date: peakDate.toISOString(),
+      type: `${this.eclipseKindLabel(eclipse.kind)} Lunar`,
+      category: 'lunar',
+      magnitude: Number(eclipse.obscuration.toFixed(4)),
+      duration: this.formatDuration(durationMinutes),
+      visibilityRegion: 'Global lunar eclipse',
+      pathCoordinates: 'Earth-facing hemisphere',
+      localVisibility: horizontal.altitude >= 0
+        ? `Moon above horizon · ${horizontal.altitude.toFixed(1)}°`
+        : `Moon below horizon at peak · ${horizontal.altitude.toFixed(1)}°`,
+      description: horizontal.altitude >= 0
+        ? `The Moon is above the horizon in ${loc.name} when this ${this.eclipseKindLabel(eclipse.kind).toLowerCase()} lunar eclipse peaks.`
+        : `The eclipse peaks while the Moon is below the horizon in ${loc.name}; another part of the world can observe it.`
+    };
+  }
+
+  private eclipseKindLabel(kind: Astronomy.EclipseKind): 'Total' | 'Annular' | 'Partial' | 'Penumbral' {
+    switch (kind) {
+      case Astronomy.EclipseKind.Total: return 'Total';
+      case Astronomy.EclipseKind.Annular: return 'Annular';
+      case Astronomy.EclipseKind.Penumbral: return 'Penumbral';
+      default: return 'Partial';
+    }
+  }
+
+  private formatDuration(minutes: number): string {
+    if (!Number.isFinite(minutes) || minutes <= 0) return '—';
+    const totalSeconds = Math.round(minutes * 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m ${secs}s`;
+  }
 }
