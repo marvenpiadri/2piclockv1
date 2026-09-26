@@ -236,7 +236,7 @@ export class WorldEventsService {
         });
       },
       error: () => {
-        if (generation === this.requestGeneration) this.islamicEvents.set([]);
+        if (generation === this.requestGeneration) return;
       }
     });
 
@@ -251,32 +251,34 @@ export class WorldEventsService {
     title: string,
     description: string,
     generation: number,
-    seed: WorldEvent[],
+    _seed: WorldEvent[],
     targetDay = 1
   ): void {
     this.http.get<any>(`https://api.aladhan.com/v1/hToGCalendar/${month}/${hijriYear}?calendarMethod=HJCoSA`).subscribe({
       next: calendar => {
         if (generation !== this.requestGeneration) return;
         const rows = Array.isArray(calendar?.data) ? calendar.data : [];
-        const first = rows.find((row: any) => Number(row?.hijri?.day) === 1);
-        if (first?.gregorian?.date) {
-          seed.push({
-            id: `islamic-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${this.parseDmy(first.gregorian.date)}`,
-            category: 'religious',
-            title,
-            time: null,
-            date: this.parseDmy(first.gregorian.date),
-            description,
-            source: 'AlAdhan',
-            allDay: true,
-            tentative: true
-          });
-        }
-        this.religiousEvents.update(existing => [...existing, ...seed].sort((a,b) => (a.date ?? '').localeCompare(b.date ?? '')));
+        const row = rows.find((item: any) => Number(item?.hijri?.day) === targetDay);
+        if (!row?.gregorian?.date) return;
+        const iso = this.parseDmy(row.gregorian.date);
+        const event: WorldEvent = {
+          id: `islamic-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${iso}`,
+          category: 'religious',
+          title,
+          time: null,
+          date: iso,
+          description,
+          source: 'AlAdhan',
+          allDay: true,
+          tentative: true
+        };
+        this.religiousEvents.update(existing => {
+          const merged = new Map(existing.map(item => [item.id, item]));
+          merged.set(event.id, event);
+          return [...merged.values()].sort((a,b) => (a.date ?? '').localeCompare(b.date ?? ''));
+        });
       },
-      error: () => {
-        if (generation === this.requestGeneration) this.religiousEvents.update(existing => [...existing, ...seed]);
-      }
+      error: () => { /* Provider failure does not affect other calendars. */ }
     });
   }
 
