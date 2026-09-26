@@ -15,6 +15,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import { WorldEventsService } from '../../core/services/world-events.service';
+import { ReactiveSkyComponent } from '../../shared/components/reactive-sky/reactive-sky';
 
 @Component({
   selector: 'app-sky-home',
