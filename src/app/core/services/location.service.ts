@@ -35,7 +35,7 @@ export class LocationService {
             this.selectedLocation.set(found);
           } else {
             const custom = JSON.parse(savedLocId);
-            if (custom && custom.latitude && custom.longitude) {
+            if (custom && Number.isFinite(Number(custom.latitude)) && Number.isFinite(Number(custom.longitude))) {
               this.selectedLocation.set(custom);
             }
           }
