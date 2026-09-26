@@ -200,8 +200,19 @@ export class StargazingPlannerComponent {
   readonly darknessWindowTimes = computed(() => {
     const ev = this.celestial().solarEvents;
     if (ev.astronomicalDusk && ev.astronomicalDawn) {
-      const dusk = ev.astronomicalDusk.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const dawn = ev.astronomicalDawn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timezone = this.selectedLocation().timezone;
+      const dusk = ev.astronomicalDusk.toLocaleTimeString('en-US', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      const dawn = ev.astronomicalDawn.toLocaleTimeString('en-US', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
       return `${dusk} – ${dawn}`;
     }
     return 'Continuous Twilight';
@@ -210,12 +221,11 @@ export class StargazingPlannerComponent {
   readonly darknessDuration = computed(() => {
     const ev = this.celestial().solarEvents;
     if (ev.astronomicalDusk && ev.astronomicalDawn) {
-      const diffMs = ev.astronomicalDawn.getTime() - ev.astronomicalDusk.getTime();
-      if (diffMs > 0) {
-        const hours = Math.floor(diffMs / 3600000);
-        const mins = Math.round((diffMs % 3600000) / 60000);
-        return `${hours}h ${mins}m`;
-      }
+      let diffMs = ev.astronomicalDawn.getTime() - ev.astronomicalDusk.getTime();
+      if (diffMs < 0) diffMs += 24 * 3600000;
+      const hours = Math.floor(diffMs / 3600000);
+      const mins = Math.round((diffMs % 3600000) / 60000);
+      return `${hours}h ${mins}m`;
     }
     return '0h (Polar/Twilight)';
   });
