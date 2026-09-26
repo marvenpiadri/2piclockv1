@@ -106,6 +106,24 @@
             }
           </div>
 
+          <div class="time-machine-compare" aria-label="Compare another date">
+            <label>
+              <span>COMPARE</span>
+              <input type="date" [value]="comparisonDateInput()" (change)="setComparisonDate($any($event.target).value)" />
+            </label>
+            @if (isComparingDates()) {
+              <div class="comparison-readout">
+                <span>{{ timeMachineComparison()?.dayDelta === 0 ? 'Same day' : (timeMachineComparison()?.dayDelta ?? 0) > 0 ? '+' + timeMachineComparison()?.dayDelta + ' days' : (timeMachineComparison()?.dayDelta ?? 0) + ' days' }}</span>
+                <b>{{ timeMachineComparison()?.sunrise }} sunrise</b>
+                <b>{{ timeMachineComparison()?.sunset }} sunset</b>
+                @if (timeMachineComparison()?.daylightMinutes !== null) {
+                  <b>{{ Math.floor((timeMachineComparison()?.daylightMinutes ?? 0) / 60) }}h {{ (timeMachineComparison()?.daylightMinutes ?? 0) % 60 }}m daylight</b>
+                }
+                <button type="button" (click)="clearComparisonDate()" aria-label="Clear date comparison"><mat-icon>close</mat-icon></button>
+              </div>
+            }
+          </div>
+
           <div class="time-scrubber">
             <div class="scrubber-head"><span>TIME MACHINE</span><span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span></div>
             <input type="range" min="0" max="1" step="0.0001" [value]="localDayFraction()" (input)="onScrubberInput($event)" aria-label="Time of day"/>
