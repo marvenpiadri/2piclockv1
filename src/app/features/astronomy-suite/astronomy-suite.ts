@@ -203,6 +203,20 @@ export class AstronomySuiteComponent implements OnInit {
     return this.selectedConstellationData().stars.find(star => star.name === name);
   }
 
+  constellationLineWidth(fromName: string, toName: string): number {
+    const from = this.constellationStarByName(fromName);
+    const to = this.constellationStarByName(toName);
+    if (!from || !to) return 0;
+    return Math.hypot(this.constellationX(to.ra) - this.constellationX(from.ra), this.constellationY(to.dec) - this.constellationY(from.dec));
+  }
+
+  constellationLineAngle(fromName: string, toName: string): number {
+    const from = this.constellationStarByName(fromName);
+    const to = this.constellationStarByName(toName);
+    if (!from || !to) return 0;
+    return Math.atan2(this.constellationY(to.dec) - this.constellationY(from.dec), this.constellationX(to.ra) - this.constellationX(from.ra)) * 180 / Math.PI;
+  }
+
   selectConstellation(id: string): void {
     this.selectedConstellation.set(id);
   }
