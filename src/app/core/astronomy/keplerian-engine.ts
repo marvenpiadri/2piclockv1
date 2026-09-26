@@ -402,3 +402,33 @@ export function computeKeplerianState(
     orbitPoints
   };
 }
+
+
+/**
+ * Julian Date for a JavaScript instant.
+ */
+export function getJulianDate(date: Date): number {
+  return date.getTime() / 86400000 + 2440587.5;
+}
+
+/**
+ * Julian centuries from J2000.0.
+ */
+export function getJulianCenturies(julianDate: number): number {
+  return (julianDate - 2451545.0) / 36525;
+}
+
+/**
+ * Greenwich Mean Sidereal Time in degrees.
+ * IAU 1982 expression, sufficient for the visual/ephemeris precision used here.
+ */
+export function getGMST(julianDate: number, _julianCenturies?: number): number {
+  const T = (julianDate - 2451545.0) / 36525;
+  const gmstHours =
+    6.697374558 +
+    0.06570982441908 * (julianDate - 2451545.0) +
+    1.00273790935 * ((julianDate - 2451545.0) % 1 * 24) +
+    0.000026 * T * T;
+
+  return normalizeAngleDeg(gmstHours * 15);
+}
