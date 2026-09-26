@@ -758,19 +758,6 @@ export class SkyHomeComponent {
     }
   }
 
-  readonly skyAheadForecast = computed(() => {
-    const now = this.activeDate().getTime();
-    return this.hourlyForecasts()
-      .filter(item => item.timeMs > now + 30 * 60 * 1000)
-      .slice(0, 6);
-  });
-
-  jumpToForecast(timeMs: number): void {
-    const forecastDate = new Date(timeMs);
-    if (Number.isNaN(forecastDate.getTime())) return;
-    this.timeControlService.setSpecificInstant(forecastDate);
-  }
-
   readonly comparisonDateInput = signal('');
   readonly isComparingDates = computed(() => this.comparisonDateInput().length === 10);
 
