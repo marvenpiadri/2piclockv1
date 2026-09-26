@@ -509,7 +509,9 @@ export function calculateLunarPosition(
     brightLimbAngleDeg,
     parallaxDeg,
     distanceKm,
-    isAboveHorizon: altitudeDeg > -0.5
+    isAboveHorizon: altitudeDeg > -0.5,
+    declinationDeg: declMoonRad * RAD2DEG,
+    rightAscensionDeg: raMoonDeg
   };
 }
 
@@ -715,12 +717,12 @@ export function calculateSubsolarPoint(date: Date): {
   equationOfTimeMin: number;
 } {
   const sunPos = calculateSolarPosition(date, 0, 0);
-  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600 + date.getUTCMilliseconds() / 3600000;
-  
-  // Solar noon at Greenwich occurs at 12:00 UTC - EqOfTime
-  // Subsolar longitude: 0° at Solar Noon, moves 15° west per hour
-  const eotHours = sunPos.equationOfTimeMinutes / 60;
-  let subsolarLng = -((utcHours - 12 + eotHours) * 15);
+  // Subsolar longitude is the negative Greenwich Hour Angle.
+  // Using the Sun's actual right ascension and GMST avoids an UTC/equation-of-time approximation.
+  const jd = getJulianDate(date);
+  const t = getJulianCenturies(jd);
+  const gmst = getGMST(jd, t);
+  let subsolarLng = sunPos.rightAscensionDeg - gmst;
   
   // Normalize to [-180, 180]
   while (subsolarLng > 180) subsolarLng -= 360;
@@ -748,14 +750,18 @@ export function calculateSublunarPoint(date: Date): {
 } {
   const moonPos = calculateLunarPosition(date, 0, 0);
 
-  // Greenwich Hour Angle: Moon longitude on Earth
-  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-  let moonLng = -((utcHours - (moonPos.azimuthDeg / 15)) * 15);
+  // Sublunar longitude is the negative Greenwich Hour Angle, while the
+  // latitude is the Moon's declination. Moon altitude/azimuth at 0°N, 0°E
+  // are observer coordinates and must not be used as the ground point.
+  const jd = getJulianDate(date);
+  const t = getJulianCenturies(jd);
+  const gmst = getGMST(jd, t);
+  let moonLng = moonPos.rightAscensionDeg - gmst;
   while (moonLng > 180) moonLng -= 360;
   while (moonLng < -180) moonLng += 360;
 
   return {
-    latitude: Math.max(-28.5, Math.min(28.5, moonPos.altitudeDeg)),
+    latitude: moonPos.declinationDeg,
     longitude: moonLng,
     phaseName: moonPos.phaseName,
     illuminationFraction: moonPos.illuminationFraction,
