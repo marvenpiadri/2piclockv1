@@ -373,7 +373,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     }
 
     // 6b. V2.0 real planetary positions from the shared precision astronomy engine.
-    this.drawPlanets(ctx, w, h, sunAlt, this.celestialService.planetaryPositions(), weather, atmos);
+    this.drawPlanets(ctx, w, h, sunAlt, this.celestialService.planetaryPositions());
 
     // 7. Draw Sun Disc, Refraction Oblateness, UV Corona & Solar Eclipse
     if (sunAlt > -10) {
