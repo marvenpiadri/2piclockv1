@@ -105,6 +105,49 @@ export class AstronomySuiteComponent implements OnInit {
 
   readonly selectedConstellation = signal('orion');
 
+  readonly selectedDeepSkyObject = signal('m31');
+
+  readonly deepSkyCatalog = [
+    { id: 'm31', name: 'Andromeda Galaxy', catalog: 'M31 · NGC 224', type: 'Galaxy', ra: 10.6847, dec: 41.2690, mag: 3.44, size: '178′ × 63′' },
+    { id: 'm42', name: 'Orion Nebula', catalog: 'M42 · NGC 1976', type: 'Emission nebula', ra: 83.8221, dec: -5.3911, mag: 4.00, size: '85′ × 60′' },
+    { id: 'm45', name: 'Pleiades', catalog: 'M45 · Melotte 22', type: 'Open cluster', ra: 56.8712, dec: 24.1170, mag: 1.60, size: '110′' },
+    { id: 'm13', name: 'Hercules Cluster', catalog: 'M13 · NGC 6205', type: 'Globular cluster', ra: 250.4235, dec: 36.4613, mag: 5.78, size: '20′' },
+    { id: 'm51', name: 'Whirlpool Galaxy', catalog: 'M51 · NGC 5194', type: 'Spiral galaxy', ra: 202.4696, dec: 47.1952, mag: 8.36, size: '11′ × 7′' },
+    { id: 'm57', name: 'Ring Nebula', catalog: 'M57 · NGC 6720', type: 'Planetary nebula', ra: 283.3969, dec: 33.0292, mag: 8.80, size: '1.4′' },
+    { id: 'm8', name: 'Lagoon Nebula', catalog: 'M8 · NGC 6523', type: 'Emission nebula', ra: 270.9200, dec: -24.3800, mag: 6.00, size: '90′ × 40′' },
+    { id: 'm20', name: 'Trifid Nebula', catalog: 'M20 · NGC 6514', type: 'Emission nebula', ra: 270.6540, dec: -23.0300, mag: 6.30, size: '28′' },
+    { id: 'm4', name: 'Butterfly Cluster', catalog: 'M6 · NGC 6405', type: 'Open cluster', ra: 265.0700, dec: -32.2200, mag: 4.20, size: '25′' },
+    { id: 'm6', name: 'Ptolemy Cluster', catalog: 'M7 · NGC 6475', type: 'Open cluster', ra: 268.4600, dec: -34.7900, mag: 3.30, size: '80′' }
+  ] as const;
+
+  readonly selectedDeepSkyData = computed(() =>
+    this.deepSkyCatalog.find(object => object.id === this.selectedDeepSkyObject()) ?? this.deepSkyCatalog[0]
+  );
+
+  readonly selectedDeepSkyPosition = computed(() => {
+    const object = this.selectedDeepSkyData();
+    const instant = this.parsedInstant();
+    const jd = getJulianDate(instant);
+    const lstDeg = (getGMST(jd, getJulianCenturies(jd)) + this.selectedLocation().longitude) % 360;
+    const hourAngleDeg = ((lstDeg - object.ra + 540) % 360) - 180;
+    const lat = this.selectedLocation().latitude * Math.PI / 180;
+    const dec = object.dec * Math.PI / 180;
+    const ha = hourAngleDeg * Math.PI / 180;
+    const sinAlt = Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(ha);
+    const altitudeDeg = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * 180 / Math.PI;
+    const azimuthDeg = ((Math.atan2(
+      Math.sin(ha),
+      Math.cos(ha) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+    ) * 180 / Math.PI) + 180 + 360) % 360;
+    return { altitudeDeg, azimuthDeg, hourAngleDeg, lstDeg };
+  });
+
+  selectDeepSkyObject(id: string): void {
+    this.selectedDeepSkyObject.set(id);
+  }
+
+
+
   readonly constellationCatalog = [
     {
       id: 'orion',
