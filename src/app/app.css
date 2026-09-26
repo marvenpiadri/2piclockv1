@@ -54,179 +54,52 @@
   display: grid;
   place-items: center;
   flex: 0 0 32px;
-  overflow: visible;
+  overflow: hidden;
   user-select: none;
   isolation: isolate;
-  transition: transform .45s cubic-bezier(.22,.61,.36,1), filter .8s ease;
+  transition: background-color .9s ease, transform .45s cubic-bezier(.22,.61,.36,1);
 }
 
-.brand-badge::after {
-  content: "";
+.brand-badge .celestial-disc {
   position: absolute;
-  inset: 1px;
+  inset: 0;
   z-index: 0;
-  border: 1px solid rgba(245,158,11,.28);
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-  transition: border-color .9s ease, box-shadow .9s ease;
+  background: #f59e0b;
+  transition: background-color 1.2s cubic-bezier(.22,.61,.36,1);
 }
 
 .brand-badge .brand-symbol {
   position: relative;
-  z-index: 5;
-  color: #211607;
+  z-index: 1;
+  color: #f59e0b;
   font-family: "Dekatron", var(--font-mono, monospace);
   font-size: 10.5px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -.08em;
   transform: translateY(-.4px);
-  text-shadow: 0 1px 1px rgba(255,255,255,.42);
-  transition: color .9s ease, text-shadow .9s ease, transform .5s ease;
+  transition: color 1.2s ease, transform .5s ease;
 }
 
-.brand-badge .celestial-halo {
-  position: absolute;
-  inset: 4px;
-  z-index: 1;
-  border-radius: 50%;
-  transition:
-    background 1s cubic-bezier(.22,.61,.36,1),
-    box-shadow 1s ease,
-    opacity 1s ease,
-    transform 1.4s cubic-bezier(.22,.61,.36,1);
+.brand-badge-sun .celestial-disc {
+  background: #f59e0b;
 }
 
-/* Day: warm solar disc with a restrained radial corona. */
-.brand-badge-sun .celestial-halo {
-  background: radial-gradient(circle at 33% 28%,
-    #fff9d6 0%,
-    #ffe58a 25%,
-    #f6b52b 63%,
-    #d98216 100%);
-  box-shadow:
-    0 0 0 1px rgba(255,214,102,.55),
-    0 0 7px rgba(245,158,11,.42),
-    0 0 15px rgba(245,158,11,.12);
+.brand-badge-sun .brand-symbol {
+  color: #451a03;
 }
 
-.brand-badge-sun .celestial-halo::before {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(
-    from 8deg,
-    rgba(251,191,36,.0) 0deg 16deg,
-    rgba(251,191,36,.62) 17deg 19deg,
-    rgba(251,191,36,.0) 20deg 45deg
-  );
-  -webkit-mask: radial-gradient(circle, transparent 57%, #000 60%, #000 72%, transparent 76%);
-  mask: radial-gradient(circle, transparent 57%, #000 60%, #000 72%, transparent 76%);
-  opacity: .62;
-  transform: rotate(0deg);
-  transition: transform 18s linear, opacity .8s ease;
-}
-
-/* Night: cool lunar disc with a real crescent-like shadow treatment. */
-.brand-badge-moon .celestial-halo {
-  background: radial-gradient(circle at 31% 27%,
-    #ffffff 0%,
-    #edf2f7 34%,
-    #cbd5df 72%,
-    #9aa8b7 100%);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.62),
-    0 0 8px rgba(203,213,225,.40),
-    0 0 16px rgba(148,163,184,.12);
-}
-
-.brand-badge-moon .celestial-halo::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: rgba(23,31,43,.88);
-  transform: translate(4px,-1px);
-  transition: transform 1.4s cubic-bezier(.22,.61,.36,1), opacity 1s ease;
-  mix-blend-mode: multiply;
+.brand-badge-moon .celestial-disc {
+  background: #cbd5e1;
 }
 
 .brand-badge-moon .brand-symbol {
-  color: #172033;
-  text-shadow: 0 1px 1px rgba(255,255,255,.72);
-}
-
-.brand-badge-moon::after {
-  border-color: rgba(226,232,240,.22);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-}
-
-/* Weather stays atmospheric and never replaces the celestial identity. */
-.brand-badge .weather-reactive-sheen {
-  position: absolute;
-  inset: 2px;
-  z-index: 3;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: .32;
-  background: linear-gradient(135deg, rgba(255,255,255,.34), transparent 58%);
-  transition: background .9s ease, opacity .9s ease, box-shadow .9s ease;
-}
-
-.brand-badge-sun.weather-rain .weather-reactive-sheen,
-.brand-badge-moon.weather-rain .weather-reactive-sheen {
-  background: linear-gradient(145deg, rgba(125,211,252,.46), transparent 64%);
-  box-shadow: inset 0 -2px 4px rgba(56,189,248,.16);
-}
-
-.brand-badge-sun.weather-cloudy .weather-reactive-sheen {
-  background: linear-gradient(145deg, rgba(203,213,225,.26), rgba(120,113,108,.08) 65%, transparent);
-}
-
-.brand-badge-moon.weather-cloudy .weather-reactive-sheen {
-  background: linear-gradient(145deg, rgba(255,255,255,.18), rgba(71,85,105,.16) 68%, transparent);
-}
-
-.brand-badge-sun.weather-fog .weather-reactive-sheen,
-.brand-badge-moon.weather-fog .weather-reactive-sheen {
-  opacity: .5;
-  background: radial-gradient(circle, rgba(255,255,255,.28), rgba(148,163,184,.07) 58%, transparent 76%);
-}
-
-.brand-badge-sun.weather-snow .weather-reactive-sheen,
-.brand-badge-moon.weather-snow .weather-reactive-sheen {
-  background:
-    radial-gradient(circle at 24% 28%, rgba(255,255,255,.72) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 70% 64%, rgba(255,255,255,.52) 0 1px, transparent 1.5px),
-    linear-gradient(135deg, rgba(224,242,254,.24), transparent 65%);
-}
-
-.brand-badge-sun.weather-storm .celestial-halo,
-.brand-badge-moon.weather-storm .celestial-halo {
-  box-shadow:
-    0 0 0 1px rgba(196,181,253,.45),
-    0 0 10px rgba(124,58,237,.38);
-}
-
-.brand-badge-sun.weather-storm .weather-reactive-sheen,
-.brand-badge-moon.weather-storm .weather-reactive-sheen {
-  background: linear-gradient(135deg, rgba(196,181,253,.26), transparent 58%);
-  animation: badge-storm-breathe 2.8s ease-in-out infinite;
-}
-
-@keyframes badge-storm-breathe {
-  0%, 100% { opacity: .24; }
-  50% { opacity: .5; }
+  color: #64748b;
 }
 
 .brand-link:hover .brand-badge {
-  transform: scale(1.05);
-}
-
-.brand-link:hover .brand-badge-sun .celestial-halo::before {
-  transform: rotate(45deg);
+  transform: scale(1.04);
 }
 
 .brand-link:hover .brand-symbol {
@@ -235,11 +108,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .brand-badge,
-  .brand-badge .celestial-halo,
-  .brand-badge .celestial-halo::before,
-  .brand-badge .weather-reactive-sheen {
+  .brand-badge .celestial-disc,
+  .brand-badge .brand-symbol {
     transition: none !important;
-    animation: none !important;
   }
 }
 .brand-text-col {
