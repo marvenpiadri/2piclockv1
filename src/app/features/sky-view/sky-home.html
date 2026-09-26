@@ -123,6 +123,47 @@
               <!-- TAB 1: WEATHER -->
               @if (activeDeckTab() === 'weather') {
                 <div class="deck-tab-pane">
+                  <div class="sky-info-card">
+                    <section class="sky-info-weather">
+                      <div class="sky-info-section-label"><app-weather-icon [condition]="weather().condition" [label]="weather().conditionLabel" [isDay]="weather().isDay" size="sm"></app-weather-icon> WEATHER</div>
+                      <div class="sky-info-weather-main">
+                        <strong>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</strong>
+                        <div>
+                          <b>{{ weather().conditionLabel }}</b>
+                          <span>Feels {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</span>
+                        </div>
+                      </div>
+                      <div class="sky-info-weather-grid">
+                        <span><mat-icon>water_drop</mat-icon> Rain {{ weather().precipitationPct }}%</span>
+                        <span><mat-icon>air</mat-icon> Wind {{ weather().windSpeedKmh }} km/h {{ windCompass() }}</span>
+                        <span><mat-icon>opacity</mat-icon> Clouds {{ weather().cloudCoverPct }}%</span>
+                        <span><mat-icon>visibility</mat-icon> Visibility {{ weather().visibilityKm }} km</span>
+                        <span><mat-icon>speed</mat-icon> {{ weather().pressureHpa }} hPa</span>
+                        <span><app-weather-icon icon="uv-index" label="UV index" size="sm"></app-weather-icon> UV {{ weather().uvIndex }} · {{ uvRiskLevel().label }}</span>
+                      </div>
+                    </section>
+
+                    <section class="sky-info-day">
+                      <div class="sky-info-section-label"><mat-icon>{{ weather().isDay ? 'light_mode' : 'dark_mode' }}</mat-icon> {{ weather().isDay ? 'DAY' : 'NIGHT' }}</div>
+                      <div class="sky-info-day-state">{{ weather().isDay ? 'Daylight' : 'Night sky' }}</div>
+                      <div class="sky-info-sun-times">
+                        <span><mat-icon>wb_sunny</mat-icon><b>Sunrise</b>{{ formatTime(celestial().solarEvents.sunrise) }}</span>
+                        <span><mat-icon>wb_twilight</mat-icon><b>Sunset</b>{{ formatTime(celestial().solarEvents.sunset) }}</span>
+                        <span><mat-icon>schedule</mat-icon><b>Daylight</b>{{ daylightDurationMinutes() === null ? '—' : formatDayLength(daylightDurationMinutes()!) }}</span>
+                      </div>
+                    </section>
+
+                    <section class="sky-info-astro">
+                      <div class="sky-info-section-label"><mat-icon>auto_awesome</mat-icon> SKY</div>
+                      <div class="sky-info-astro-grid">
+                        <span><mat-icon>wb_sunny</mat-icon><b>Sun</b>{{ sunAltitude().toFixed(1) }}° alt · {{ sunAzimuth().toFixed(0) }}° az</span>
+                        <span><mat-icon>brightness_2</mat-icon><b>Moon</b>{{ celestial().moon.phaseName }} · {{ Math.round(celestial().moon.illuminationFraction * 100) }}%</span>
+                        <span><mat-icon>north</mat-icon><b>Moon altitude</b>{{ moonAltitude().toFixed(1) }}° · {{ moonAzimuth().toFixed(0) }}° az</span>
+                        <span><mat-icon>straighten</mat-icon><b>Moon distance</b>{{ formatMoonDistance(celestial().moon.distanceKm) }} km</span>
+                      </div>
+                    </section>
+                  </div>
+
                   <div class="deck-weather-hero">
                     <div class="deck-weather-main">
                       <div class="deck-temperature-readout">
