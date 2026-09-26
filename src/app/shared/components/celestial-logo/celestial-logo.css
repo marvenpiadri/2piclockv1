@@ -4,7 +4,7 @@
 .sun-rays{transform-origin:24px 24px;stroke:rgba(251,191,36,.9);stroke-width:1.35;stroke-linecap:round;fill:none;transition:transform 1s linear}
 .sun-glow{fill:rgba(251,191,36,.24);filter:url(#logoGlow)}
 .moon-glow{fill:rgba(226,232,240,.22);filter:url(#logoGlow)}
-.logo-type{fill:#111827;font:800 8px/1 system-ui,sans-serif;letter-spacing:-.35px;pointer-events:none;paint-order:stroke;stroke:rgba(255,255,255,.18);stroke-width:.35px}
+.logo-type{fill:#111827;font-family:"Dekatron",system-ui,sans-serif;font-size:8px;font-weight:600;line-height:1;letter-spacing:-.35px;pointer-events:none;paint-order:stroke;stroke:rgba(255,255,255,.18);stroke-width:.35px}
 .night .logo-type,.transition .logo-type{fill:#0f172a}
 .celestial-logo:hover{transform:scale(1.05)}
 @media(prefers-reduced-motion:reduce){.celestial-logo,.celestial-mark,.sun-layer,.moon-layer,.sun-rays{transition:none!important}}
