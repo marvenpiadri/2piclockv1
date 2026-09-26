@@ -192,6 +192,57 @@
           </div>
         </section>
 
+        <section class="solar-system-explorer" aria-label="Interactive Solar System">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">SOLAR SYSTEM</span>
+              <h3>Planetary Orbits · {{ selectedDate() }} {{ selectedTime() }}</h3>
+              <p>Heliocentric orbital geometry for the selected instant. Distances use a logarithmic visual scale so the inner planets remain readable.</p>
+            </div>
+            <div class="planet-selector">
+              @for (body of solarSystemStates(); track body.name) {
+                <button type="button" [class.active]="selectedPlanet() === body.name.toLowerCase()" (click)="selectPlanet(body.name)">{{ body.name }}</button>
+              }
+            </div>
+          </div>
+          <div class="solar-system-layout">
+            <div class="solar-system-stage">
+              <svg viewBox="0 0 100 100" role="img" aria-label="Solar System orbital diagram">
+                <defs>
+                  <radialGradient id="astroSun"><stop offset="0%" stop-color="#fff7ae"/><stop offset="55%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></radialGradient>
+                </defs>
+                @for (body of solarSystemStates(); track body.name) {
+                  <path class="orbit-line" [class.selected-orbit]="selectedPlanet() === body.name.toLowerCase()" [attr.d]="orbitPath(body)"></path>
+                }
+                <circle cx="50" cy="50" r="2.5" fill="url(#astroSun)" class="sun-core"></circle>
+                @for (body of solarSystemStates(); track body.name) {
+                  <g class="planet-node" [class.selected-node]="selectedPlanet() === body.name.toLowerCase()" [attr.transform]="'translate(' + planetX(body) + ' ' + planetY(body) + ')'" (click)="selectPlanet(body.name)">
+                    <circle r="1.25" [attr.fill]="body.color"></circle>
+                    <circle class="planet-hit" r="3.2"></circle>
+                    <text y="-2.2">{{ body.symbol }}</text>
+                  </g>
+                }
+              </svg>
+              <span class="solar-system-center">SUN</span>
+            </div>
+            @if (selectedPlanetState(); as body) {
+              <div class="solar-system-detail">
+                <div class="detail-kicker">{{ body.symbol }} {{ body.name }}</div>
+                <strong>{{ body.heliocentricRadiusAU.toFixed(3) }} AU</strong>
+                <span>heliocentric distance</span>
+                <dl>
+                  <div><dt>ORBIT</dt><dd>{{ body.semiMajorAxisAU.toFixed(3) }} AU</dd></div>
+                  <div><dt>ECCENTRICITY</dt><dd>{{ body.eccentricity.toFixed(4) }}</dd></div>
+                  <div><dt>INCLINATION</dt><dd>{{ body.inclinationDeg.toFixed(2) }}°</dd></div>
+                  <div><dt>TRUE ANOMALY</dt><dd>{{ body.trueAnomalyDeg.toFixed(1) }}°</dd></div>
+                  <div><dt>FROM EARTH</dt><dd>{{ body.geocentricDistanceAU.toFixed(3) }} AU</dd></div>
+                  <div><dt>ALT / AZ</dt><dd>{{ body.altitudeDeg.toFixed(1) }}° / {{ body.azimuthDeg.toFixed(0) }}°</dd></div>
+                </dl>
+              </div>
+            }
+          </div>
+        </section>
+
         <div class="observatory-actions">
           <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>
           <button type="button" (click)="setTab('daylight')"><mat-icon>wb_twilight</mat-icon> Daylight & Twilight</button>
