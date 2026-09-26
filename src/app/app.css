@@ -65,14 +65,14 @@
   inset: 0;
   z-index: 0;
   border-radius: 50%;
-  background: #f59e0b;
+  background: #f97316;
   transition: background-color 1.2s cubic-bezier(.22,.61,.36,1);
 }
 
 .brand-badge .brand-symbol {
   position: relative;
   z-index: 1;
-  color: #f59e0b;
+  color: #f97316;
   font-family: "Dekatron", var(--font-mono, monospace);
   font-size: 16px;
   font-weight: 600;
@@ -83,11 +83,11 @@
 }
 
 .brand-badge-sun .celestial-disc {
-  background: #f59e0b;
+  background: #f97316;
 }
 
 .brand-badge-sun .brand-symbol {
-  color: #451a03;
+  color: #431407;
 }
 
 .brand-badge-moon .celestial-disc {
@@ -133,7 +133,7 @@
 
 .brand-sub {
   font-size: 9px;
-  color: #fbbf24;
+  color: #fb923c;
   font-family: var(--font-mono);
   line-height: 1;
   letter-spacing: 0.08em;
@@ -172,7 +172,7 @@
 }
 
 .btn-observatories .obs-icon {
-  color: #fbbf24;
+  color: #431407;
   font-size: 18px;
   width: 18px;
   height: 18px;
