@@ -1,7 +1,6 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { GeoLocation, PRESET_LOCATIONS } from '../models/location.model';
-import { WeatherService } from './weather.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +8,6 @@ import { WeatherService } from './weather.service';
 export class LocationService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
-  private weatherService = inject(WeatherService);
 
   readonly allPresets: GeoLocation[] = PRESET_LOCATIONS;
   readonly selectedLocation = signal<GeoLocation>(PRESET_LOCATIONS[0]); // Default to Tokyo or local
@@ -47,10 +45,6 @@ export class LocationService {
   }
 
   selectLocation(loc: GeoLocation): void {
-    // When changing country or location, remove user-chosen preset from Atmospheric Conditions
-    // and apply the authentic atmosphere for the newly selected country
-    this.weatherService.clearOverride();
-
     this.selectedLocation.set(loc);
     this.locationError.set(null);
     if (this.isBrowser) {
@@ -64,8 +58,6 @@ export class LocationService {
         // Ignore storage error
       }
     }
-    // Eagerly fetch and apply the atmosphere for the selected country
-    this.weatherService.fetchWeatherForLocation(loc);
   }
 
   setCustomCoordinates(name: string, lat: number, lng: number, timezone?: string): void {
@@ -138,9 +130,9 @@ export class LocationService {
       if (detected) return detected;
     }
 
-    const fallback = this.allPresets[Math.floor(Math.random() * this.allPresets.length)] ?? this.allPresets[0];
-    // Do not persist an automatic random fallback; a later visit should get
-    // another GPS opportunity. Explicit user choices are persisted by selectLocation().
+    // Keep the no-GPS fallback deterministic. The app must never change cities
+    // randomly between visits or renders.
+    const fallback = this.allPresets[0];
     this.selectedLocation.set(fallback);
     return fallback;
   }
