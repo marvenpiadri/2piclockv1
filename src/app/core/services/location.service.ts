@@ -1,6 +1,7 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { GeoLocation, PRESET_LOCATIONS } from '../models/location.model';
+import { WeatherService } from './weather.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +9,7 @@ import { GeoLocation, PRESET_LOCATIONS } from '../models/location.model';
 export class LocationService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private weatherService = inject(WeatherService);
 
   readonly allPresets: GeoLocation[] = PRESET_LOCATIONS;
   readonly selectedLocation = signal<GeoLocation>(PRESET_LOCATIONS[0]); // Default to Tokyo or local
@@ -45,6 +47,9 @@ export class LocationService {
   }
 
   selectLocation(loc: GeoLocation): void {
+    // A manual atmosphere belongs to the previous location. Clear it here;
+    // CelestialService remains responsible for the single weather fetch trigger.
+    this.weatherService.clearOverride();
     this.selectedLocation.set(loc);
     this.locationError.set(null);
     if (this.isBrowser) {
