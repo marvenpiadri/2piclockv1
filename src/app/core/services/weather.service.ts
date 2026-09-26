@@ -7,6 +7,15 @@ import { GeoLocation } from '../models/location.model';
 @Injectable({
   providedIn: 'root'
 })
+export interface WorldWeatherSnapshot {
+  locationId: string;
+  temperatureC: number;
+  condition: WeatherCondition;
+  cloudCoverPct: number;
+  windSpeedKmh: number;
+  precipitationPct: number;
+}
+
 export class WeatherService {
   private platformId = inject(PLATFORM_ID);
   private http = inject(HttpClient);
@@ -17,6 +26,44 @@ export class WeatherService {
   readonly isLoading = signal<boolean>(false);
   readonly overrideConfig = signal<WeatherOverrideConfig>({ active: false });
   readonly isFahrenheit = signal<boolean>(false);
+  readonly worldWeather = signal<Record<string, WorldWeatherSnapshot>>({});
+  private worldWeatherFetchedAt = 0;
+
+
+  fetchWorldWeather(locations: GeoLocation[]): void {
+    if (!this.isBrowser || locations.length === 0) return;
+    const now = Date.now();
+    if (now - this.worldWeatherFetchedAt < 10 * 60 * 1000 && Object.keys(this.worldWeather()).length > 0) return;
+
+    const params = new HttpParams()
+      .set('latitude', locations.map(loc => loc.latitude.toFixed(4)).join(','))
+      .set('longitude', locations.map(loc => loc.longitude.toFixed(4)).join(','))
+      .set('current', 'temperature_2m,precipitation,weather_code,cloud_cover,wind_speed_10m')
+      .set('timezone', 'UTC');
+
+    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params }).subscribe({
+      next: (data) => {
+        const rows = Array.isArray(data) ? data : [data];
+        const next: Record<string, WorldWeatherSnapshot> = {};
+        rows.forEach((row: any, index: number) => {
+          const loc = locations[index];
+          if (!loc || !row?.current) return;
+          const current = row.current;
+          const condition = this.mapWmoCodeToCondition(Number(current.weather_code ?? 0));
+          next[loc.id] = {
+            locationId: loc.id,
+            temperatureC: Math.round(Number(current.temperature_2m ?? 0) * 10) / 10,
+            condition,
+            cloudCoverPct: Math.round(Number(current.cloud_cover ?? 0)),
+            windSpeedKmh: Math.round(Number(current.wind_speed_10m ?? 0)),
+            precipitationPct: Number(current.precipitation ?? 0) > 0 ? 100 : 0
+          };
+        });
+        this.worldWeather.set(next);
+        this.worldWeatherFetchedAt = Date.now();
+      }
+    });
+  }
 
   toggleFahrenheit(): void {
     this.isFahrenheit.update(v => !v);
