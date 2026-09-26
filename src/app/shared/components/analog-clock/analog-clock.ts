@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -104,13 +104,30 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     :host { display:block; width:100%; }
-    .analog-face { width:min(100%,220px); aspect-ratio:1; margin:auto; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .analog-face { width:min(100%,var(--analog-clock-size,220px)); aspect-ratio:1; margin:auto; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
     .analog-svg { width: 100%; height: 100%; overflow: visible; display: block; }
   `]
 })
 export class AnalogClockComponent {
-  @Input({ required: true }) timezone = 'UTC';
-  @Input() activeDate: Date = new Date();
+  private readonly timezoneValue = signal('UTC');
+  private readonly activeDateValue = signal<Date>(new Date());
+
+  @Input({ required: true })
+  set timezone(value: string) {
+    this.timezoneValue.set(value || 'UTC');
+  }
+  get timezone(): string {
+    return this.timezoneValue();
+  }
+
+  @Input()
+  set activeDate(value: Date) {
+    this.activeDateValue.set(value instanceof Date ? value : new Date(value));
+  }
+  get activeDate(): Date {
+    return this.activeDateValue();
+  }
+
   @Input() latitude = 0;
   @Input() longitude = 0;
 
@@ -134,10 +151,10 @@ export class AnalogClockComponent {
   })();
 
   private parsedTime = computed(() => {
-    const d = this.activeDate;
+    const d = this.activeDateValue();
     try {
       const options: Intl.DateTimeFormatOptions = {
-        timeZone: this.timezone,
+        timeZone: this.timezoneValue(),
         hour: 'numeric',
         minute: 'numeric',
         second: 'numeric',

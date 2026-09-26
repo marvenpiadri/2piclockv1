@@ -8,14 +8,14 @@ import { WeatherService } from '../../core/services/weather.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
-import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent } from '../../shared/components';
-import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
+import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent, AnalogClockComponent } from '../../shared/components';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import { WorldEventsService } from '../../core/services/world-events.service';
+import { ReactiveSkyComponent } from '../../shared/components/reactive-sky/reactive-sky';
 
 @Component({
   selector: 'app-sky-home',
@@ -49,7 +49,6 @@ export class SkyHomeComponent {
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
 
-  readonly tonightViewMode = signal<'celestial' | 'analog'>('celestial');
 
   private readonly skyPageState = signal<'time' | 'weather' | 'astronomy' | 'tonight' | 'world'>(
     (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
@@ -90,16 +89,6 @@ export class SkyHomeComponent {
   readonly localTime = this.celestialService.formattedLocalTime;
   readonly localDate = this.celestialService.formattedLocalDate;
   readonly timezoneDisplay = this.celestialService.timezoneDisplay;
-  readonly polarAngles = this.celestialService.polarClockAngles;
-  readonly isBrightSky = this.celestialService.isBrightSky;
-
-  readonly moonHandRotation = computed(() => {
-    const ageDays = this.celestial().moon.ageDays;
-    const elongationDeg = (ageDays / 29.530588853) * 360;
-    const sunRot = this.localDayFraction() * 360 - 180;
-    return sunRot + elongationDeg;
-  });
-
   // Simulated Eclipse State for interactive exploration and visual testing
   readonly simulatedEclipse = signal<'none' | 'solar' | 'lunar'>('none');
 
@@ -217,9 +206,6 @@ export class SkyHomeComponent {
       { name: 'Solar Midnight', time: '00:00', alt: 'Lowest Nadir', desc: 'Sun reaches maximum depth below Earth' }
     ];
   });
-
-  // Clock Display Mode: Radian 2Pi Dial vs Analog Clock (Digital option removed as requested)
-  readonly clockDisplayMode = signal<'radian' | 'analog'>('radian');
 
   readonly showShareModal = signal<boolean>(false);
   

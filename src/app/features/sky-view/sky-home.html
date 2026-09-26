@@ -5,24 +5,24 @@
     <div class="sky-header-left">
       @if (skyPage === 'time') {
         <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
-        <h1>Living Sky Horizon · {{ selectedLocation().name }}</h1>
-        <p>{{ localDate() }} · {{ timezoneDisplay() }} · Solar & Lunar 2π Coordinate</p>
+        <h1>{{ selectedLocation().name }}</h1>
+        <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
       } @else if (skyPage === 'weather') {
         <span class="section-eyebrow">METEOROLOGY · {{ selectedLocation().name }}</span>
-        <h1>Atmospheric Weather</h1>
-        <p>Live conditions, telemetry, and 24-hour predictive trend.</p>
+        <h1>Weather</h1>
+        <p>Current conditions and local forecast.</p>
       } @else if (skyPage === 'astronomy') {
         <span class="section-eyebrow">ASTRONOMICAL EPHEMERIS · {{ selectedLocation().name }}</span>
-        <h1>Celestial Altitude & Azimuth</h1>
-        <p>Solar zenith, lunar phases, golden hour and twilight intervals.</p>
+        <h1>Astronomy</h1>
+        <p>Sun, Moon, twilight and celestial positions.</p>
       } @else if (skyPage === 'tonight') {
         <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
-        <h1>Tonight's Sky</h1>
-        <p>Moonlight, twilight and conditions for observing the night sky.</p>
+        <h1>Tonight</h1>
+        <p>Moonlight, twilight and observing conditions.</p>
       } @else {
         <span class="section-eyebrow">GLOBAL CLOCKS</span>
-        <h1>World Observatories</h1>
-        <p>Precise local time and solar offsets across planetary zones.</p>
+        <h1>World Time</h1>
+        <p>Local time across selected cities.</p>
       }
     </div>
 
@@ -68,52 +68,11 @@
       <section class="sky-time-layout" [class.panel-collapsed]="!isRightPanelExpanded()">
         <div class="time-column">
           <div class="time-stage">
-            <div class="polar-clock-container">
-              <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="Celestial clock">
-                <defs>
-                  <filter id="sunGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                  <filter id="moonGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                </defs>
-                <circle cx="0" cy="0" r="148" [attr.fill]="isBrightSky() ? 'rgba(8,12,20,.68)' : 'rgba(8,8,8,.38)'" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
-                <circle cx="0" cy="0" r="132" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".8"/>
-                <circle cx="0" cy="0" r="116" fill="none" stroke="rgba(245,158,11,.28)" stroke-width="1" stroke-dasharray="2 4"/>
-                @for (hour of [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]; track hour) {
-                  <g [attr.transform]="'rotate(' + (hour * 15) + ')'">
-                    <line x1="0" [attr.y1]="hour % 6 === 0 ? '-148' : (hour % 3 === 0 ? '-142' : '-138')" x2="0" y2="-132"
-                      [attr.stroke]="hour % 6 === 0 ? 'rgba(245,158,11,.95)' : 'rgba(255,255,255,.28)'"
-                      [attr.stroke-width]="hour % 6 === 0 ? '2' : '1'"/>
-                  </g>
-                }
-                <text x="0" y="-152" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle" class="clock-svg-num">12:00</text>
-                <text x="152" y="3" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" class="clock-svg-num">18:00</text>
-                <text x="0" y="158" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle" class="clock-svg-num">00:00</text>
-                <text x="-152" y="3" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="end" class="clock-svg-num">06:00</text>
-                <line x1="-128" y1="0" x2="128" y2="0" stroke="rgba(245,158,11,.45)" stroke-width="1" stroke-dasharray="3 3"/>
-                <text x="-124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700">EAST</text>
-                <text x="124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700" text-anchor="end">WEST</text>
-                <g [attr.transform]="'rotate(' + (localDayFraction() * 360 - 180) + ')'">
-                  <line x1="0" y1="0" x2="0" y2="-122" stroke="rgba(245,158,11,.9)" stroke-width="2"/>
-                  <circle cx="0" cy="-122" r="9" fill="#f59e0b" filter="url(#sunGlowFilter)"/>
-                  <circle cx="0" cy="-122" r="3.5" fill="#fff"/>
-                </g>
-                <g [attr.transform]="'rotate(' + moonHandRotation() + ')'">
-                  <line x1="0" y1="0" x2="0" y2="-96" stroke="rgba(186,230,253,.85)" stroke-width="1.8" stroke-dasharray="3 2"/>
-                  <circle cx="0" cy="-96" r="7" fill="#38bdf8" filter="url(#moonGlowFilter)" [attr.opacity]="0.4 + celestial().moon.illuminationFraction * 0.6"/>
-                  <circle cx="0" cy="-96" r="3" fill="#f8fafc"/>
-                </g>
-                <circle cx="0" cy="0" r="78" fill="rgba(8,8,8,.94)" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
-              </svg>
-              <div class="clock-readout">
-                <div class="clock-time">{{ localTime() }}</div>
-                <div class="clock-date">{{ timezoneDisplay() }}</div>
-                <div class="clock-state">{{ getTwilightLabel(celestial().twilightState) }}</div>
-              </div>
+            <div class="analog-clock-container" aria-label="Local analog clock">
+              <app-analog-clock
+                [timezone]="selectedLocation().timezone"
+                [activeDate]="activeDate()">
+              </app-analog-clock>
             </div>
           </div>
 
@@ -491,48 +450,10 @@
     @if (skyPage === 'tonight') {
       <section class="report-page tonight-page">
         
-        <!-- Header Strip: Title and Primary View Switcher (Celestial Sky Dome vs. Precision Analog Clock) -->
-        <div class="tonight-header-strip">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center border border-indigo-500/30">
-              <mat-icon class="text-xl">dark_mode</mat-icon>
-            </div>
-            <div class="text-left">
-              <span class="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase">NOCTURNAL SKY THEATRE</span>
-              <h2 class="text-xl md:text-2xl font-extrabold text-white font-sans tracking-tight">Tonight's Horizon & Celestial View</h2>
-            </div>
-          </div>
-
-          <!-- View Mode Switch: Celestial View vs Precision Analog Clock -->
-          <div class="flex items-center p-1 rounded-xl bg-black/60 border border-white/10">
-            <button 
-              type="button" 
-              (click)="tonightViewMode.set('celestial')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition"
-              [class.bg-amber-500]="tonightViewMode() === 'celestial'"
-              [class.text-neutral-950]="tonightViewMode() === 'celestial'"
-              [class.text-slate-300]="tonightViewMode() !== 'celestial'"
-              [class.hover:text-white]="tonightViewMode() !== 'celestial'">
-              <mat-icon class="text-sm">flare</mat-icon>
-              <span>Celestial Sky View</span>
-            </button>
-
-            <button 
-              type="button" 
-              (click)="tonightViewMode.set('analog')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition"
-              [class.bg-amber-500]="tonightViewMode() === 'analog'"
-              [class.text-neutral-950]="tonightViewMode() === 'analog'"
-              [class.text-slate-300]="tonightViewMode() !== 'analog'"
-              [class.hover:text-white]="tonightViewMode() !== 'analog'">
-              <mat-icon class="text-sm">schedule</mat-icon>
-              <span>Analog Clock</span>
-            </button>
-          </div>
-        </div>
+        <!-- Tonight uses the shared celestial presentation; no duplicate clock mode. -->
 
         <!-- Mode A: Pure Celestial Sun, Moon, and Eclipse Horizon View (No Overlapping Center Text) -->
-        @if (tonightViewMode() === 'celestial') {
+        @if (true) {
           <div class="tonight-stage-card" [class.eclipse-active]="activeEclipseState().isActive">
             
             <!-- Eclipse Mode & Simulation Selector -->
@@ -715,46 +636,6 @@
                   }
                 </g>
               </svg>
-            </div>
-          </div>
-        }
-
-        <!-- Mode B: Precision Astronomical Analog Clock for Timing Focus -->
-        @if (tonightViewMode() === 'analog') {
-          <div class="tonight-stage-card">
-            <div class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-black/50 border border-white/10 mb-6">
-              <div class="flex items-center gap-2">
-                <mat-icon class="text-amber-400">schedule</mat-icon>
-                <span class="text-xs font-bold font-mono text-white">Astronomical Precision Analog Time</span>
-              </div>
-              <span class="text-xs font-mono text-amber-300 font-bold">{{ selectedLocation().name }} · {{ selectedLocation().timezone }}</span>
-            </div>
-
-            <div class="py-6 flex flex-col items-center justify-center">
-              <div class="w-64 h-64 md:w-72 md:h-72 p-3 rounded-full bg-slate-950/90 border-2 border-amber-500/30 shadow-2xl flex items-center justify-center">
-                <app-analog-clock 
-                  [timezone]="selectedLocation().timezone" 
-                  [activeDate]="activeDate()"
-                  [latitude]="selectedLocation().latitude"
-                  [longitude]="selectedLocation().longitude">
-                </app-analog-clock>
-              </div>
-
-              <!-- Analog Clock Digital Readout Bar -->
-              <div class="mt-6 flex flex-wrap items-center justify-center gap-3 font-mono text-xs">
-                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span class="text-[10px] text-slate-400 block uppercase">LOCAL TIME</span>
-                  <strong class="text-white text-base font-bold">{{ localTime() }}</strong>
-                </div>
-                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span class="text-[10px] text-slate-400 block uppercase">CALENDAR DATE</span>
-                  <strong class="text-amber-300 text-base font-bold">{{ localDate() }}</strong>
-                </div>
-                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span class="text-[10px] text-slate-400 block uppercase">SOLAR NOON</span>
-                  <strong class="text-indigo-200 text-base font-bold">{{ formatTime(celestial().solarEvents.solarNoon) }}</strong>
-                </div>
-              </div>
             </div>
           </div>
         }
