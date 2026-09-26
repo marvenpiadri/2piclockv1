@@ -55,11 +55,11 @@ Goal: turn Tonight into a practical nightly observing experience without turning
 - [x] Moon observing conditions
 - [x] Astronomical darkness timeline
 - [x] Stargazing conditions based on sky factors
-- [ ] Upcoming celestial events
+- [x] Upcoming celestial events
 - [x] Personalized nightly timeline
 - [x] Shareable "Tonight under your sky" state
 
-V2.2 implementation is now substantially complete. The remaining item is a dedicated upcoming-events feed; existing event tools remain available without duplicating them inside Tonight.
+V2.2 implementation is complete. Tonight now combines the local sky, Moon observing conditions, visible constellations, darkness boundaries, stargazing factors, a personalized timeline, upcoming celestial events, and share state.
 
 ## V2.3 — My Sky
 Goal: make the experience personal.
@@ -84,9 +84,11 @@ Goal: connect the local sky to the planet.
 ## V2.5 — Time Machine
 Goal: let users explore the sky across time.
 
-- [ ] Arbitrary date/time
-- [ ] Historical skies
-- [ ] Future skies
+The Living Sky time engine already supports exact historical/future instants; the compact date navigator now exposes this directly from the main experience.
+
+- [x] Arbitrary date/time
+- [x] Historical skies
+- [x] Future skies
 - [ ] Date comparison
 - [ ] Celestial event exploration
 - [ ] Shareable sky states
