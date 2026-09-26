@@ -154,21 +154,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 12px;
-  background: rgba(249, 115, 22, 0.96);
-  border: 1px solid rgba(249, 115, 22, 1);
-  color: #1c1917;
+  padding: 6px 11px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #cbd5e1;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
 }
 
 .btn-observatories:hover,
 .btn-observatories.menu-open {
-  background: #f97316;
-  border-color: #fb923c;
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.10);
+  color: #f8fafc;
 }
 
 .btn-observatories .obs-icon {
@@ -314,26 +315,26 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  border-radius: 12px;
-  background: rgba(249, 115, 22, 0.96);
-  border: 1px solid rgba(249, 115, 22, 1);
-  color: #1c1917;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #e2e8f0;
   cursor: pointer;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
 }
 
 .location-pill-btn:hover,
 .location-pill-btn.menu-open {
-  background: #f97316;
-  border-color: #fb923c;
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.10);
 }
 
 .loc-name-label {
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: #e2e8f0;
   max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
@@ -342,7 +343,7 @@
 }
 
 .location-pill-btn:hover .loc-name-label {
-  color: #fde68a;
+  color: #f8fafc;
 }
 
 .loc-country-label {
@@ -460,22 +461,23 @@
 }
 
 .btn-gps-action {
-  padding: 8px;
-  border-radius: 12px;
-  background: rgba(249, 115, 22, 0.96);
-  border: 1px solid rgba(249, 115, 22, 1);
-  color: #1c1917;
+  padding: 7px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 
- .btn-gps-action:hover {
-  background: #f97316;
-  color: #1c1917;
+.btn-gps-action:hover {
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.10);
+  color: #f8fafc;
 }
 
 .btn-gps-action mat-icon {
@@ -485,9 +487,9 @@
 }
 
  .full-page-glass-substrate.glass-active {
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  background-color: rgba(13, 17, 23, 0.62);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  background-color: rgba(13, 17, 23, 0.16);
 }
 
 .full-page-glass-substrate.glass-inactive {
