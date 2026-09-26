@@ -80,6 +80,16 @@ export class ShareExportModalComponent implements AfterViewInit {
     ctx.roundRect(x, y, w, h, r);
   }
 
+  private formatEvent(date: Date | null, timezone: string): string {
+    if (!date) return '—';
+    return date.toLocaleTimeString('en-US', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  }
+
   private drawMetric(ctx: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number): void {
     ctx.fillStyle = 'rgba(148,163,184,.72)';
     ctx.font = '700 12px ui-monospace, SFMono-Regular, Menlo, monospace';
