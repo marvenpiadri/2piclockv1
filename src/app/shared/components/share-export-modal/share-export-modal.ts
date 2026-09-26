@@ -196,7 +196,9 @@ export class ShareExportModalComponent implements AfterViewInit {
     if (!isPlatformBrowser(this.platformId)) return;
     const location = this.locationService.selectedLocation();
     const instant = this.timeControlService.currentActiveDate().toISOString();
-    const path = window.location.pathname === '/' ? '/' + location.id : window.location.pathname;
+    const pathname = window.location.pathname;
+    const experience = pathname === '/weather' ? 'weather' : pathname === '/tonight' ? 'tonight' : 'time';
+    const path = pathname.startsWith('/' + location.id) ? pathname : '/' + location.id + '/' + experience;
     const url = window.location.origin + path + '?at=' + encodeURIComponent(instant);
 
     try {
