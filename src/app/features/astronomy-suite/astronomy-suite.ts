@@ -146,6 +146,14 @@ export class AstronomySuiteComponent implements OnInit {
     this.selectedDeepSkyObject.set(id);
   }
 
+  deepSkyFieldLeft(): number {
+    return 50 + Math.max(-46, Math.min(46, this.selectedDeepSkyPosition().hourAngleDeg / 180 * 46));
+  }
+
+  deepSkyFieldTop(): number {
+    return 50 - Math.max(-42, Math.min(42, this.selectedDeepSkyPosition().altitudeDeg / 90 * 42));
+  }
+
 
 
   readonly constellationCatalog = [
