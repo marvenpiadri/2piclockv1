@@ -711,3 +711,174 @@
   background: #fb923c;
   border-color: #fb923c;
 }
+
+
+/* V2.0 header — intentionally follows DooMath's quiet navigation language.
+   Amber belongs to the living sky, not to every header control. */
+.universal-top-header {
+  height: 56px;
+  padding: 0 24px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.header-left {
+  gap: 12px;
+}
+
+.btn-observatories,
+.location-pill-btn,
+.btn-gps-action {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  box-shadow: none !important;
+  border-radius: 6px;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.btn-observatories {
+  height: 32px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-observatories .obs-icon,
+.btn-observatories .chevron-icon {
+  color: #8b949e !important;
+}
+
+.btn-observatories:hover,
+.btn-observatories.menu-open,
+.location-pill-btn:hover,
+.location-pill-btn.menu-open,
+.btn-gps-action:hover,
+.btn-gps-action:focus-visible {
+  background: rgba(255,255,255,.05) !important;
+  border-color: transparent !important;
+  color: #f0f6fc !important;
+}
+
+.btn-observatories:hover .obs-icon,
+.btn-observatories:hover .chevron-icon,
+.btn-observatories.menu-open .obs-icon,
+.btn-observatories.menu-open .chevron-icon,
+.location-pill-btn:hover .chevron-icon,
+.location-pill-btn.menu-open .chevron-icon,
+.btn-gps-action:hover mat-icon {
+  color: #f0f6fc !important;
+}
+
+.location-pill-btn {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #8b949e !important;
+}
+
+.location-pill-btn .loc-name-label {
+  color: #8b949e !important;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.location-pill-btn .loc-country-label,
+.location-pill-btn .loc-time-row {
+  color: #8b949e !important;
+}
+
+.location-pill-btn:hover .loc-name-label,
+.location-pill-btn.menu-open .loc-name-label {
+  color: #f0f6fc !important;
+}
+
+.btn-gps-action {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+}
+
+.nav-main-link {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: #8b949e;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none !important;
+}
+
+.nav-main-link:hover,
+.nav-main-active,
+.nav-main-active:hover {
+  color: #f0f6fc !important;
+  background: rgba(255,255,255,.05) !important;
+  box-shadow: none !important;
+}
+
+.nav-main-active {
+  border-bottom: 0 !important;
+}
+
+.brand-title {
+  color: #f0f6fc;
+}
+
+.brand-sub {
+  color: #8b949e;
+}
+
+.header-divider {
+  background: #30363d;
+}
+
+.app-layout.sky-background-active .universal-top-header {
+  background: #161b22 !important;
+  border-bottom-color: #30363d !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.app-layout.sky-background-active .btn-observatories,
+.app-layout.sky-background-active .location-pill-btn,
+.app-layout.sky-background-active .btn-gps-action {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: #8b949e !important;
+}
+
+.app-layout.sky-background-active .btn-observatories:hover,
+.app-layout.sky-background-active .btn-observatories.menu-open,
+.app-layout.sky-background-active .location-pill-btn:hover,
+.app-layout.sky-background-active .location-pill-btn.menu-open,
+.app-layout.sky-background-active .btn-gps-action:hover,
+.app-layout.sky-background-active .btn-gps-action:focus-visible {
+  background: rgba(255,255,255,.05) !important;
+  color: #f0f6fc !important;
+}
+
+.app-layout.sky-background-active .nav-main-active {
+  background: rgba(255,255,255,.05) !important;
+  color: #f0f6fc !important;
+  box-shadow: none !important;
+}
+
+/* Neutralize legacy amber header accents without changing the sky's amber identity. */
+.app-layout.sky-background-active .search-input-wrap:focus-within {
+  border-color: #30363d;
+  box-shadow: none;
+}
+.app-layout.sky-background-active .btn-explore-current {
+  background: rgba(255,255,255,.05);
+  border-color: #30363d;
+  color: #f0f6fc;
+}
+.app-layout.sky-background-active .btn-explore-current:hover {
+  background: rgba(255,255,255,.09);
+}
+.app-layout.sky-background-active .btn-gps-trigger:hover {
+  color: #f0f6fc;
+}
