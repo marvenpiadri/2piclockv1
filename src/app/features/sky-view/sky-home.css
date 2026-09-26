@@ -2,7 +2,7 @@
 :host{display:block;width:100%;min-height:calc(100vh - 64px);color:#f5f5f5;background:transparent}
 .sky-report{position:relative;min-height:calc(100vh - 64px);overflow:hidden;background:transparent;color:#f5f5f5;transition:color .45s ease}
 .sky-header,.sky-navigation,.sky-page{position:relative;z-index:2}
-.sky-header{width:100%;margin:0;padding:12px 24px 10px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:0;border-bottom:1px solid rgba(255,255,255,.08);border-radius:0;background:rgba(8,10,14,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:none}
+.sky-header{width:100%;margin:0;padding:9px 20px 8px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:0;border-bottom:1px solid rgba(255,255,255,.08);border-radius:0;background:rgba(8,10,14,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:none}
 .sky-header-left{display:flex;flex-direction:column;gap:1px;min-width:0}
 .sky-header-left h1{margin:1px 0 0;font:650 clamp(18px,1.8vw,24px)/1.2 system-ui,sans-serif;letter-spacing:-.025em;color:#f8fafc}
 .sky-header-left p{margin:2px 0 0;color:#94a3b8;font:11px monospace}
@@ -67,20 +67,20 @@
   font-weight: 800;
   box-shadow: 0 2px 8px rgba(245, 158, 11, .25);
 }
-.sky-page{width:100%;max-width:100%;margin:0;min-height:calc(100vh - 140px);padding:16px 24px 60px;box-sizing:border-box}
-.sky-time-layout{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:24px;align-items:start;width:100%;min-height:calc(100vh - 160px);transition:grid-template-columns .35s cubic-bezier(0.16,1,0.3,1)}
+.sky-page{width:100%;max-width:100%;margin:0;min-height:calc(100vh - 140px);padding:10px 20px 48px;box-sizing:border-box}
+.sky-time-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start;width:100%;min-height:calc(100vh - 160px);transition:grid-template-columns .35s cubic-bezier(0.16,1,0.3,1)}
 .sky-time-layout.panel-collapsed{grid-template-columns:minmax(0,1fr) 48px;gap:16px}
 .time-column{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;min-width:0;transition:all .35s ease}
-.time-stage{width:100%;min-height:480px;display:grid;place-items:center;position:relative}
+.time-stage{width:100%;min-height:440px;display:grid;place-items:center;position:relative}
 
 .collapsed-deck-dock{position:sticky;top:80px;height:calc(100vh - 200px);display:flex;align-items:center;justify-content:center}
-.expand-deck-btn{appearance:none;border:1px solid rgba(255,255,255,.14);background:rgba(12,14,18,.75);color:#d0d0d0;border-radius:12px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:12px;backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(0,0,0,.35);transition:.18s ease}
+.expand-deck-btn{appearance:none;border:1px solid rgba(255,255,255,.12);background:rgba(12,14,18,.58);color:#d0d0d0;border-radius:10px;padding:12px 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:12px;backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(0,0,0,.35);transition:.18s ease}
 .expand-deck-btn:hover{background:rgba(20,24,32,.95);color:#fff;border-color:rgba(255,255,255,.24);transform:translateX(-2px)}
 .expand-deck-btn mat-icon{font-size:18px;width:18px;height:18px;color:#f59e0b}
 .expand-deck-btn span{writing-mode:vertical-rl;text-orientation:mixed;font:700 9px monospace;letter-spacing:.14em;color:#94a3b8}
 
-.environmental-deck{position:sticky;top:80px;max-height:calc(100vh - 140px);display:flex;flex-direction:column;padding:0;overflow:hidden;border:1px solid rgba(255,255,255,.14);border-radius:20px;background:rgba(10,12,16,.68);backdrop-filter:blur(24px) saturate(130%);box-shadow:0 18px 48px rgba(0,0,0,.25)}
-.deck-header{padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.environmental-deck{position:sticky;top:80px;max-height:calc(100vh - 140px);display:flex;flex-direction:column;padding:0;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(10,12,16,.68);backdrop-filter:blur(24px) saturate(130%);box-shadow:0 18px 48px rgba(0,0,0,.25)}
+.deck-header{padding:12px 14px 9px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.08)}
 .deck-title-row{display:flex;align-items:center;gap:10px}
 .deck-flag{width:26px;height:auto;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .deck-title-row h2{margin:0;font:700 16px/1.2 system-ui,sans-serif;color:#f8fafc}
@@ -100,7 +100,7 @@
 .deck-nav-tabs button.active{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#090b10;font-weight:800;border-color:rgba(245,158,11,.6);box-shadow:0 2px 10px rgba(245,158,11,.35),inset 0 1px 0 rgba(255,255,255,.35)}
 .deck-nav-tabs button.active mat-icon{color:#090b10;transform:scale(1.05)}
 
-.deck-scroll-container{flex:1;overflow-y:auto;padding:16px 18px 48px}
+.deck-scroll-container{flex:1;overflow-y:auto;padding:10px 13px 32px}
 .deck-scroll-container::-webkit-scrollbar{width:4px}
 .deck-scroll-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
 .deck-tab-pane{display:flex;flex-direction:column;gap:14px}
@@ -115,7 +115,7 @@
 .deck-hero-icon{font-size:36px;width:36px;height:36px;color:#f59e0b}
 
 .deck-metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
-.deck-metric-card{padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(18,22,31,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:all .2s ease}
+.deck-metric-card{padding:10px 11px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:rgba(18,22,31,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:all .2s ease}
 .deck-metric-card:hover{border-color:rgba(245,158,11,.4);background:rgba(22,27,38,.9);transform:translateY(-1px)}
 .metric-label{display:flex;align-items:center;justify-content:center;gap:6px;color:#93c5fd;font:700 9px/1 monospace;letter-spacing:.08em;width:100%}
 .metric-label mat-icon{font-size:14px;width:14px;height:14px;color:#38bdf8;display:flex;align-items:center;justify-content:center}
