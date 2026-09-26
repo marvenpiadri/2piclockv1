@@ -78,11 +78,11 @@ export interface EclipseEvent {
             <mat-icon class="text-amber-400 text-lg">event_available</mat-icon>
             <span>Upcoming Solar & Lunar Eclipses Catalog</span>
           </h3>
-          <span class="text-xs text-slate-400 font-mono">{{ upcomingEclipses.length }} Events Calculated</span>
+          <span class="text-xs text-slate-400 font-mono">{{ upcomingEclipses().length }} Events Calculated</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          @for (e of upcomingEclipses; track e.date) {
+          @for (e of upcomingEclipses(); track e.id) {
             <div class="eclipse-card p-5 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl hover:border-amber-500/30 transition">
               <div class="flex items-start justify-between">
                 <div class="flex items-center gap-2.5">
