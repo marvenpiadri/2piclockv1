@@ -1330,3 +1330,58 @@
   .tonight-constellation-list { grid-template-columns: 1fr; }
   .tonight-timeline { grid-template-columns: 1fr; }
 }
+
+
+.time-machine-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px auto 0;
+}
+.time-machine-date > button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+  color: rgba(255,255,255,.58);
+  cursor: pointer;
+}
+.time-machine-date > button:hover {
+  color: rgba(255,255,255,.88);
+  border-color: rgba(249,115,22,.32);
+}
+.time-machine-date label {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.time-machine-date label span {
+  font-size: 8px;
+  letter-spacing: .14em;
+  color: rgba(255,255,255,.32);
+}
+.time-machine-date input {
+  width: 124px;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,.78);
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+}
+.time-machine-date input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: .45;
+}
+.time-machine-today {
+  padding: 5px 8px;
+  font-size: 10px;
+}
+@media (max-width: 520px) {
+  .time-machine-date { gap: 5px; }
+  .time-machine-today { display: none; }
+}
