@@ -77,23 +77,6 @@
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('midnight')"><span>Midnight</span><b>00:00</b></button><button type="button" class="time-tool share-time-tool" (click)="showShareModal.set(true)" aria-label="Share this time and sky snapshot"><mat-icon>ios_share</mat-icon><span>Share</span></button>
           </div>
 
-          <div class="sky-ahead-preview" aria-label="Forecast to sky preview">
-            <div class="sky-ahead-heading">
-              <span>SKY AHEAD</span>
-              <small>Jump the sky forward</small>
-            </div>
-            <div class="sky-ahead-strip">
-              @for (item of skyAheadForecast(); track item.timeMs) {
-                <button type="button" class="sky-ahead-item" (click)="jumpToForecast(item.timeMs)" [class.current-preview]="Math.abs(item.timeMs - activeDate().getTime()) < 1800000">
-                  <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
-                  <app-weather-icon [condition]="item.weather.condition" [label]="item.weather.conditionLabel" [isDay]="item.weather.isDay" size="sm"></app-weather-icon>
-                  <strong>{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
-                  <small>{{ item.weather.precipitationPct }}%</small>
-                </button>
-              }
-            </div>
-          </div>
-
           <div class="time-machine-date" aria-label="Time machine date">
             <button type="button" (click)="shiftTimeMachineDate(-1)" aria-label="Previous day"><mat-icon>chevron_left</mat-icon></button>
             <label>
