@@ -49,7 +49,6 @@ export class SkyHomeComponent {
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
 
-  readonly tonightViewMode = signal<'celestial' | 'analog'>('celestial');
 
   private readonly skyPageState = signal<'time' | 'weather' | 'astronomy' | 'tonight' | 'world'>(
     (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
