@@ -339,6 +339,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly showSolarTrack = signal<boolean>(true);
   readonly showMoonZenith = signal<boolean>(true);
   readonly showWindVectors = signal<boolean>(false);
+  readonly showWorldWeather = signal<boolean>(false);
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
 
@@ -360,6 +361,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private subsolarMarker: Marker | null = null;
   private sublunarMarker: Marker | null = null;
   private probeMarker: Marker | null = null;
+  private worldWeatherSourceReady = false;
   private cityMarkers = new Map<string, Marker>();
   private countryLocations: GeoLocation[] = [];
   private lastLocationId = '';
@@ -532,12 +534,15 @@ export class WorldViewComponent implements OnInit, OnDestroy {
         const showTz = this.showTimezoneGrid();
         const showCel = this.showCelestialGrid();
         const showTrack = this.showSolarTrack();
+        const showWeather = this.showWorldWeather();
+        const showWeather = this.showWorldWeather();
 
         if (this.map && this.isMapLoaded()) {
           this.updateTerminatorLayers(date, showNight, showTwilight);
           this.updateTimezoneLayer(showTz);
           this.updateCelestialGridLayer(showCel);
           this.updateSolarTrackLayer(date, showTrack);
+          this.updateWorldWeatherLayer(showWeather);
           this.updateSubsolarMarker();
           this.updateSublunarMarker();
           this.updateObserverMarker(loc);
@@ -612,6 +617,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
       // Add Solar Ground Track
       this.initSolarTrackSource();
+      this.initWorldWeatherSource();
 
       // Add Subsolar Marker
       this.initSubsolarMarker();
@@ -636,6 +642,8 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       this.updateTimezoneLayer(this.showTimezoneGrid());
       this.updateCelestialGridLayer(this.showCelestialGrid());
       this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
+      this.updateWorldWeatherLayer(this.showWorldWeather());
+      this.weatherService.fetchWorldWeather(this.allPresets);
 
       // Fetch weather for initial location
       this.weatherService.fetchWeatherForLocation(loc);
@@ -938,6 +946,72 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   /**
    * Initializes the UTC Timezone Meridian Lines GeoJSON Source & Layer
    */
+  private initWorldWeatherSource(): void {
+    if (!this.map) return;
+    if (!this.map.getSource('world-weather-source')) {
+      this.map.addSource('world-weather-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] } as any
+      });
+    }
+    if (!this.map.getLayer('world-weather-points')) {
+      this.map.addLayer({
+        id: 'world-weather-points',
+        type: 'circle',
+        source: 'world-weather-source',
+        minzoom: 1.5,
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 1.5, 3, 5, 5],
+          'circle-color': [
+            'match', ['get', 'condition'],
+            'clear', '#fbbf24',
+            'partly_cloudy', '#cbd5e1',
+            'overcast', '#94a3b8',
+            'fog', '#a8b4c2',
+            'rain', '#60a5fa',
+            'heavy_rain', '#3b82f6',
+            'snow', '#e2e8f0',
+            'heavy_snow', '#f8fafc',
+            'thunderstorm', '#a78bfa',
+            'severe_thunderstorm', '#c084fc',
+            '#94a3b8'
+          ],
+          'circle-opacity': 0.82,
+          'circle-stroke-color': '#07111f',
+          'circle-stroke-width': 1
+        }
+      });
+    }
+    this.worldWeatherSourceReady = true;
+    this.refreshWorldWeatherSource();
+  }
+
+  private refreshWorldWeatherSource(): void {
+    if (!this.map || !this.worldWeatherSourceReady) return;
+    const weather = this.weatherService.worldWeather();
+    const features = this.allPresets
+      .filter(loc => weather[loc.id])
+      .map(loc => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
+        properties: {
+          id: loc.id,
+          condition: weather[loc.id].condition,
+          temperatureC: weather[loc.id].temperatureC,
+          cloudCoverPct: weather[loc.id].cloudCoverPct,
+          windSpeedKmh: weather[loc.id].windSpeedKmh
+        }
+      }));
+    const source = this.map.getSource('world-weather-source') as GeoJSONSource | undefined;
+    source?.setData({ type: 'FeatureCollection', features } as any);
+  }
+
+  private updateWorldWeatherLayer(show: boolean): void {
+    if (!this.map || !this.map.getLayer('world-weather-points')) return;
+    this.refreshWorldWeatherSource();
+    this.map.setPaintProperty('world-weather-points', 'circle-opacity', show ? 0.82 : 0);
+  }
+
   private initTimezoneSource(): void {
     if (!this.map) return;
 
@@ -1764,6 +1838,13 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       const el = this.sublunarMarker.getElement();
       el.style.display = this.showMoonZenith() ? 'block' : 'none';
     }
+  }
+
+  toggleWorldWeather(): void {
+    const enabled = !this.showWorldWeather();
+    this.showWorldWeather.set(enabled);
+    if (enabled) this.weatherService.fetchWorldWeather(this.allPresets);
+    this.updateWorldWeatherLayer(enabled);
   }
 
   toggleWindVectors(): void {
