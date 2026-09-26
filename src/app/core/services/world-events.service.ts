@@ -223,11 +223,12 @@ export class WorldEventsService {
               });
             };
 
-            const first = rows.find((row: any) => Number(row?.hijri?.day) === 1);
+            const first = rows.find((row: any) => Number(row?.hijri?.day) === targetDay);
             add(first, 'Ramadan begins', 'First day of Ramadan by the selected Hijri calculation method.', true);
 
             this.loadIslamicMonth(hijriYear, 10, 'Eid al-Fitr', 'Start of Shawwal and Eid al-Fitr.', generation, events);
-            this.loadIslamicMonth(hijriYear, 12, 'Eid al-Adha', 'Eid al-Adha begins on 10 Dhu al-Hijjah; this marks the month containing the observance.', generation, events);
+            this.loadIslamicMonth(hijriYear, 12, 'Eid al-Adha', 'Eid al-Adha observance on 10 Dhu al-Hijjah.', generation, events, 10);
+            this.loadIslamicMonth(hijriYear, 1, 'Islamic New Year', 'First day of Muharram.', generation, events, 1);
           },
           error: () => {
             if (generation === this.requestGeneration) this.religiousEvents.set([]);
@@ -250,7 +251,8 @@ export class WorldEventsService {
     title: string,
     description: string,
     generation: number,
-    seed: WorldEvent[]
+    seed: WorldEvent[],
+    targetDay = 1
   ): void {
     this.http.get<any>(`https://api.aladhan.com/v1/hToGCalendar/${month}/${hijriYear}?calendarMethod=HJCoSA`).subscribe({
       next: calendar => {
