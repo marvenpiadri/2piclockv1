@@ -124,4 +124,23 @@ Goal: expose the 2piClock engine beyond the main website and make the core exper
 
 V2.7 is complete for launch. The platform now has an installable web-app manifest with progressive service-worker support, a widget generator and embeddable clock route, a read-only versioned astronomy API, and shareable location/time URLs that restore an exact astronomical instant.
 
-The public API is intentionally small and read-only for the launch freeze. It exposes the preset location catalogue and a solar-position snapshot rather than turning the platform into a broad backend product.
+The API platform is intentionally read-only for the launch freeze, but it is not limited to a single endpoint. The public v1 surface now exposes locations, solar position, lunar position, combined celestial state, and solar events, with a crawlable developer documentation page at `/api`. The API is designed as an SEO-positive developer surface: useful documentation, stable examples and indexable technical content can attract developers while exposing the same astronomical engine used by the product.
+
+## SEO ENHANCEMENT — Final pre-launch phase
+Goal: make 2piClock discoverable as a global astronomy/time platform without creating thin or duplicate pages.
+
+- [x] Dynamic title and description per route
+- [x] Canonical URL normalization
+- [x] Robots and sitemap architecture
+- [x] Dynamic location-page sitemap generation
+- [x] Open Graph and Twitter metadata
+- [x] WebSite, WebApplication and BreadcrumbList JSON-LD
+- [x] Developer API documentation page and API schema metadata
+- [x] Public API endpoints for core astronomical data
+- [ ] Programmatic SEO expansion for high-value locations, time zones, astronomy objects, constellations and events
+- [ ] Rich FAQ/content blocks where they genuinely answer search intent
+- [ ] Multilingual EN/FR/ES SEO architecture
+- [ ] Search Console / production indexation audit
+- [ ] Final SSR/browser SEO verification
+
+SEO is now the final product phase. After these remaining indexation/content tasks are verified, feature development is frozen for launch.
