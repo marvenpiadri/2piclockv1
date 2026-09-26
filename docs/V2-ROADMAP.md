@@ -105,11 +105,13 @@ Goal: give advanced astronomical exploration its own dedicated experience instea
 - [x] Earth/Moon/Sun relationship view
 - [x] Celestial coordinate exploration
 - [x] Detailed constellation map
-- [ ] Deep-sky object exploration
+- [x] Deep-sky object exploration
 - [x] Planet rise/set and observing information
 - [x] Celestial events and alignments
 - [x] Historical/future astronomical exploration
 - [ ] Optional Milky Way / galactic visualization here, where a denser astronomical view is appropriate
+
+V2.6 now includes the Solar System explorer, planetary observing data, Earth/Moon/Sun geometry, coordinate exploration, constellation atlas, and the Deep Sky Atlas. The remaining Milky Way/galactic visualization is intentionally optional and can be added later without affecting the core Astronomy experience.
 
 ## V2.7 — Platform
 Goal: expose the 2piClock engine beyond the main website.
