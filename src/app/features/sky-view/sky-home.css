@@ -473,7 +473,8 @@
   min-height: 430px;
 }
 
-.analog-clock-container {
+.analog-clock-container,
+.astrolabe-container {
   width: min(58vh, 520px);
   aspect-ratio: 1;
   display: grid;
@@ -481,7 +482,8 @@
   --analog-clock-size: min(58vh, 520px);
 }
 
-.sky-time-layout.panel-collapsed .analog-clock-container {
+.sky-time-layout.panel-collapsed .analog-clock-container,
+.sky-time-layout.panel-collapsed .astrolabe-container {
   width: min(64vh, 590px);
   --analog-clock-size: min(64vh, 590px);
 }

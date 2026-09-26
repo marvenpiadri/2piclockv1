@@ -1,4 +1,5 @@
 export * from './analog-clock/analog-clock';
+export * from './celestial-astrolabe/celestial-astrolabe';
 export * from './radian-overlap-tunnel/radian-overlap-tunnel';
 export * from './reactive-sky/reactive-sky';
 export * from './share-export-modal/share-export-modal';
@@ -22,4 +23,3 @@ export * from './weather-bar-chart/weather-bar-chart';
 export * from './mini-radio-player/mini-radio-player';
 
 export * from './weather-icon/weather-icon';
-export * from './celestial-logo/celestial-logo';

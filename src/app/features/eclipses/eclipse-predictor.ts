@@ -9,7 +9,7 @@ import * as Astronomy from 'astronomy-engine';
 export interface EclipseEvent {
   id: string;
   date: string;
-  type: 'Total Solar' | 'Annular Solar' | 'Partial Solar' | 'Penumbral Solar' | 'Total Lunar' | 'Partial Lunar' | 'Penumbral Lunar' | 'Annular Lunar';
+  type: string;
   category: 'solar' | 'lunar';
   magnitude: number;
   duration: string;

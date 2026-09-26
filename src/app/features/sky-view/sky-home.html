@@ -68,13 +68,13 @@
       <section class="sky-time-layout" [class.panel-collapsed]="!isRightPanelExpanded()">
         <div class="time-column">
           <div class="time-stage">
-            <div class="analog-clock-container" aria-label="Local analog clock">
-              <app-analog-clock
+            <div class="astrolabe-container" aria-label="Celestial Astrolabe of time and space">
+              <app-celestial-astrolabe
                 [timezone]="selectedLocation().timezone"
                 [activeDate]="activeDate()"
-                [showCelestialMarkers]="true"
-                [showDigitalReadout]="true">
-              </app-analog-clock>
+                [latitude]="selectedLocation().latitude"
+                [longitude]="selectedLocation().longitude">
+              </app-celestial-astrolabe>
             </div>
           </div>
 

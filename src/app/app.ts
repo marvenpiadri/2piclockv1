@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-sky';
 import { DeepSpaceBackdropComponent } from './shared/components/deep-space-backdrop/deep-space-backdrop';
-import { CountryFlagComponent, MiniRadioPlayerComponent, CelestialLogoComponent } from './shared/components';
+import { CountryFlagComponent, MiniRadioPlayerComponent } from './shared/components';
 import { PwaInstallComponent } from './shared/components/pwa-install/pwa-install';
 import { GlassThemeService } from './core/services/glass-theme.service';
 import { LocationService } from './core/services/location.service';
@@ -43,8 +43,7 @@ export interface NavCategory {
     DeepSpaceBackdropComponent,
     CountryFlagComponent,
     MiniRadioPlayerComponent,
-    PwaInstallComponent,
-    CelestialLogoComponent
+    PwaInstallComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -102,7 +101,64 @@ export class App {
   readonly celestial = this.celestialService.celestialState;
   readonly currentWeather = this.celestialService.currentWeather;
 
+  readonly isDaytime = computed(() => {
+    const state = this.celestial();
+    return state.sun.isAboveHorizon || state.twilightState === 'day' || state.twilightState === 'golden_hour';
+  });
 
+  readonly weatherClass = computed(() => {
+    const w = this.currentWeather();
+    const cond = w?.condition || 'clear';
+    if (
+      cond === 'thunderstorm' ||
+      cond === 'severe_storm' ||
+      cond === 'severe_thunderstorm' ||
+      cond === 'monsoon' ||
+      cond === 'tropical_storm'
+    ) return 'weather-storm';
+    if (
+      cond === 'rain' ||
+      cond === 'heavy_rain' ||
+      cond === 'heavy_downpour' ||
+      cond === 'drizzle' ||
+      cond === 'freezing_rain' ||
+      cond === 'hail' ||
+      cond === 'sleet'
+    ) return 'weather-rain';
+    if (
+      cond === 'snow' ||
+      cond === 'snow_flurries' ||
+      cond === 'heavy_snow' ||
+      cond === 'blizzard'
+    ) return 'weather-snow';
+    if (
+      cond === 'fog' ||
+      cond === 'freezing_fog' ||
+      cond === 'haze' ||
+      cond === 'dust_haze' ||
+      cond === 'spring_mist' ||
+      cond === 'autumn_haze'
+    ) return 'weather-fog';
+    if (
+      cond === 'cloudy' ||
+      cond === 'overcast' ||
+      cond === 'partly_cloudy' ||
+      cond === 'broken_clouds' ||
+      cond === 'low_clouds' ||
+      cond === 'winter_overcast'
+    ) return 'weather-cloudy';
+    return 'weather-clear';
+  });
+
+  readonly badgeTooltip = computed(() => {
+    const isDay = this.isDaytime();
+    const w = this.currentWeather();
+    const loc = this.selectedLocation();
+    const phase = isDay ? 'Sun (Solar Day)' : 'Moon (Lunar Night)';
+    const temp = w?.temperatureC !== undefined ? `${w.temperatureC}°C` : '';
+    const cond = w?.conditionLabel || '';
+    return `2piClock · ${phase} · ${loc.name}${temp ? ' · ' + temp : ''}${cond ? ' · ' + cond : ''}`;
+  });
 
   constructor() {
     this.seoService.init();
@@ -283,6 +339,13 @@ export class App {
       title: 'Atmosphere & Weather',
       icon: 'air',
       items: [
+        {
+          label: 'Real-Time Severe & Astronomical Alerts',
+          path: '/alerts',
+          desc: 'Live severe weather warnings, geomagnetic storms, eclipses, and visibility alerts.',
+          icon: 'warning',
+          tag: 'Live'
+        },
         {
           label: 'Atmosphere & Storm Severity',
           path: '/atmosphere',

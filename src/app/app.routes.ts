@@ -18,6 +18,7 @@ import { SatelliteTrackerComponent } from './features/satellites/satellite-track
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { WidgetGeneratorComponent } from './features/widget-generator/widget-generator';
 import { WorldEventsComponent } from './features/world-events/world-events';
+import { AlertsComponent } from './features/alerts/alerts';
 
 const resolveRootLocation: CanActivateFn = async () => {
   const locationService = inject(LocationService);
@@ -98,6 +99,7 @@ export const routes: Routes = [
   { path: 'world-clocks', component: WorldClocksComponent },
   { path: 'space', component: SpaceViewComponent },
   { path: 'atmosphere', component: WeatherAtmosphereComponent },
+  { path: 'alerts', component: AlertsComponent },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
 
@@ -109,6 +111,7 @@ export const routes: Routes = [
   { path: ':location/moon', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'moon' } },
   { path: ':location/astronomy', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'overview' } },
   { path: ':location/events', component: WorldEventsComponent, canActivate: [validLocationGuard] },
+  { path: ':location/alerts', component: AlertsComponent, canActivate: [validLocationGuard] },
   { path: ':location/stargazing', component: StargazingPlannerComponent, canActivate: [validLocationGuard] },
   { path: ':location/eclipses', component: EclipsePredictorComponent, canActivate: [validLocationGuard] },
   { path: ':location/satellites', component: SatelliteTrackerComponent, canActivate: [validLocationGuard] },

@@ -1,0 +1,284 @@
+<div class="alerts-container">
+  <!-- Page Header & Emergency Telemetry Bar -->
+  <header class="alerts-header">
+    <div class="header-main">
+      <div class="title-group">
+        <div class="header-badge" [class.has-critical]="criticalCount() > 0">
+          <mat-icon>{{ criticalCount() > 0 ? 'warning' : 'verified_user' }}</mat-icon>
+          <span>{{ criticalCount() > 0 ? criticalCount() + ' CRITICAL WARNINGS' : 'ATMOSPHERE STABLE' }}</span>
+        </div>
+        <h1>Real-Time Severe Weather & Space Alerts</h1>
+        <p class="header-subtitle">
+          Continuous telemetry monitoring severe meteorological storms, gale winds, geomagnetic Kp spikes, solar eclipses, and stargazing clarity.
+        </p>
+      </div>
+
+      <!-- Action Tools & Simulation Trigger -->
+      <div class="header-actions">
+        <button type="button" class="action-btn audio-btn" [class.active]="audioEnabled()" (click)="toggleAudio()" title="Toggle Web Audio warning chime">
+          <mat-icon>{{ audioEnabled() ? 'volume_up' : 'volume_off' }}</mat-icon>
+          <span>{{ audioEnabled() ? 'Chime Enabled' : 'Chime Off' }}</span>
+        </button>
+
+        <button type="button" class="action-btn sim-btn" (click)="toggleSimModal()">
+          <mat-icon>science</mat-icon>
+          <span>Test Alert Simulator</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Location Context Ribbon -->
+    <div class="location-context-bar">
+      <div class="loc-info">
+        <app-country-flag [countryCode]="selectedLocation().countryCode" class="flag-icon"></app-country-flag>
+        <span class="loc-name">{{ selectedLocation().name }}, {{ selectedLocation().country }}</span>
+        <span class="loc-coords">({{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°)</span>
+        <span class="loc-tz">{{ selectedLocation().timezone }}</span>
+      </div>
+
+      <div class="loc-live-metrics">
+        <span class="metric-pill">
+          <mat-icon>thermostat</mat-icon>
+          {{ currentWeather().temperatureC }}°C
+        </span>
+        <span class="metric-pill">
+          <mat-icon>air</mat-icon>
+          {{ currentWeather().windSpeedKmh }} km/h
+        </span>
+        <span class="metric-pill">
+          <mat-icon>thunderstorm</mat-icon>
+          Index: {{ currentWeather().aggressivenessIndex }}/100
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter & Category Navigation Toolbar -->
+  <nav class="alerts-toolbar" aria-label="Alert Filters">
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+      <button 
+        type="button" 
+        class="cat-tab" 
+        [class.active]="activeCategory() === 'all'" 
+        (click)="setCategory('all')">
+        <mat-icon>grid_view</mat-icon>
+        <span>All Alerts</span>
+        <b class="count-chip">{{ liveAlerts().length }}</b>
+      </button>
+
+      <button 
+        type="button" 
+        class="cat-tab" 
+        [class.active]="activeCategory() === 'weather'" 
+        (click)="setCategory('weather')">
+        <mat-icon>thunderstorm</mat-icon>
+        <span>Severe Weather</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="cat-tab" 
+        [class.active]="activeCategory() === 'space_weather'" 
+        (click)="setCategory('space_weather')">
+        <mat-icon>flare</mat-icon>
+        <span>Space & Geomagnetic</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="cat-tab" 
+        [class.active]="activeCategory() === 'eclipse'" 
+        (click)="setCategory('eclipse')">
+        <mat-icon>wb_twilight</mat-icon>
+        <span>Eclipses</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="cat-tab" 
+        [class.active]="activeCategory() === 'stargazing'" 
+        (click)="setCategory('stargazing')">
+        <mat-icon>nightlight</mat-icon>
+        <span>Stargazing Sky</span>
+      </button>
+    </div>
+
+    <!-- Severity & Search Sub-controls -->
+    <div class="filter-controls">
+      <!-- Search Input -->
+      <div class="search-box">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input 
+          type="text" 
+          placeholder="Filter warnings or cities..." 
+          [value]="searchQuery()" 
+          (input)="searchQuery.set($any($event.target).value)" 
+          aria-label="Filter warnings by text" />
+        @if (searchQuery()) {
+          <button type="button" class="clear-search" (click)="searchQuery.set('')">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Severity Filter Select -->
+      <div class="severity-select-wrapper">
+        <mat-icon>filter_list</mat-icon>
+        <select [value]="activeSeverity()" (change)="setSeverity($any($event.target).value)" aria-label="Filter by Severity">
+          <option value="all">All Severities</option>
+          <option value="critical">Critical Warnings</option>
+          <option value="warning">Warnings</option>
+          <option value="watch">Watches</option>
+          <option value="advisory">Advisories</option>
+          <option value="info">Info Notices</option>
+        </select>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Alerts Cards List / Grid -->
+  <main class="alerts-main-grid">
+    @if (filteredAlerts().length > 0) {
+      @for (alert of filteredAlerts(); track alert.id) {
+        <article 
+          class="alert-card" 
+          [class.is-critical]="alert.severity === 'critical'"
+          [class.is-simulated]="alert.isSimulated"
+          [style.borderColor]="alert.cardBorderColor">
+          
+          <!-- Card Top Bar -->
+          <div class="card-header">
+            <div class="card-severity-badge" [style.backgroundColor]="alert.badgeBg" [style.color]="alert.badgeColor">
+              <mat-icon>{{ alert.icon }}</mat-icon>
+              <span>{{ alert.severityLabel | uppercase }}</span>
+              @if (alert.isSimulated) {
+                <b class="sim-tag">TEST SIMULATION</b>
+              }
+            </div>
+
+            <div class="card-category-tag">
+              <span>{{ alert.categoryLabel }}</span>
+            </div>
+          </div>
+
+          <!-- Alert Title & Location -->
+          <h2 class="card-title">{{ alert.title }}</h2>
+          <div class="card-location">
+            <mat-icon>location_on</mat-icon>
+            <span>{{ alert.locationName }}</span>
+            <span class="card-coords">{{ alert.coordinates }}</span>
+          </div>
+
+          <!-- Metric Highlight Box -->
+          <div class="card-metric-box">
+            <span class="metric-label">{{ alert.metricLabel }}</span>
+            <strong class="metric-value">{{ alert.metricValue }}</strong>
+          </div>
+
+          <!-- Detailed Description -->
+          <p class="card-description">{{ alert.description }}</p>
+
+          <!-- Safety Advice Banner -->
+          <div class="card-safety-box">
+            <mat-icon class="shield-icon">shield</mat-icon>
+            <div class="safety-text">
+              <strong>Action & Safety Advisory:</strong>
+              <p>{{ alert.safetyAdvice }}</p>
+            </div>
+          </div>
+
+          <!-- Card Footer & Action -->
+          <div class="card-footer">
+            <div class="timestamp-info">
+              <mat-icon>schedule</mat-icon>
+              <span>Issued: {{ alert.issuedAt | date:'mediumTime' }} · {{ alert.issuedAt | date:'mediumDate' }}</span>
+            </div>
+
+            <button type="button" class="copy-alert-btn" (click)="copyAlertSummary(alert)">
+              <mat-icon>{{ copiedAlertId() === alert.id ? 'check' : 'content_copy' }}</mat-icon>
+              <span>{{ copiedAlertId() === alert.id ? 'Copied!' : 'Share Alert' }}</span>
+            </button>
+          </div>
+        </article>
+      }
+    } @else {
+      <!-- Empty State: All Clear -->
+      <div class="alerts-empty-state">
+        <div class="empty-icon-circle">
+          <mat-icon>check_circle_outline</mat-icon>
+        </div>
+        <h2>Atmosphere & Space Weather All Clear</h2>
+        <p>No severe meteorological, solar storm, or visibility warnings matching your filter criteria for <strong>{{ selectedLocation().name }}</strong>.</p>
+        
+        <div class="empty-actions">
+          @if (activeCategory() !== 'all' || activeSeverity() !== 'all' || searchQuery()) {
+            <button type="button" class="reset-filter-btn" (click)="setCategory('all'); setSeverity('all'); searchQuery.set('');">
+              <mat-icon>refresh</mat-icon>
+              <span>Reset All Filters</span>
+            </button>
+          }
+          <button type="button" class="sim-test-btn" (click)="toggleSimModal()">
+            <mat-icon>science</mat-icon>
+            <span>Run Test Severe Weather Simulation</span>
+          </button>
+        </div>
+      </div>
+    }
+  </main>
+
+  <!-- Simulator Modal Dialog -->
+  @if (showSimModal()) {
+    <div class="modal-backdrop" (click)="toggleSimModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <mat-icon>science</mat-icon>
+            <h3>Real-Time Severe Warning Simulator</h3>
+          </div>
+          <button type="button" class="close-btn" (click)="toggleSimModal()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <p class="modal-desc">
+          Inject test emergency telemetries to verify how 2PiClock alerts, color-coded borders, metric badges, and audio chime react in real time.
+        </p>
+
+        <div class="sim-presets-grid">
+          <button type="button" class="sim-preset-card sim-space" (click)="triggerG5GeomagneticStorm()">
+            <mat-icon>flare</mat-icon>
+            <div class="preset-info">
+              <strong>G5 Extreme Geomagnetic Superstorm</strong>
+              <span>Kp 9.0 · Solar Flare C9.8 · Low-Latitude Aurora</span>
+            </div>
+          </button>
+
+          <button type="button" class="sim-preset-card sim-weather" (click)="triggerSuperTyphoonGale()">
+            <mat-icon>thunderstorm</mat-icon>
+            <div class="preset-info">
+              <strong>Category 4 Super Typhoon Gale</strong>
+              <span>120 km/h winds · 165 km/h gusts · 932 hPa</span>
+            </div>
+          </button>
+
+          <button type="button" class="sim-preset-card sim-eclipse" (click)="triggerTotalSolarEclipse()">
+            <mat-icon>wb_twilight</mat-icon>
+            <div class="preset-info">
+              <strong>Total Solar Eclipse - Path of Totality</strong>
+              <span>100% Obscuration · Daytime Darkness Totality</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="clear-sim-btn" (click)="clearSimulation()">
+            <mat-icon>cleaning_services</mat-icon>
+            <span>Clear Active Simulation</span>
+          </button>
+          <button type="button" class="cancel-btn" (click)="toggleSimModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

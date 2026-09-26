@@ -22,9 +22,23 @@
     <!-- Left: Brand Logo + Expandable Observatories Dropdown + Subtle Navigation Links -->
     <div class="header-left">
       
-      <!-- Reactive identity mark: the same celestial state drives day/night, phase and simulated time. -->
-      <a routerLink="/" class="brand-link" (click)="closeMenus()">
-        <app-celestial-logo></app-celestial-logo>
+      <!-- Brand Logo (Solar/Lunar + Live Weather Reactive Circular Orb) -->
+      <a routerLink="/" class="brand-link" (click)="closeMenus()" [attr.title]="badgeTooltip()">
+        <div 
+          class="brand-badge"
+          [class.brand-badge-sun]="isDaytime()"
+          [class.brand-badge-moon]="!isDaytime()"
+          [class.weather-rain]="weatherClass() === 'weather-rain'"
+          [class.weather-storm]="weatherClass() === 'weather-storm'"
+          [class.weather-snow]="weatherClass() === 'weather-snow'"
+          [class.weather-fog]="weatherClass() === 'weather-fog'"
+          [class.weather-cloudy]="weatherClass() === 'weather-cloudy'"
+          [class.weather-clear]="weatherClass() === 'weather-clear'"
+          [attr.aria-label]="badgeTooltip()">
+          <span class="brand-symbol">2π</span>
+          <span class="celestial-halo" aria-hidden="true"></span>
+          <span class="weather-reactive-sheen" aria-hidden="true"></span>
+        </div>
         <div class="brand-text-col">
           <span class="brand-title">2piClock</span>
           <span class="brand-sub">2PICLOCK.COM</span>

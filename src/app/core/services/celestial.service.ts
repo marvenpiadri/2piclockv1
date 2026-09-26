@@ -63,7 +63,7 @@ export class CelestialService {
     const c = this.celestialState();
 
     // 1. Natural astronomical season from date + latitude
-    let season: Season = this.weatherService.getSeason(date, loc.latitude, loc.timezone);
+    let season: Season = this.weatherService.getSeason(date, loc.latitude);
     let seasonalBias = 0;
     if (season === 'winter') seasonalBias = -8;
     else if (season === 'summer') seasonalBias = +8;
