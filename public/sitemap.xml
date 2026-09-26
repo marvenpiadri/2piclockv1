@@ -7,11 +7,17 @@
   <url><loc>https://2piclock.com/tonight</loc></url>
   <url><loc>https://2piclock.com/world</loc></url>
   <url><loc>https://2piclock.com/world-clocks</loc></url>
-  <url><loc>https://2piclock.com/widget</loc></url>
   <url><loc>https://2piclock.com/events</loc></url>
   <url><loc>https://2piclock.com/stargazing</loc></url>
   <url><loc>https://2piclock.com/eclipses</loc></url>
   <url><loc>https://2piclock.com/satellites</loc></url>
+  <url><loc>https://2piclock.com/dashboard</loc></url>
+  <url><loc>https://2piclock.com/widget</loc></url>
+  <url><loc>https://2piclock.com/space</loc></url>
+  <url><loc>https://2piclock.com/atmosphere</loc></url>
+  <url><loc>https://2piclock.com/ephemeris</loc></url>
+  <url><loc>https://2piclock.com/planner</loc></url>
+  <url><loc>https://2piclock.com/alerts</loc></url>
   <url><loc>https://2piclock.com/time/converter</loc></url>
   <url><loc>https://2piclock.com/time/difference</loc></url>
   <url><loc>https://2piclock.com/time/duration</loc></url>
@@ -26,8 +32,4 @@
   <url><loc>https://2piclock.com/radio/map</loc></url>
   <url><loc>https://2piclock.com/radio/favorites</loc></url>
   <url><loc>https://2piclock.com/radio/recent</loc></url>
-  <url><loc>https://2piclock.com/atmosphere</loc></url>
-  <url><loc>https://2piclock.com/ephemeris</loc></url>
-  <url><loc>https://2piclock.com/planner</loc></url>
-  <url><loc>https://2piclock.com/space</loc></url>
 </urlset>
