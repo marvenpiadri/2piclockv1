@@ -112,10 +112,12 @@ export class TimeControlService {
   }
 
   private reanchorLiveClock(performanceTime: number): void {
-    this.liveAnchorEpochMs = Date.now();
+    const exactSecond = Math.floor(Date.now() / 1000) * 1000;
+    this.liveAnchorEpochMs = exactSecond;
     this.liveAnchorPerformanceMs = performanceTime;
     this.lastClockResyncPerformanceMs = performanceTime;
-    this.liveEpochMs.set(this.liveAnchorEpochMs);
+    this.lastEmittedLiveSecond = Math.floor(exactSecond / 1000);
+    this.liveEpochMs.set(exactSecond);
   }
 
   private advanceSimulation(advancementMs: number): void {
