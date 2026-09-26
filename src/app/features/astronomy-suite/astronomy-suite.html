@@ -337,6 +337,56 @@
           </div>
         </section>
 
+        <section class="deep-sky-atlas" aria-label="Deep sky atlas">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">DEEP SKY ATLAS</span>
+              <h3>Celestial Objects · {{ selectedLocation().name }}</h3>
+              <p>Bright Messier objects plotted from their equatorial coordinates and evaluated for the selected time and location.</p>
+            </div>
+            <div class="planet-selector deep-sky-selector">
+              @for (object of deepSkyCatalog; track object.id) {
+                <button type="button" [class.active]="selectedDeepSkyObject() === object.id" (click)="selectDeepSkyObject(object.id)">{{ object.id.toUpperCase() }}</button>
+              }
+            </div>
+          </div>
+
+          <div class="deep-sky-layout">
+            <div class="deep-sky-field">
+              <div class="deep-sky-grid deep-sky-grid-ra"></div>
+              <div class="deep-sky-grid deep-sky-grid-dec"></div>
+              <div class="deep-sky-crosshair"></div>
+              <div class="deep-sky-object-point"
+                [style.left.%]="50 + Math.max(-46, Math.min(46, selectedDeepSkyPosition().hourAngleDeg / 180 * 46))"
+                [style.top.%]="50 - Math.max(-42, Math.min(42, selectedDeepSkyPosition().altitudeDeg / 90 * 42))">
+                <i></i>
+                <span>{{ selectedDeepSkyData().name }}</span>
+              </div>
+              <div class="deep-sky-axis deep-sky-axis-top">ZENITH</div>
+              <div class="deep-sky-axis deep-sky-axis-bottom">HORIZON</div>
+              <div class="deep-sky-axis deep-sky-axis-left">EAST</div>
+              <div class="deep-sky-axis deep-sky-axis-right">WEST</div>
+            </div>
+
+            <div class="deep-sky-detail">
+              <span class="detail-kicker">{{ selectedDeepSkyData().catalog }}</span>
+              <strong>{{ selectedDeepSkyData().name }}</strong>
+              <small>{{ selectedDeepSkyData().type }} · apparent magnitude {{ selectedDeepSkyData().mag.toFixed(2) }}</small>
+              <dl>
+                <div><dt>RA</dt><dd>{{ (selectedDeepSkyData().ra / 15).toFixed(2) }}h</dd></div>
+                <div><dt>DEC</dt><dd>{{ selectedDeepSkyData().dec.toFixed(2) }}°</dd></div>
+                <div><dt>ALTITUDE</dt><dd>{{ selectedDeepSkyPosition().altitudeDeg.toFixed(1) }}°</dd></div>
+                <div><dt>AZIMUTH</dt><dd>{{ selectedDeepSkyPosition().azimuthDeg.toFixed(1) }}°</dd></div>
+                <div><dt>HOUR ANGLE</dt><dd>{{ selectedDeepSkyPosition().hourAngleDeg.toFixed(1) }}°</dd></div>
+                <div><dt>ANGULAR SIZE</dt><dd>{{ selectedDeepSkyData().size }}</dd></div>
+              </dl>
+              <span class="deep-sky-visibility" [class.visible]="selectedDeepSkyPosition().altitudeDeg > 0">
+                {{ selectedDeepSkyPosition().altitudeDeg > 0 ? 'ABOVE HORIZON' : 'BELOW HORIZON' }}
+              </span>
+            </div>
+          </div>
+        </section>
+
         <div class="observatory-actions">
           <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>
           <button type="button" (click)="setTab('daylight')"><mat-icon>wb_twilight</mat-icon> Daylight & Twilight</button>
