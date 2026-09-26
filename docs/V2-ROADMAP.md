@@ -14,11 +14,11 @@ Goal: make the Living Sky a more accurate real-world sky without making it visua
 - [x] Subtle constellation geometry
 - [x] Real planetary ephemeris available through CelestialService
 - [x] Real planets projected into Living Sky
-- [ ] Expand the star catalogue carefully, prioritizing useful visible stars
-- [ ] Better horizon extinction
-- [ ] Moonlight wash over the night sky
-- [ ] Weather/cloud occlusion for stars, Moon and planets
-- [ ] Refine atmospheric visibility, haze and dust interaction
+- [x] Expand the star catalogue carefully, prioritizing useful visible stars
+- [x] Better horizon extinction
+- [x] Moonlight wash over the night sky
+- [x] Weather/cloud occlusion for stars, Moon and planets
+- [x] Refine atmospheric visibility, haze and dust interaction
 - [ ] Celestial render QA across day/night, locations and polar conditions
 
 ### Visual rule
@@ -28,7 +28,7 @@ Astronomical objects may be added when they make the sky feel **more alive**. Th
 
 **Do not add a Milky Way layer to the Living Sky.** The stars, Moon, planets, atmosphere and weather already provide the astronomical texture we need.
 
-**Exit condition:** the same date/location produces a consistent Sun, Moon, star and planet sky across the Living Sky and the dedicated Astronomy experience.
+**Implementation complete.** The remaining V2.0 exit task is visual/browser QA across day/night, locations and polar conditions before V2.1 begins.
 
 ## V2.1 — Weather × Sky
 Goal: make weather visibly change the atmosphere rather than only the information cards.
