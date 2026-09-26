@@ -450,339 +450,90 @@
     }
 
     @if (skyPage === 'tonight') {
-      <section class="report-page tonight-page">
-        
-        <!-- Tonight uses the shared celestial presentation; no duplicate clock mode. -->
-
-        <!-- Mode A: Pure Celestial Sun, Moon, and Eclipse Horizon View (No Overlapping Center Text) -->
-        @if (true) {
-          <div class="tonight-stage-card" [class.eclipse-active]="activeEclipseState().isActive">
-            
-            <!-- Eclipse Mode & Simulation Selector -->
-            <div class="w-full flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/50 border border-white/10 mb-6">
-              <div class="flex items-center gap-2.5">
-                <span class="w-3 h-3 rounded-full" [style.backgroundColor]="activeEclipseState().color" [class.animate-pulse]="activeEclipseState().isActive"></span>
-                <span class="text-xs font-bold font-mono text-white">{{ activeEclipseState().type }}</span>
-                <span class="text-[11px] font-mono text-slate-400">· Elongation: {{ angularSeparationDeg().toFixed(1) }}°</span>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <button 
-                  type="button" 
-                  (click)="simulatedEclipse.set('none')" 
-                  class="px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition"
-                  [class.bg-amber-500]="simulatedEclipse() === 'none'"
-                  [class.text-neutral-950]="simulatedEclipse() === 'none'"
-                  [class.border-amber-400]="simulatedEclipse() === 'none'"
-                  [class.bg-white/5]="simulatedEclipse() !== 'none'"
-                  [class.text-slate-300]="simulatedEclipse() !== 'none'"
-                  [class.border-white/10]="simulatedEclipse() !== 'none'">
-                  Live Ephemeris
-                </button>
-
-                <button 
-                  type="button" 
-                  (click)="simulatedEclipse.set('solar')" 
-                  class="px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition"
-                  [class.bg-amber-500]="simulatedEclipse() === 'solar'"
-                  [class.text-neutral-950]="simulatedEclipse() === 'solar'"
-                  [class.border-amber-400]="simulatedEclipse() === 'solar'"
-                  [class.bg-white/5]="simulatedEclipse() !== 'solar'"
-                  [class.text-slate-300]="simulatedEclipse() !== 'solar'"
-                  [class.border-white/10]="simulatedEclipse() !== 'solar'">
-                  Solar Eclipse
-                </button>
-
-                <button 
-                  type="button" 
-                  (click)="simulatedEclipse.set('lunar')" 
-                  class="px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition"
-                  [class.bg-rose-500]="simulatedEclipse() === 'lunar'"
-                  [class.text-white]="simulatedEclipse() === 'lunar'"
-                  [class.border-rose-400]="simulatedEclipse() === 'lunar'"
-                  [class.bg-white/5]="simulatedEclipse() !== 'lunar'"
-                  [class.text-slate-300]="simulatedEclipse() !== 'lunar'"
-                  [class.border-white/10]="simulatedEclipse() !== 'lunar'">
-                  Blood Moon
-                </button>
-              </div>
-            </div>
-
-            <!-- Unobstructed Clean SVG Canvas Dome (100% Centered, Zenith Open) -->
-            <div class="tonight-dome-viewport">
-              <svg class="tonight-celestial-svg" viewBox="-160 -160 320 320" aria-label="Celestial sky dome with sun, moon, and eclipse alignment">
-                <defs>
-                  <!-- Sun Corona Flare Filter -->
-                  <filter id="solarCoronaGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="6" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                  <!-- Lunar Glow Filter -->
-                  <filter id="lunarSilverGlow" x="-40%" y="-40%" width="180%" height="180%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                  <!-- Eclipse Diamond Ring Filter -->
-                  <filter id="eclipseCoronaFlare" x="-80%" y="-80%" width="260%" height="260%">
-                    <feGaussianBlur stdDeviation="12" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                  <!-- Lunar Blood Moon Gradient -->
-                  <radialGradient id="bloodMoonGradient" cx="40%" cy="40%" r="60%">
-                    <stop offset="0%" stop-color="#fca5a5" />
-                    <stop offset="45%" stop-color="#dc2626" />
-                    <stop offset="85%" stop-color="#7f1d1d" />
-                    <stop offset="100%" stop-color="#450a0a" />
-                  </radialGradient>
-                  <!-- Standard Moon Gradient -->
-                  <radialGradient id="lunarSurfaceGradient" cx="35%" cy="35%" r="65%">
-                    <stop offset="0%" stop-color="#ffffff" />
-                    <stop offset="40%" stop-color="#f1f5f9" />
-                    <stop offset="75%" stop-color="#cbd5e1" />
-                    <stop offset="100%" stop-color="#64748b" />
-                  </radialGradient>
-                  <!-- Sun Gradient -->
-                  <radialGradient id="solarDiskGradient" cx="35%" cy="35%" r="65%">
-                    <stop offset="0%" stop-color="#fffbeb" />
-                    <stop offset="30%" stop-color="#fde047" />
-                    <stop offset="70%" stop-color="#f59e0b" />
-                    <stop offset="100%" stop-color="#d97706" />
-                  </radialGradient>
-                </defs>
-
-                <!-- Deep Sky Outer Background Ring -->
-                <circle cx="0" cy="0" r="148" fill="rgba(6, 9, 15, 0.94)" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.2" />
-                
-                <!-- Altitude Rings (Nadir: 140, Horizon: 100, 30°: 66, 60°: 33, Zenith: 0) -->
-                <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(245, 158, 11, 0.45)" stroke-width="1.5" stroke-dasharray="4 3" />
-                <circle cx="0" cy="0" r="66" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
-                <circle cx="0" cy="0" r="33" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
-                
-                <!-- Zenith Center Point (Pure and Unobstructed) -->
-                <circle cx="0" cy="0" r="2.5" fill="rgba(255, 255, 255, 0.5)" />
-                <text x="0" y="-6" fill="rgba(255, 255, 255, 0.4)" font-size="6" font-family="monospace" text-anchor="middle">ZENITH (+90°)</text>
-
-                <!-- Cardinal Compass Markings -->
-                <text x="0" y="-136" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">N</text>
-                <text x="138" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700">E</text>
-                <text x="0" y="144" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">S</text>
-                <text x="-142" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="end">W</text>
-                <text x="104" y="-98" fill="rgba(245,158,11,0.6)" font-size="6.5" font-family="monospace">0° HORIZON</text>
-
-                <!-- Star Scatter in Night Dome -->
-                <g opacity="0.65">
-                  <circle cx="-60" cy="-70" r="1" fill="#fff" opacity="0.8"/>
-                  <circle cx="45" cy="-85" r="1.2" fill="#fff" opacity="0.9"/>
-                  <circle cx="-30" cy="-40" r="0.8" fill="#93c5fd" opacity="0.7"/>
-                  <circle cx="70" cy="-30" r="1.1" fill="#fde68a" opacity="0.85"/>
-                  <circle cx="-80" cy="-20" r="0.9" fill="#fff" opacity="0.6"/>
-                  <circle cx="20" cy="-60" r="1" fill="#fff" opacity="0.75"/>
-                  <circle cx="-15" cy="-90" r="1.4" fill="#fff" opacity="0.9"/>
-                  <circle cx="85" cy="-65" r="0.9" fill="#fff" opacity="0.7"/>
-                </g>
-
-                <!-- Sun & Moon Connection Line (Angular Elongation Arc) -->
-                <line [attr.x1]="sunCanvasPos().x" [attr.y1]="sunCanvasPos().y"
-                      [attr.x2]="moonCanvasPos().x" [attr.y2]="moonCanvasPos().y"
-                      stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.2" stroke-dasharray="3 3" />
-
-                <!-- ================= THE SUN ================= -->
-                <g [attr.transform]="'translate(' + sunCanvasPos().x + ',' + sunCanvasPos().y + ')'">
-                  @if (activeEclipseState().category === 'solar') {
-                    <!-- Solar Eclipse Dynamic Chromosphere & Diamond Ring Corona -->
-                    <circle cx="0" cy="0" r="24" fill="none" stroke="#fef08a" stroke-width="4" filter="url(#eclipseCoronaFlare)" opacity="0.95" />
-                    <circle cx="0" cy="0" r="17" fill="#f59e0b" filter="url(#solarCoronaGlow)" opacity="0.8" />
-                    <!-- Sun Prominences / Flare Rays -->
-                    @for (ray of [0, 45, 90, 135, 180, 225, 270, 315]; track ray) {
-                      <line x1="0" y1="-15" x2="0" y2="-26" [attr.transform]="'rotate(' + ray + ')'" stroke="#fef08a" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-                    }
-                    <circle cx="0" cy="0" r="13" fill="url(#solarDiskGradient)" />
-                  } @else {
-                    <!-- Standard Radiant Solar Orb -->
-                    <circle cx="0" cy="0" r="19" fill="none" stroke="rgba(245, 158, 11, 0.35)" stroke-width="2" stroke-dasharray="2 3" />
-                    <circle cx="0" cy="0" r="14" fill="url(#solarDiskGradient)" filter="url(#solarCoronaGlow)" [attr.opacity]="sunCanvasPos().isAboveHorizon ? 1 : 0.45" />
-                    <circle cx="0" cy="0" r="4.5" fill="#ffffff" [attr.opacity]="sunCanvasPos().isAboveHorizon ? 0.95 : 0.4" />
-                  }
-                  <!-- Sun Label -->
-                  <text x="0" y="26" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">
-                    SUN ({{ sunAltitude().toFixed(1) }}°)
-                  </text>
-                </g>
-
-                <!-- ================= THE MOON ================= -->
-                <g [attr.transform]="'translate(' + moonCanvasPos().x + ',' + moonCanvasPos().y + ')'">
-                  @if (activeEclipseState().category === 'solar') {
-                    <!-- Solar Eclipse: Moon's Black Silhouette (New Moon Umbra passing in front of Sun) -->
-                    <circle cx="0" cy="0" r="13.2" fill="#05070c" stroke="#fef08a" stroke-width="1.5" />
-                    <text x="0" y="-20" fill="#fef08a" font-size="7.5" font-family="monospace" font-weight="800" text-anchor="middle">
-                      MOON UMBRA
-                    </text>
-                  } @else if (activeEclipseState().category === 'lunar') {
-                    <!-- Lunar Eclipse: Blood Moon in Earth's Umbra -->
-                    <circle cx="0" cy="0" r="18" fill="rgba(220, 38, 38, 0.35)" filter="url(#eclipseCoronaFlare)" />
-                    <circle cx="0" cy="0" r="12" fill="url(#bloodMoonGradient)" stroke="#f87171" stroke-width="1.2" />
-                    <text x="0" y="24" fill="#fca5a5" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">
-                      BLOOD MOON ({{ moonAltitude().toFixed(1) }}°)
-                    </text>
-                  } @else {
-                    <!-- Standard Geometric Lunar Phase -->
-                    <circle cx="0" cy="0" r="16" fill="none" stroke="rgba(148, 163, 184, 0.25)" stroke-width="1.5" />
-                    <circle cx="0" cy="0" r="12" fill="url(#lunarSurfaceGradient)" filter="url(#lunarSilverGlow)" [attr.opacity]="0.35 + celestial().moon.illuminationFraction * 0.65" />
-                    <!-- Phase Terminator Shadow Overlay -->
-                    <circle cx="0" cy="0" r="12" fill="rgba(10, 14, 23, 0.88)" [attr.opacity]="1 - celestial().moon.illuminationFraction" />
-                    <circle cx="0" cy="0" r="3" fill="#ffffff" opacity="0.85" />
-                    <!-- Moon Label -->
-                    <text x="0" y="24" fill="#e2e8f0" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">
-                      MOON ({{ moonAltitude().toFixed(1) }}°)
-                    </text>
-                  }
-                </g>
-              </svg>
-            </div>
+      <section class="report-page tonight-page tonight-refined">
+        <header class="tonight-hero">
+          <div>
+            <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
+            <h1>Tonight under your sky</h1>
+            <p>Follow sunset, darkness, Moon conditions and the brightest planets from one calm night view.</p>
           </div>
-        }
-
-        <!-- Dedicated Dual Focus: Sun Tonight vs. Moon Tonight Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full my-4">
-          
-          <!-- Sun Focus Card -->
-          <div class="p-6 rounded-3xl bg-slate-900/80 border border-amber-500/20 backdrop-blur-xl shadow-xl">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
-                  <mat-icon class="text-lg">wb_sunny</mat-icon>
-                </div>
-                <div>
-                  <h3 class="font-bold text-base text-white font-sans">The Sun Tonight</h3>
-                  <span class="text-[11px] font-mono text-amber-300">Solar Position & Twilight Horizon</span>
-                </div>
-              </div>
-              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                {{ sunAltitude() >= 0 ? 'Above Horizon' : 'Below Horizon' }}
-              </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3.5 my-4 text-xs font-mono">
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">SOLAR ALTITUDE</span>
-                <strong class="text-white text-sm">{{ sunAltitude().toFixed(2) }}°</strong>
-              </div>
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">SOLAR AZIMUTH</span>
-                <strong class="text-white text-sm">{{ sunAzimuth().toFixed(1) }}°</strong>
-              </div>
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">SUNSET TIME</span>
-                <strong class="text-amber-300 text-sm">{{ formatTime(celestial().solarEvents.sunset) }}</strong>
-              </div>
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">TOTAL DAYLIGHT</span>
-                <strong class="text-white text-sm">{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong>
-              </div>
-            </div>
+          <div class="tonight-live">
+            <span>{{ getTwilightLabel(celestial().twilightState) }}</span>
+            <strong>{{ localTime() }}</strong>
+            <small>{{ localDate() }}</small>
           </div>
+        </header>
 
-          <!-- Moon Focus Card -->
-          <div class="p-6 rounded-3xl bg-slate-900/80 border border-indigo-400/20 backdrop-blur-xl shadow-xl">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
-                  <mat-icon class="text-lg">nightlight_round</mat-icon>
-                </div>
-                <div>
-                  <h3 class="font-bold text-base text-white font-sans">The Moon Tonight</h3>
-                  <span class="text-[11px] font-mono text-indigo-300">{{ celestial().moon.phaseName }}</span>
-                </div>
-              </div>
-              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
-                {{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% Illuminated
-              </span>
+        <div class="tonight-overview">
+          <article class="tonight-sky-card">
+            <div class="tonight-sky-orbit" aria-label="Current Sun and Moon positions">
+              <div class="tonight-orbit-ring"></div>
+              <div class="tonight-horizon-line"></div>
+              <div class="tonight-sun-dot" [style.left.%]="50 + Math.sin(sunAzimuth() * Math.PI / 180) * Math.max(0, Math.min(42, (90 - sunAltitude()) * .46))" [style.top.%]="50 - Math.cos(sunAzimuth() * Math.PI / 180) * Math.max(0, Math.min(42, (90 - sunAltitude()) * .46))"></div>
+              <div class="tonight-moon-dot" [style.left.%]="50 + Math.sin(moonAzimuth() * Math.PI / 180) * Math.max(0, Math.min(42, (90 - moonAltitude()) * .46))" [style.top.%]="50 - Math.cos(moonAzimuth() * Math.PI / 180) * Math.max(0, Math.min(42, (90 - moonAltitude()) * .46))"></div>
+              <span class="tonight-cardinal north">N</span><span class="tonight-cardinal east">E</span>
+              <span class="tonight-cardinal south">S</span><span class="tonight-cardinal west">W</span>
             </div>
-
-            <div class="grid grid-cols-2 gap-3.5 my-4 text-xs font-mono">
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">MOON ALTITUDE</span>
-                <strong class="text-white text-sm">{{ moonAltitude().toFixed(2) }}°</strong>
-              </div>
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">MOON AZIMUTH</span>
-                <strong class="text-white text-sm">{{ moonAzimuth().toFixed(1) }}°</strong>
-              </div>
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">EARTH DISTANCE</span>
-                <strong class="text-indigo-200 text-sm">{{ formatMoonDistance(celestial().moon.distanceKm) }} km</strong>
-              </div>
-              <div class="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <span class="text-slate-400 block text-[10px]">LUNAR AGE</span>
-                <strong class="text-white text-sm">{{ celestial().moon.ageDays.toFixed(1) }} days</strong>
-              </div>
+            <div class="tonight-sky-copy">
+              <span class="eyebrow">LIVE SKY</span>
+              <h2>{{ sunAltitude() >= 0 ? 'Daylight is still present.' : 'The Sun is below the horizon.' }}</h2>
+              <p>Sun {{ sunAltitude().toFixed(1) }}° altitude · Moon {{ moonAltitude().toFixed(1) }}° altitude</p>
             </div>
-          </div>
+          </article>
 
+          <article class="tonight-moon-card">
+            <div class="tonight-moon-visual"><div class="tonight-moon-disc"></div></div>
+            <div>
+              <span class="eyebrow">MOON TONIGHT</span>
+              <h2>{{ celestial().moon.phaseName }}</h2>
+              <p>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated · {{ formatMoonDistance(celestial().moon.distanceKm) }} km away</p>
+            </div>
+          </article>
         </div>
 
-        <!-- Visible Planets in Tonight's Sky -->
-        @if (visiblePlanetsTonight().length > 0) {
-          <div class="w-full p-6 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl my-2">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-bold text-base text-white font-sans flex items-center gap-2">
-                <mat-icon class="text-indigo-400">flare</mat-icon>
-                <span>Bright Naked-Eye Planets in Tonight's Sky</span>
-              </h3>
-              <span class="text-xs font-mono text-emerald-400 font-semibold">{{ visiblePlanetsTonight().length }} Planets Above Horizon</span>
-            </div>
+        <div class="tonight-metrics">
+          <article><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></article>
+          <article><span>Astronomical darkness</span><strong>{{ formatTime(celestial().solarEvents.astronomicalTwilightEnd) }}</strong><small>Dark-sky threshold</small></article>
+          <article><span>Moon altitude</span><strong>{{ moonAltitude().toFixed(1) }}°</strong><small>{{ moonAzimuth().toFixed(0) }}° azimuth</small></article>
+          <article><span>Moon age</span><strong>{{ celestial().moon.ageDays.toFixed(1) }} days</strong><small>Current lunar cycle</small></article>
+        </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        @if (visiblePlanetsTonight().length > 0) {
+          <section class="tonight-section">
+            <div class="tonight-section-head">
+              <div><span class="eyebrow">LOOK UP</span><h2>Bright planets tonight</h2></div>
+              <span>{{ visiblePlanetsTonight().length }} above horizon</span>
+            </div>
+            <div class="tonight-planets">
               @for (planet of visiblePlanetsTonight(); track planet.name) {
-                <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
-                  <div class="flex items-center justify-between">
-                    <strong class="text-sm font-bold text-white">{{ planet.name }}</strong>
-                    <span class="text-[10px] font-mono text-slate-400">Mag {{ planet.magnitude.toFixed(1) }}</span>
-                  </div>
-                  <div class="mt-2 flex items-center justify-between text-xs font-mono text-indigo-300">
-                    <span>Alt: {{ planet.altitudeDeg.toFixed(1) }}°</span>
-                    <span>Az: {{ planet.azimuthDeg.toFixed(0) }}°</span>
-                  </div>
-                </div>
+                <article class="tonight-planet">
+                  <span class="planet-orb"></span>
+                  <div><strong>{{ planet.name }}</strong><small>Magnitude {{ planet.magnitude.toFixed(1) }}</small></div>
+                  <div class="planet-position"><span>{{ planet.altitudeDeg.toFixed(1) }}° alt</span><span>{{ planet.azimuthDeg.toFixed(0) }}° az</span></div>
+                </article>
               }
             </div>
-          </div>
+          </section>
         }
 
-        <!-- Twilight & Nightfall Horizon Progression -->
-        <div class="w-full p-6 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl my-2">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-base text-white font-sans flex items-center gap-2">
-              <mat-icon class="text-amber-400">timelapse</mat-icon>
-              <span>Tonight's Twilight & Horizon Progression</span>
-            </h3>
-            <span class="text-xs font-mono text-slate-400">Solar Elevation Boundaries</span>
+        <section class="tonight-section">
+          <div class="tonight-section-head">
+            <div><span class="eyebrow">THE EVENING UNFOLDS</span><h2>Twilight progression</h2></div>
+            <span>Live solar boundaries</span>
           </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          <div class="tonight-twilight">
             @for (step of tonightTwilightSequence(); track step.name) {
-              <div class="p-3.5 rounded-2xl bg-white/5 border border-white/5 text-center">
-                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">{{ step.name }}</span>
-                <strong class="text-sm font-mono text-amber-300 block my-1">{{ step.time }}</strong>
-                <span class="text-[9px] font-mono text-slate-400 block">{{ step.alt }}</span>
-              </div>
+              <article>
+                <span>{{ step.name }}</span><strong>{{ step.time }}</strong><small>{{ step.alt }}</small>
+              </article>
             }
           </div>
-        </div>
+        </section>
 
-        <div class="astronomy-actions my-4">
-          <a [routerLink]="['/', selectedLocation().id, 'stargazing']" class="primary-report-button">
-            <span>Stargazing & Darkness Planner</span>
-            <mat-icon>arrow_forward</mat-icon>
-          </a>
-          <a [routerLink]="['/', selectedLocation().id, 'eclipses']" class="secondary-report-button">
-            <span>Eclipse Predictor</span>
-            <mat-icon>arrow_forward</mat-icon>
-          </a>
-          <a [routerLink]="['/', selectedLocation().id]" class="secondary-report-button">
-            <span>Back to Live Sky</span>
-            <mat-icon>arrow_forward</mat-icon>
-          </a>
+        <div class="tonight-actions">
+          <a [routerLink]="['/', selectedLocation().id, 'stargazing']" class="primary-report-button">Plan stargazing <mat-icon>arrow_forward</mat-icon></a>
+          <a [routerLink]="['/', selectedLocation().id, 'astronomy']" class="secondary-report-button">Full astronomy <mat-icon>arrow_forward</mat-icon></a>
+          <button type="button" class="secondary-report-button" (click)="showShareModal.set(true)">Share tonight <mat-icon>ios_share</mat-icon></button>
         </div>
       </section>
     }
