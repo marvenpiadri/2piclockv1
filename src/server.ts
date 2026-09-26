@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import {join} from 'node:path';
 import { PRESET_LOCATIONS } from './app/core/models/location.model';
+import { calculateSolarPosition } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -59,6 +60,65 @@ const buildSitemap = () => {
   const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n');
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>';
 };
+
+const apiHeaders = (res: express.Response) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
+};
+
+app.get('/api/v1/locations', (_req, res) => {
+  apiHeaders(res);
+  res.json({
+    version: '1',
+    locations: PRESET_LOCATIONS.map(location => ({
+      id: location.id,
+      name: location.name,
+      country: location.country,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      timezone: location.timezone
+    }))
+  });
+});
+
+app.get('/api/v1/sky', (req, res) => {
+  apiHeaders(res);
+  const locationId = typeof req.query['location'] === 'string' ? req.query['location'] : '';
+  const location = PRESET_LOCATIONS.find(item => item.id === locationId);
+  if (!location) {
+    res.status(404).json({ error: 'Unknown location', code: 'LOCATION_NOT_FOUND' });
+    return;
+  }
+
+  const rawAt = typeof req.query['at'] === 'string' ? req.query['at'] : '';
+  const date = rawAt ? new Date(rawAt) : new Date();
+  if (!Number.isFinite(date.getTime())) {
+    res.status(400).json({ error: 'Invalid at timestamp', code: 'INVALID_TIMESTAMP' });
+    return;
+  }
+
+  const solar = calculateSolarPosition(date, location.latitude, location.longitude);
+  res.json({
+    version: '1',
+    generatedAt: new Date().toISOString(),
+    instant: date.toISOString(),
+    location: {
+      id: location.id,
+      name: location.name,
+      country: location.country,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      timezone: location.timezone
+    },
+    sun: {
+      altitudeDeg: Number(solar.altitudeDeg.toFixed(4)),
+      azimuthDeg: Number(solar.azimuthDeg.toFixed(4)),
+      distanceAU: Number(solar.distanceAU.toFixed(8)),
+      rightAscensionDeg: Number(solar.rightAscensionDeg.toFixed(4)),
+      declinationDeg: Number(solar.declinationDeg.toFixed(4))
+    }
+  });
+});
 
 app.get('/robots.txt', (_req, res) => {
   res.type('text/plain').send('User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n');
