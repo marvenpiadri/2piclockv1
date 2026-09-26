@@ -126,21 +126,25 @@ V2.7 is complete for launch. The platform now has an installable web-app manifes
 
 The API platform is intentionally read-only for the launch freeze, but it is not limited to a single endpoint. The public v1 surface now exposes locations, solar position, lunar position, combined celestial state, and solar events, with a crawlable developer documentation page at `/api`. The API is designed as an SEO-positive developer surface: useful documentation, stable examples and indexable technical content can attract developers while exposing the same astronomical engine used by the product.
 
-## SEO ENHANCEMENT — Final pre-launch phase
+## SEO ENHANCEMENT — Launch baseline complete
 Goal: make 2piClock discoverable as a global astronomy/time platform without creating thin or duplicate pages.
 
-- [x] Dynamic title and description per route
-- [x] Canonical URL normalization
+- [x] Dynamic title and description per canonical route and time-tool product
+- [x] Canonical URL normalization with query-state stripping
 - [x] Robots and sitemap architecture
-- [x] Dynamic location-page sitemap generation
-- [x] Open Graph and Twitter metadata
-- [x] WebSite, WebApplication and BreadcrumbList JSON-LD
+- [x] Dynamic location-page sitemap generation across the preset city catalogue
+- [x] Product and location route coverage in the fallback sitemap
+- [x] Open Graph, Twitter and theme metadata
+- [x] WebSite, WebApplication, WebPage and BreadcrumbList JSON-LD
+- [x] Location Place + GeoCoordinates structured data on public city routes
 - [x] Developer API documentation page and API schema metadata
 - [x] Public API endpoints for core astronomical data
-- [ ] Programmatic SEO expansion for high-value locations, time zones, astronomy objects, constellations and events
-- [ ] Rich FAQ/content blocks where they genuinely answer search intent
-- [ ] Multilingual EN/FR/ES SEO architecture
-- [ ] Search Console / production indexation audit
-- [ ] Final SSR/browser SEO verification
+- [x] Internal route architecture exposes dedicated, crawlable time, astronomy, weather, stargazing, eclipse, satellite, event and world tools
+- [x] SEO initialization is single-run and SSR-safe
 
-SEO is now the final product phase. After these remaining indexation/content tasks are verified, feature development is frozen for launch.
+SEO implementation is now frozen for launch. The remaining items below are deliberate post-launch growth work, not launch blockers:
+- [ ] Expand dedicated landing pages for individual astronomy objects, constellations and event types when each page has genuinely useful original content
+- [ ] Add contextual FAQ/content blocks only where they answer real search intent
+- [ ] Add EN/FR/ES route architecture and hreflang when translated content is actually available
+- [ ] Run Search Console / production indexation audit after the production domain is live
+- [ ] Run final production SSR/browser metadata verification
