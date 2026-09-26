@@ -266,6 +266,12 @@ export class SkyHomeComponent {
     return { label: 'Extreme', color: '#c084fc', advice: 'Avoid direct midday exposure' };
   });
 
+  readonly daylightDurationMinutes = computed(() => {
+    const events = this.celestial().solarEvents;
+    if (!events.sunrise || !events.sunset) return null;
+    return Math.max(0, Math.round((events.sunset.getTime() - events.sunrise.getTime()) / 60000));
+  });
+
   readonly solarProgress = computed(() => {
     const events = this.celestial().solarEvents;
     if (!events.sunrise || !events.sunset) return 50;
