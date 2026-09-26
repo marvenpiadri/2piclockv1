@@ -491,48 +491,10 @@
     @if (skyPage === 'tonight') {
       <section class="report-page tonight-page">
         
-        <!-- Header Strip: Title and Primary View Switcher (Celestial Sky Dome vs. Precision Analog Clock) -->
-        <div class="tonight-header-strip">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center border border-indigo-500/30">
-              <mat-icon class="text-xl">dark_mode</mat-icon>
-            </div>
-            <div class="text-left">
-              <span class="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase">NOCTURNAL SKY THEATRE</span>
-              <h2 class="text-xl md:text-2xl font-extrabold text-white font-sans tracking-tight">Tonight's Horizon & Celestial View</h2>
-            </div>
-          </div>
-
-          <!-- View Mode Switch: Celestial View vs Precision Analog Clock -->
-          <div class="flex items-center p-1 rounded-xl bg-black/60 border border-white/10">
-            <button 
-              type="button" 
-              (click)="tonightViewMode.set('celestial')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition"
-              [class.bg-amber-500]="tonightViewMode() === 'celestial'"
-              [class.text-neutral-950]="tonightViewMode() === 'celestial'"
-              [class.text-slate-300]="tonightViewMode() !== 'celestial'"
-              [class.hover:text-white]="tonightViewMode() !== 'celestial'">
-              <mat-icon class="text-sm">flare</mat-icon>
-              <span>Celestial Sky View</span>
-            </button>
-
-            <button 
-              type="button" 
-              (click)="tonightViewMode.set('analog')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition"
-              [class.bg-amber-500]="tonightViewMode() === 'analog'"
-              [class.text-neutral-950]="tonightViewMode() === 'analog'"
-              [class.text-slate-300]="tonightViewMode() !== 'analog'"
-              [class.hover:text-white]="tonightViewMode() !== 'analog'">
-              <mat-icon class="text-sm">schedule</mat-icon>
-              <span>Analog Clock</span>
-            </button>
-          </div>
-        </div>
+        <!-- Tonight uses the shared celestial presentation; no duplicate clock mode. -->
 
         <!-- Mode A: Pure Celestial Sun, Moon, and Eclipse Horizon View (No Overlapping Center Text) -->
-        @if (tonightViewMode() === 'celestial') {
+        @if (true) {
           <div class="tonight-stage-card" [class.eclipse-active]="activeEclipseState().isActive">
             
             <!-- Eclipse Mode & Simulation Selector -->
@@ -715,46 +677,6 @@
                   }
                 </g>
               </svg>
-            </div>
-          </div>
-        }
-
-        <!-- Mode B: Precision Astronomical Analog Clock for Timing Focus -->
-        @if (tonightViewMode() === 'analog') {
-          <div class="tonight-stage-card">
-            <div class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-black/50 border border-white/10 mb-6">
-              <div class="flex items-center gap-2">
-                <mat-icon class="text-amber-400">schedule</mat-icon>
-                <span class="text-xs font-bold font-mono text-white">Astronomical Precision Analog Time</span>
-              </div>
-              <span class="text-xs font-mono text-amber-300 font-bold">{{ selectedLocation().name }} · {{ selectedLocation().timezone }}</span>
-            </div>
-
-            <div class="py-6 flex flex-col items-center justify-center">
-              <div class="w-64 h-64 md:w-72 md:h-72 p-3 rounded-full bg-slate-950/90 border-2 border-amber-500/30 shadow-2xl flex items-center justify-center">
-                <app-analog-clock 
-                  [timezone]="selectedLocation().timezone" 
-                  [activeDate]="activeDate()"
-                  [latitude]="selectedLocation().latitude"
-                  [longitude]="selectedLocation().longitude">
-                </app-analog-clock>
-              </div>
-
-              <!-- Analog Clock Digital Readout Bar -->
-              <div class="mt-6 flex flex-wrap items-center justify-center gap-3 font-mono text-xs">
-                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span class="text-[10px] text-slate-400 block uppercase">LOCAL TIME</span>
-                  <strong class="text-white text-base font-bold">{{ localTime() }}</strong>
-                </div>
-                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span class="text-[10px] text-slate-400 block uppercase">CALENDAR DATE</span>
-                  <strong class="text-amber-300 text-base font-bold">{{ localDate() }}</strong>
-                </div>
-                <div class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span class="text-[10px] text-slate-400 block uppercase">SOLAR NOON</span>
-                  <strong class="text-indigo-200 text-base font-bold">{{ formatTime(celestial().solarEvents.solarNoon) }}</strong>
-                </div>
-              </div>
             </div>
           </div>
         }
