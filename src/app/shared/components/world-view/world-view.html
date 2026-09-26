@@ -47,6 +47,9 @@
       <button type="button" class="world-tool" [class.active]="showWindVectors()" (click)="toggleWindVectors()" title="Wind vectors">
         <mat-icon>air</mat-icon><span>Wind</span>
       </button>
+      <button type="button" class="world-tool" [class.active]="showWorldWeather()" (click)="toggleWorldWeather()" title="Live weather at world locations">
+        <mat-icon>cloud</mat-icon><span>Weather</span>
+      </button>
       <button type="button" class="world-tool" (click)="flyToSubsolar()" title="Center on subsolar point">
         <mat-icon class="sun-tool">wb_sunny</mat-icon><span>Sun point</span>
       </button>
