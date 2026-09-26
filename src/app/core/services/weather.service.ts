@@ -515,8 +515,20 @@ export class WeatherService {
   /**
    * Determine astronomical season based on local calendar date and hemisphere
    */
-  getSeason(date: Date, latitude: number): Season {
-    const month = date.getUTCMonth(); // 0 to 11
+  getSeason(date: Date, latitude: number, timezone?: string): Season {
+    // Seasons used by the atmosphere are tied to the selected location's
+    // civil calendar, not the browser/UTC calendar. This matters around
+    // midnight when a location and UTC are on different dates.
+    let month: number;
+    if (timezone) {
+      const monthText = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        month: 'numeric'
+      }).format(date);
+      month = Number(monthText) - 1;
+    } else {
+      month = date.getUTCMonth();
+    }
     const isNorthern = latitude >= 0;
 
     // Northern hemisphere:
