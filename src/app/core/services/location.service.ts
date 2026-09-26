@@ -28,6 +28,19 @@ export class LocationService {
   constructor() {
     if (this.isBrowser) {
       try {
+        const savedWatchlist = localStorage.getItem('2piclock_watchlist');
+        if (savedWatchlist) {
+          try {
+            const ids = JSON.parse(savedWatchlist) as string[];
+            const restored = ids
+              .map(id => this.allPresets.find(loc => loc.id === id))
+              .filter((loc): loc is GeoLocation => Boolean(loc));
+            if (restored.length > 0) this.watchlist.set(restored);
+          } catch {
+            // Ignore malformed watchlist data.
+          }
+        }
+
         const savedLocId = localStorage.getItem('2piclock_selected_location');
         if (savedLocId) {
           const found = this.allPresets.find(l => l.id === savedLocId);
@@ -150,11 +163,25 @@ export class LocationService {
   addToWatchlist(loc: GeoLocation): void {
     if (!this.watchlist().some(l => l.id === loc.id)) {
       this.watchlist.update(list => [...list, loc]);
+      this.persistWatchlist();
     }
   }
 
   removeFromWatchlist(locId: string): void {
     this.watchlist.update(list => list.filter(l => l.id !== locId));
+    this.persistWatchlist();
+  }
+
+  private persistWatchlist(): void {
+    if (!this.isBrowser) return;
+    try {
+      localStorage.setItem(
+        '2piclock_watchlist',
+        JSON.stringify(this.watchlist().filter(loc => !loc.isCustom).map(loc => loc.id))
+      );
+    } catch {
+      // Ignore storage errors.
+    }
   }
 
   getCountryFlag(countryCode: string): string {
