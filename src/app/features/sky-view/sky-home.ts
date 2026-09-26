@@ -9,7 +9,6 @@ import { ObservatoryViewService, ObservatoryView } from '../../core/services/obs
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent } from '../../shared/components';
-import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
@@ -31,7 +30,6 @@ import { WorldEventsService } from '../../core/services/world-events.service';
     WeatherBarChartComponent, WeatherIconComponent,
     RouterLink,
     CountryFlagComponent,
-    AnalogClockComponent,
     ReactiveSkyComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
