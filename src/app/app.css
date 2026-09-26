@@ -44,8 +44,8 @@
 }
 
 .brand-badge {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   min-width: 32px;
   min-height: 32px;
   aspect-ratio: 1;
@@ -53,7 +53,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  flex: 0 0 32px;
+  flex: 0 0 38px;
   overflow: hidden;
   user-select: none;
   isolation: isolate;
@@ -74,10 +74,10 @@
   z-index: 1;
   color: #f59e0b;
   font-family: "Dekatron", var(--font-mono, monospace);
-  font-size: 10.5px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: -.08em;
+  letter-spacing: -.12em;
   transform: translateY(-.4px);
   transition: color 1.2s ease, transform .5s ease;
 }
@@ -156,9 +156,9 @@
   gap: 8px;
   padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: rgba(245, 158, 11, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.98);
+  color: #1c1917;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -167,8 +167,8 @@
 
 .btn-observatories:hover,
 .btn-observatories.menu-open {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 1);
+  border-color: rgba(251, 191, 36, 1);
 }
 
 .btn-observatories .obs-icon {
@@ -316,18 +316,18 @@
   gap: 10px;
   padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  background: rgba(245, 158, 11, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.98);
+  color: #1c1917;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
   transition: all 0.2s ease;
 }
 
 .location-pill-btn:hover,
 .location-pill-btn.menu-open {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 1);
+  border-color: rgba(251, 191, 36, 1);
 }
 
 .loc-name-label {
@@ -462,9 +462,9 @@
 .btn-gps-action {
   padding: 8px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
+  background: rgba(245, 158, 11, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.98);
+  color: #1c1917;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
@@ -473,9 +473,9 @@
   transition: all 0.15s ease;
 }
 
-.btn-gps-action:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fbbf24;
+ .btn-gps-action:hover {
+  background: rgba(245, 158, 11, 1);
+  color: #1c1917;
 }
 
 .btn-gps-action mat-icon {
@@ -484,10 +484,10 @@
   height: 16px;
 }
 
-.full-page-glass-substrate.glass-active {
+ .full-page-glass-substrate.glass-active {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  background-color: rgba(2, 6, 23, 0.4);
+  background-color: rgba(2, 6, 23, 0.58);
 }
 
 .full-page-glass-substrate.glass-inactive {
@@ -622,7 +622,7 @@
  * its existing watch treatment unchanged.
  */
 .sky-background-active .universal-top-header {
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(3, 7, 18, 0.78);
   border-bottom-color: rgba(255, 255, 255, 0.16);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
 }
@@ -640,24 +640,29 @@
 }
 
 .sky-background-active .nav-main-active {
-  background: rgba(255, 255, 255, 0.11);
+  background: rgba(3, 7, 18, 0.78);
 }
 
 .sky-background-active .nav-directory-menu,
 .sky-background-active .location-dropdown-menu,
 .sky-background-active .search-dropdown-menu {
-  background: rgba(255, 255, 255, 0.075) !important;
+  background: rgba(3, 7, 18, 0.92) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
 
-.sky-background-active .search-input-wrap,
+.sky-background-active .search-input-wrap {
+  background: rgba(3, 7, 18, 0.78);
+  border-color: rgba(255, 255, 255, 0.18);
+}
 .sky-background-active .btn-observatories,
 .sky-background-active .location-pill-btn,
 .sky-background-active .btn-gps-action {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(245, 158, 11, 0.92);
+  border-color: rgba(245, 158, 11, 0.98);
+  color: #1c1917;
   border-color: rgba(255, 255, 255, 0.18);
 }
 
@@ -673,5 +678,5 @@
 }
 
 .sky-background-active .full-page-glass-substrate.glass-active {
-  background-color: rgba(255, 255, 255, 0.035);
+  background-color: rgba(2, 6, 23, 0.58);
 }
