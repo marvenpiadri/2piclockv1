@@ -12,6 +12,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { CelestialService } from '../../../core/services/celestial.service';
 import { CelestialState } from '../../../core/models/celestial.model';
 import { WeatherData, AtmosphericState } from '../../../core/models/weather.model';
+import { PlanetaryPosition } from '../../../core/services/precision-astronomy.service';
 
 interface Star {
   x: number; // 0 to 1 normalized
@@ -370,6 +371,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     if (moonAlt > -8) {
       this.drawMoon(ctx, w, h, celestial, weather, atmos, isSouthern);
     }
+
+    // 6b. V2.0 real planetary positions from the shared precision astronomy engine.
+    this.drawPlanets(ctx, w, h, sunAlt, this.celestialService.planetaryPositions(), weather, atmos);
 
     // 7. Draw Sun Disc, Refraction Oblateness, UV Corona & Solar Eclipse
     if (sunAlt > -10) {
@@ -800,6 +804,89 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       y: horizonY - Math.cos(azRad) * radius,
       altitude
     };
+  }
+
+  /**
+   * V2.0 planetary projection.
+   * Uses the same altitude/azimuth values exposed by CelestialService so the
+   * Living Sky and Tonight/astronomy views share one astronomical source.
+   */
+  private drawPlanets(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    sunAlt: number,
+    planets: PlanetaryPosition[],
+    weather: WeatherData,
+    atmos: AtmosphericState
+  ): void {
+    // Planets are a night-sky feature. Keep them out of daylight and deep
+    // atmospheric wash so they never compete with the Sun.
+    if (sunAlt > -3) return;
+
+    const horizonY = h * 0.90;
+    const visibility = Math.max(0, Math.min(1, (Math.min(-sunAlt, 18) - 3) / 15));
+    const weatherOcclusion = Math.max(
+      0.04,
+      1 - this.interp.cloudCoverage * 0.82 - this.interp.haze * 0.45 - this.interp.dustAerosols * 0.35
+    );
+
+    const radiusByName: Record<string, number> = {
+      Mercury: 2.0,
+      Venus: 3.2,
+      Mars: 2.4,
+      Jupiter: 3.0,
+      Saturn: 2.6,
+      Uranus: 1.55,
+      Neptune: 1.35
+    };
+
+    const colorByName: Record<string, string> = {
+      Mercury: 'rgba(210, 215, 220,',
+      Venus: 'rgba(255, 244, 205,',
+      Mars: 'rgba(245, 155, 120,',
+      Jupiter: 'rgba(245, 225, 190,',
+      Saturn: 'rgba(235, 220, 175,',
+      Uranus: 'rgba(180, 225, 235,',
+      Neptune: 'rgba(150, 185, 255,'
+    };
+
+    for (const planet of planets) {
+      if (!planet.visible || planet.altitudeDeg <= 2) continue;
+      // Uranus/Neptune are kept extremely subtle in the naked-eye atmosphere;
+      // their presence is still tied to the real ephemeris.
+      const magnitudeVisibility = Math.max(0.16, Math.min(1, 1.15 - planet.magnitude / 4));
+      const alpha = visibility * weatherOcclusion * magnitudeVisibility;
+      if (alpha < 0.035) continue;
+
+      const pos = this.projectCelestialToScreen(
+        planet.altitudeDeg,
+        planet.azimuthDeg,
+        w,
+        horizonY,
+        this.celestialService.selectedLocation().latitude < 0
+      );
+      if (pos.y > h + 20 || pos.y < -20) continue;
+
+      const baseRadius = radiusByName[planet.name] ?? 1.8;
+      const radius = baseRadius * (planet.magnitude < 0 ? 1.12 : 1);
+      const color = colorByName[planet.name] ?? 'rgba(235, 240, 250,';
+
+      // A restrained glow gives bright planets a physical presence without
+      // turning the sky into a UI decoration.
+      const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, radius * 4.5);
+      glow.addColorStop(0, `${color} ${(alpha * 0.30).toFixed(3)})`);
+      glow.addColorStop(1, `${color} 0)`);
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, radius * 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = `${color} ${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   /**
