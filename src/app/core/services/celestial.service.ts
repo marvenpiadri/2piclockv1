@@ -297,7 +297,7 @@ export class CelestialService {
     minAltitudeDeg = 8
   ): VisibleConstellation[] {
     const observer = new Astronomy.Observer(latitude, longitude, 0);
-    const catalog: Array<{ name: string; ra: number; dec: number; season: string }> = [
+    const catalog: { name: string; ra: number; dec: number; season: string }[] = [
       { name: 'Orion', ra: 83.8, dec: 0.0, season: 'Winter' },
       { name: 'Taurus', ra: 68.0, dec: 15.0, season: 'Winter' },
       { name: 'Gemini', ra: 102.5, dec: 22.0, season: 'Winter' },
