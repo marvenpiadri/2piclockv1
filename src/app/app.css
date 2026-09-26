@@ -614,3 +614,64 @@
 .sky-background-active .main-content-viewport {
   color: var(--2pi-text-on-sky);
 }
+
+/*
+ * Sky-native shell
+ * The living sky is the surface. Do not introduce a second opaque dark app shell
+ * over it. These overrides are intentionally scoped to Sky routes so /now keeps
+ * its existing watch treatment unchanged.
+ */
+.sky-background-active .universal-top-header {
+  background: rgba(255, 255, 255, 0.045);
+  border-bottom-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.sky-background-active .brand-title,
+.sky-background-active .nav-main-link,
+.sky-background-active .loc-name-label,
+.sky-background-active .btn-observatories,
+.sky-background-active .location-pill-btn {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.18);
+}
+
+.sky-background-active .nav-main-link:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.sky-background-active .nav-main-active {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.sky-background-active .nav-directory-menu,
+.sky-background-active .location-dropdown-menu,
+.sky-background-active .search-dropdown-menu {
+  background: rgba(255, 255, 255, 0.075) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.sky-background-active .search-input-wrap,
+.sky-background-active .btn-observatories,
+.sky-background-active .location-pill-btn,
+.sky-background-active .btn-gps-action {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.sky-background-active .search-input-wrap input,
+.sky-background-active .nav-cat-btn .item-label,
+.sky-background-active .loc-item-title {
+  color: #ffffff;
+}
+
+.sky-background-active .nav-cat-btn:hover,
+.sky-background-active .location-item-row:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.sky-background-active .full-page-glass-substrate.glass-active {
+  background-color: rgba(255, 255, 255, 0.035);
+}
