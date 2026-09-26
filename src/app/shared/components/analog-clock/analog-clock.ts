@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject } from '@angular/core';
 import { CelestialService } from '../../../core/services/celestial.service';
 
 @Component({
@@ -11,13 +10,13 @@ import { CelestialService } from '../../../core/services/celestial.service';
   template: `
     <div class="analog-face">
       <svg class="analog-svg" viewBox="0 0 200 200">
+        <!-- Pure Outer & Inner Dial Circle -->
+        <circle cx="100" cy="100" r="94" fill="#090b10" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2" />
+
         @if (showCelestialMarkers) {
           <circle cx="100" cy="100" r="82" fill="none" stroke="rgba(245,158,11,.20)" stroke-width="1" stroke-dasharray="2 4" />
           <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1" />
         }
-
-        <!-- Pure Outer & Inner Dial Circle -->
-        <circle cx="100" cy="100" r="94" fill="#090b10" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2" />
 
         <!-- Dial Tick Marks / Stripes -->
         <!-- Fine stripes in WHITE, Big hour stripes in AMBER -->
