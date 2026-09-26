@@ -19,6 +19,23 @@ function normalizeDeg(deg: number): number {
 }
 
 /**
+ * Recover the Sun's apparent ecliptic longitude from its equatorial
+ * coordinates. This keeps lunar phase geometry in the correct coordinate
+ * system without changing the public SolarPosition model.
+ */
+function trueSolarEclipticLongitude(sun: SolarPosition, t: number): number {
+  const omega = (125.04 - 1934.136 * t) * DEG2RAD;
+  const eps0 = 23 + (26 + (21.448 - t * (46.815 + t * (0.00059 - t * 0.001813))) / 60) / 60;
+  const eps = eps0 + 0.00256 * Math.cos(omega);
+  const alpha = sun.rightAscensionDeg * DEG2RAD;
+  const delta = sun.declinationDeg * DEG2RAD;
+  return normalizeDeg(Math.atan2(
+    Math.sin(alpha) * Math.cos(eps) + Math.tan(delta) * Math.sin(eps),
+    Math.cos(alpha)
+  ) * RAD2DEG);
+}
+
+/**
  * Calculates Julian Day Number from a UTC Date object
  */
 export function getJulianDate(date: Date): number {
@@ -210,13 +227,18 @@ export function calculateSolarEvents(
       day: '2-digit'
     }).formatToParts(date);
     const value = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
-    const localNoon = zonedDateTimeToInstant(value('year'), value('month'), value('day'), 12, 0, 0, timeZone);
-    startOfDay = new Date(Date.UTC(
-      localNoon.getUTCFullYear(),
-      localNoon.getUTCMonth(),
-      localNoon.getUTCDate(),
-      0, 0, 0
-    ));
+    // Solar events belong to the selected location's civil day. Construct
+    // actual local midnight instead of truncating the UTC date, which can
+    // shift the event window by the location's timezone offset.
+    startOfDay = zonedDateTimeToInstant(
+      value('year'),
+      value('month'),
+      value('day'),
+      0,
+      0,
+      0,
+      timeZone
+    );
   } else {
     startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
   }
@@ -436,9 +458,10 @@ export function calculateLunarPosition(
   }
 
   // Lunar Phase Angle (i) & Illuminated Fraction (k)
-  // cos(i) = -cos(lambdaMoon - lambdaSun) * cos(betaMoon)
-  const sunLambda = actualSun.rightAscensionDeg; // approximate ecliptic long
-  const elongRad = Math.abs(lambdaMoonRad - (sunLambda * DEG2RAD));
+  // Use the Sun's apparent ecliptic longitude here. Right ascension is an
+  // equatorial coordinate and cannot be substituted for ecliptic longitude.
+  const sunLambda = normalizeDeg(trueSolarEclipticLongitude(actualSun, t));
+  const elongRad = Math.abs((lambdaMoonDeg - sunLambda) * DEG2RAD);
   const cosPhaseAngle = -Math.cos(elongRad) * Math.cos(betaMoonRad);
   const phaseAngleDeg = Math.acos(Math.max(-1, Math.min(1, cosPhaseAngle))) * RAD2DEG;
   const illuminationFraction = (1 + Math.cos(phaseAngleDeg * DEG2RAD)) / 2;
