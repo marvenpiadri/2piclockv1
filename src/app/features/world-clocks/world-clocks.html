@@ -40,13 +40,7 @@
     </div>
    </div>
   } @else {
-   <div class="analog-clock" [attr.aria-label]="clock.location.name+' '+clock.time">
-    <span class="marker marker-12">12</span><span class="marker marker-3">3</span><span class="marker marker-6">6</span><span class="marker marker-9">9</span>
-    <span class="hand hour-hand" [style.transform]="'translateX(-50%) rotate('+((clock.hour+clock.minute/60)*30)+'deg)'"></span>
-    <span class="hand minute-hand" [style.transform]="'translateX(-50%) rotate('+((clock.minute+clock.second/60)*6)+'deg)'"></span>
-    <span class="second-hand" [style.transform]="'translateX(-50%) rotate('+(clock.second*6)+'deg)'"></span>
-    <span class="clock-center"></span>
-   </div>
+   <app-analog-clock [timezone]="clock.location.timezone" [activeDate]="activeDate()" [size]="150" [showSeconds]="true" [ariaLabel]="clock.location.name+' '+clock.time"></app-analog-clock>
    <div class="analog-readout">{{clock.time}}:{{clock.second.toString().padStart(2,'0')}} <span>{{clock.date}}</span></div>
   }
  </article>
