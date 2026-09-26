@@ -575,6 +575,24 @@
           </div>
         </section>
 
+        @if (upcomingCelestialEvents().length > 0) {
+          <section class="tonight-section">
+            <div class="tonight-section-head">
+              <div><span class="eyebrow">UP NEXT</span><h2>Celestial events</h2></div>
+              <a [routerLink]="['/', selectedLocation().id, 'astronomy']">Full astronomy <mat-icon>arrow_forward</mat-icon></a>
+            </div>
+            <div class="tonight-events">
+              @for (event of upcomingCelestialEvents(); track event.id) {
+                <article>
+                  <span>{{ event.category }}</span>
+                  <strong>{{ event.title }}</strong>
+                  <small>{{ event.formattedDate }} · {{ event.formattedTime }}</small>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
         <div class="tonight-actions">
           <a [routerLink]="['/', selectedLocation().id, 'stargazing']" class="primary-report-button">Plan stargazing <mat-icon>arrow_forward</mat-icon></a>
           <a [routerLink]="['/', selectedLocation().id, 'astronomy']" class="secondary-report-button">Full astronomy <mat-icon>arrow_forward</mat-icon></a>
