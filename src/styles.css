@@ -1066,3 +1066,73 @@ a:focus-visible {
   background: rgba(13, 17, 24, 0.52);
   box-shadow: none;
 }
+
+/* ==========================================================================
+   Atmospheric UI language
+   The interface belongs to the sky. There is no opaque dark card system.
+   Surfaces remain translucent so the living sky, weather and time of day
+   continue through the entire experience. /now is intentionally untouched.
+   ========================================================================== */
+
+:root {
+  --2pi-atmosphere-surface: rgba(255, 255, 255, 0.075);
+  --2pi-atmosphere-surface-strong: rgba(255, 255, 255, 0.115);
+  --2pi-atmosphere-border: rgba(255, 255, 255, 0.18);
+  --2pi-atmosphere-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+}
+
+/* Replace large utility-colored card fills with transparent atmospheric
+   material. The sky remains the visual surface underneath. */
+:is(.bg-blue-400, .bg-blue-500, .bg-blue-600,
+    .bg-sky-400, .bg-sky-500,
+    .bg-indigo-800, .bg-indigo-950).rounded-lg,
+:is(.bg-blue-400, .bg-blue-500, .bg-blue-600,
+    .bg-sky-400, .bg-sky-500,
+    .bg-indigo-800, .bg-indigo-950).rounded-xl,
+:is(.bg-blue-400, .bg-blue-500, .bg-blue-600,
+    .bg-sky-400, .bg-sky-500,
+    .bg-indigo-800, .bg-indigo-950).rounded-2xl {
+  background: var(--2pi-atmosphere-surface) !important;
+  color: inherit;
+  border-color: var(--2pi-atmosphere-border) !important;
+  box-shadow: var(--2pi-atmosphere-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Blue borders on large surfaces become atmospheric separators. */
+:is(.border-blue-500\/20, .border-blue-500\/30, .border-sky-500\/20).rounded-lg,
+:is(.border-blue-500\/20, .border-blue-500\/30, .border-sky-500\/20).rounded-xl,
+:is(.border-blue-500\/20, .border-blue-500\/30, .border-sky-500\/20).rounded-2xl {
+  border-color: var(--2pi-atmosphere-border) !important;
+}
+
+/* Existing shared panels should expose the sky instead of becoming dark
+   application chrome. */
+.app-surface .glass-card,
+.glass-panel .glass-card {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: var(--2pi-atmosphere-border);
+  box-shadow: var(--2pi-atmosphere-shadow);
+}
+
+/* Generic glass surfaces stay atmospheric in both themes. */
+.glass,
+.glass-panel,
+.glass-card {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* On light atmospheric scenes, keep material airy rather than introducing
+   a dark rectangle. */
+.light .glass,
+.light .glass-panel,
+.light .glass-card,
+[data-theme="light"] .glass,
+[data-theme="light"] .glass-panel,
+[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 10px 35px rgba(20, 35, 55, 0.06);
+}
