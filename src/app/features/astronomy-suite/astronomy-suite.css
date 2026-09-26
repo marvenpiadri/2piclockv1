@@ -829,3 +829,78 @@
 .observatory-actions mat-icon{font-size:15px;width:15px;height:15px}
 @media (max-width:900px){.observatory-grid{grid-template-columns:1fr 1fr}.observatory-hero{grid-template-columns:1fr}.observatory-time{text-align:left}}
 @media (max-width:560px){.observatory-grid{grid-template-columns:1fr}.sky-horizon{height:220px}}
+
+
+.planetary-observatory {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(8,10,14,.72);
+  overflow: hidden;
+}
+.planetary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+.planetary-header h3 {
+  margin: 5px 0 3px;
+  color: #f8fafc;
+  font: 800 18px/1.2 system-ui,sans-serif;
+}
+.planetary-header p {
+  margin: 0;
+  color: #94a3b8;
+  font: 10px/1.5 monospace;
+}
+.planetary-count {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.18);
+  color: #fbbf24;
+  font: 700 9px monospace;
+}
+.planetary-table-wrap { overflow-x: auto; }
+.planetary-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-family: monospace;
+}
+.planetary-table th {
+  padding: 8px 9px;
+  text-align: left;
+  color: #64748b;
+  font-size: 8px;
+  letter-spacing: .08em;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.planetary-table td {
+  padding: 10px 9px;
+  color: #94a3b8;
+  font-size: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+  white-space: nowrap;
+}
+.planetary-table tr.is-visible td { color: #cbd5e1; }
+.planetary-table td:first-child strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 11px;
+}
+.planetary-table td:first-child small {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 7px;
+}
+.planetary-table tr.is-visible td:first-child small { color: #fbbf24; }
+@media (max-width: 700px) {
+  .planetary-header { flex-direction: column; }
+}
