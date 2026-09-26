@@ -223,7 +223,7 @@ export class WorldEventsService {
               });
             };
 
-            const first = rows.find((row: any) => Number(row?.hijri?.day) === targetDay);
+            const first = rows.find((row: any) => Number(row?.hijri?.day) === 1);
             add(first, 'Ramadan begins', 'First day of Ramadan by the selected Hijri calculation method.', true);
 
             this.loadIslamicMonth(hijriYear, 10, 'Eid al-Fitr', 'Start of Shawwal and Eid al-Fitr.', generation, events);
@@ -231,7 +231,7 @@ export class WorldEventsService {
             this.loadIslamicMonth(hijriYear, 1, 'Islamic New Year', 'First day of Muharram.', generation, events, 1);
           },
           error: () => {
-            if (generation === this.requestGeneration) this.religiousEvents.set([]);
+            if (generation === this.requestGeneration) return;
           }
         });
       },
