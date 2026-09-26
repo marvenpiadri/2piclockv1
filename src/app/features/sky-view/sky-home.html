@@ -87,7 +87,7 @@
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunrise')"><span>Sunrise</span><b>{{ formatTime(celestial().solarEvents.sunrise) }}</b></button>
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('noon')"><span>Noon</span><b>{{ formatTime(celestial().solarEvents.solarNoon) }}</b></button>
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunset')"><span>Sunset</span><b>{{ formatTime(celestial().solarEvents.sunset) }}</b></button>
-            <button type="button" class="time-tool" (click)="jumpToSolarEvent('midnight')"><span>Midnight</span><b>00:00</b></button>
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('midnight')"><span>Midnight</span><b>00:00</b></button><button type="button" class="time-tool share-time-tool" (click)="showShareModal.set(true)" aria-label="Share this time and sky snapshot"><mat-icon>ios_share</mat-icon><span>Share</span></button>
           </div>
 
           <div class="time-scrubber">
