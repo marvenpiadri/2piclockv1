@@ -5,6 +5,7 @@ import { CelestialService } from '../../core/services/celestial.service';
 import { TimeControlService, SimulationSpeed } from '../../core/services/time-control.service';
 import { LocationService } from '../../core/services/location.service';
 import { WeatherService } from '../../core/services/weather.service';
+import { AstronomicalCalculatorService } from '../../core/services/astronomical-calculator.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
@@ -45,6 +46,7 @@ export class SkyHomeComponent {
   private locationService = inject(LocationService);
   readonly weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
+  private astronomicalCalculator = inject(AstronomicalCalculatorService);
   private title = inject(Title);
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
@@ -287,6 +289,25 @@ export class SkyHomeComponent {
     return events
       .filter(event => event.time instanceof Date && Number.isFinite(event.time.getTime()))
       .sort((a, b) => a.time!.getTime() - b.time!.getTime());
+  });
+
+  readonly upcomingCelestialEvents = computed(() => {
+    const now = this.activeDate().getTime();
+    const location = this.selectedLocation();
+    const year = Number(new Intl.DateTimeFormat('en-US', {
+      timeZone: location.timezone,
+      year: 'numeric'
+    }).format(this.activeDate()));
+
+    const events = [
+      ...this.astronomicalCalculator.calculateYearlyEvents(year, location),
+      ...this.astronomicalCalculator.calculateYearlyEvents(year + 1, location)
+    ];
+
+    return events
+      .filter(event => event.date.getTime() > now)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 4);
   });
 
   readonly tonightTwilightSequence = computed(() => {
