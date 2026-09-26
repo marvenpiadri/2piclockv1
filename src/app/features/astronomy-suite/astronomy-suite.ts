@@ -41,7 +41,7 @@ export class AstronomySuiteComponent implements OnInit {
 
   readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<AstronomyTab>('overview');
-  readonly selectedLocation = signal<GeoLocation>(this.locationService.selectedLocation());
+  readonly selectedLocation = this.locationService.selectedLocation;
   readonly selectedDate = signal<string>(
     new Intl.DateTimeFormat('en-CA', {
       timeZone: this.locationService.selectedLocation().timezone
@@ -115,6 +115,16 @@ export class AstronomySuiteComponent implements OnInit {
       this.meta.updateTag({ property: 'og:title', content: title });
       this.meta.updateTag({ property: 'og:description', content: description });
     });
+
+    // Sync selectedDate with local timezone of the selected location
+    effect(() => {
+      const timezone = this.selectedLocation().timezone;
+      this.selectedDate.set(
+        new Intl.DateTimeFormat('en-CA', {
+          timeZone: timezone
+        }).format(new Date())
+      );
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {
@@ -123,7 +133,6 @@ export class AstronomySuiteComponent implements OnInit {
       if (slug) {
         const found = this.allPresets.find(p => p.id === slug);
         if (found) {
-          this.selectedLocation.set(found);
           this.locationService.selectLocation(found);
           this.selectedDate.set(new Intl.DateTimeFormat('en-CA', {
             timeZone: found.timezone
@@ -143,7 +152,7 @@ export class AstronomySuiteComponent implements OnInit {
       }
       if (params['loc']) {
         const found = this.allPresets.find(p => p.id === params['loc'] || p.name.toLowerCase() === params['loc'].toLowerCase());
-        if (found) this.selectedLocation.set(found);
+        if (found) this.locationService.selectLocation(found);
       }
       if (params['date']) {
         this.selectedDate.set(params['date']);
@@ -168,12 +177,14 @@ export class AstronomySuiteComponent implements OnInit {
   }
 
   setLocation(loc: GeoLocation): void {
-    this.selectedLocation.set(loc);
+    this.locationService.selectLocation(loc);
   }
 
   setLocationById(id: string): void {
     const loc = this.allPresets.find(p => p.id === id);
-    if (loc) { this.selectedLocation.set(loc); this.locationService.selectLocation(loc); }
+    if (loc) {
+      this.locationService.selectLocation(loc);
+    }
   }
 
   setWhenIsQuery(query: 'next-full-moon' | 'next-new-moon' | 'spring-equinox' | 'summer-solstice' | 'autumn-equinox' | 'winter-solstice' | 'solar-noon'): void {

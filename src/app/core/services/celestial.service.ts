@@ -6,6 +6,7 @@ import { WeatherService } from './weather.service';
 import { PrecisionAstronomyService, SolarCrossCheck, PlanetaryPosition } from './precision-astronomy.service';
 import { getCelestialState, get24HourSolarCurve } from '../astronomy/astronomy-engine';
 import { CelestialState } from '../models/celestial.model';
+import { AtmosphericState, Season } from '../models/weather.model';
 
 @Injectable({
   providedIn: 'root'
@@ -28,10 +29,16 @@ export class CelestialService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
+      let previousLocKey = '';
       // Eagerly keep weather up to date when the active location changes
       effect(() => {
         const loc = this.selectedLocation();
         if (loc) {
+          const key = `${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}`;
+          if (previousLocKey && previousLocKey !== key) {
+            this.weatherService.clearOverride();
+          }
+          previousLocKey = key;
           this.weatherService.fetchWeatherForLocation(loc);
         }
       });
@@ -43,6 +50,191 @@ export class CelestialService {
     const loc = this.selectedLocation();
     const date = this.activeDate();
     return getCelestialState(date, loc.latitude, loc.longitude, loc.timezone);
+  });
+
+  /**
+   * Authoritative layered Atmospheric State derived from location, date, astronomy, season, and weather
+   */
+  readonly atmosphericState = computed<AtmosphericState>(() => {
+    const loc = this.selectedLocation();
+    const date = this.activeDate();
+    const w = this.currentWeather();
+    const c = this.celestialState();
+
+    // 1. Natural astronomical season from date + latitude
+    let season: Season = this.weatherService.getSeason(date, loc.latitude);
+    let seasonalBias = 0;
+    if (season === 'winter') seasonalBias = -8;
+    else if (season === 'summer') seasonalBias = +8;
+    else if (season === 'spring') seasonalBias = -1;
+    else seasonalBias = +1;
+
+    // Preset / condition overrides for season
+    if (w.condition === 'winter_clear' || w.condition === 'winter_overcast') {
+      season = 'winter';
+      seasonalBias = -10;
+    } else if (w.condition === 'summer_heat_haze') {
+      season = 'summer';
+      seasonalBias = +12;
+    } else if (w.condition === 'spring_mist') {
+      season = 'spring';
+      seasonalBias = 0;
+    } else if (w.condition === 'autumn_haze') {
+      season = 'autumn';
+      seasonalBias = +2;
+    }
+
+    // 2. Cloud coverage (0 to 1) & Cloud Type
+    let cloudCoverage = Math.max(0, Math.min(1, w.cloudCoverPct / 100));
+    let cloudType: AtmosphericState['cloudType'] = 'cumulus';
+    let cloudAltitude = 0.45;
+
+    if (
+      w.condition === 'thunderstorm' ||
+      w.condition === 'severe_storm' ||
+      w.condition === 'severe_thunderstorm' ||
+      w.condition === 'monsoon' ||
+      w.condition === 'tropical_storm'
+    ) {
+      cloudType = 'cumulonimbus';
+      cloudCoverage = Math.max(0.85, cloudCoverage);
+      cloudAltitude = 0.5;
+    } else if (w.condition === 'low_clouds') {
+      cloudType = 'low_stratus';
+      cloudAltitude = 0.18;
+    } else if (w.condition === 'broken_clouds') {
+      cloudType = 'broken';
+      cloudAltitude = 0.5;
+    } else if (w.condition === 'cloudy' || w.condition === 'overcast' || w.condition === 'winter_overcast') {
+      cloudType = 'stratus';
+      cloudAltitude = 0.4;
+    } else if (w.condition === 'fog' || w.condition === 'freezing_fog') {
+      cloudType = 'low_stratus';
+      cloudAltitude = 0.08;
+    } else if (w.condition === 'spring_mist' || w.condition === 'autumn_haze' || w.condition === 'clear_dry') {
+      cloudType = 'cirrus';
+      cloudAltitude = 0.7;
+    }
+
+    // 3. Visibility
+    let visibilityKm = Math.max(0.1, Math.min(50, w.visibilityKm));
+    if (w.condition === 'fog' || w.condition === 'freezing_fog') {
+      visibilityKm = Math.min(visibilityKm, 1.2);
+    } else if (w.condition === 'clear' || w.condition === 'clear_dry') {
+      visibilityKm = Math.max(visibilityKm, 35);
+    }
+
+    // 4. Haze, Dust, Heat Shimmer, Freezing Frost
+    const haze =
+      w.condition === 'haze' || w.condition === 'autumn_haze'
+        ? 0.8
+        : Math.max(0, (1 - Math.min(1, visibilityKm / 25)) * 0.65);
+    const dustAerosols = w.condition === 'dust_haze' ? 0.9 : 0;
+    const heatShimmer =
+      w.condition === 'heat_haze' || w.condition === 'summer_heat_haze'
+        ? 0.85
+        : w.temperatureC >= 28 && c.sun.altitudeDeg > 12 && cloudCoverage < 0.45
+        ? Math.min(0.75, (w.temperatureC - 28) * 0.1)
+        : 0;
+    const freezingFrost =
+      w.condition === 'freezing_fog' || w.condition === 'winter_clear' || w.condition === 'blizzard'
+        ? 0.85
+        : w.temperatureC <= 0
+        ? Math.min(0.9, Math.abs(w.temperatureC) * 0.08 + 0.15)
+        : 0;
+
+    // 5. Precipitation
+    let precipType: AtmosphericState['precipitationType'] = 'none';
+    let precipIntensity = Math.max(0, Math.min(1, w.precipitationPct / 100));
+
+    if (w.condition === 'drizzle') {
+      precipType = 'drizzle';
+      precipIntensity = Math.max(0.25, precipIntensity);
+    } else if (w.condition === 'rain') {
+      precipType = 'rain';
+      precipIntensity = Math.max(0.45, precipIntensity);
+    } else if (w.condition === 'heavy_rain') {
+      precipType = 'rain';
+      precipIntensity = Math.max(0.85, precipIntensity);
+    } else if (w.condition === 'heavy_downpour' || w.condition === 'monsoon') {
+      precipType = 'downpour';
+      precipIntensity = 1.0;
+    } else if (w.condition === 'snow_flurries') {
+      precipType = 'flurries';
+      precipIntensity = Math.max(0.2, precipIntensity);
+    } else if (w.condition === 'snow') {
+      precipType = 'snow';
+      precipIntensity = Math.max(0.45, precipIntensity);
+    } else if (w.condition === 'heavy_snow') {
+      precipType = 'snow';
+      precipIntensity = Math.max(0.85, precipIntensity);
+    } else if (w.condition === 'blizzard') {
+      precipType = 'blizzard';
+      precipIntensity = 1.0;
+    } else if (w.condition === 'sleet' || w.condition === 'freezing_rain') {
+      precipType = 'sleet';
+      precipIntensity = Math.max(0.5, precipIntensity);
+    } else if (
+      w.condition === 'thunderstorm' ||
+      w.condition === 'severe_storm' ||
+      w.condition === 'severe_thunderstorm' ||
+      w.condition === 'tropical_storm'
+    ) {
+      precipType = (w.condition === 'severe_storm' || w.condition === 'tropical_storm') ? 'downpour' : 'rain';
+      precipIntensity = Math.max(0.85, precipIntensity);
+    }
+
+    // 6. Storm activity (electrical potential)
+    let stormActivity = 0;
+    if (w.condition === 'severe_storm' || w.condition === 'severe_thunderstorm') stormActivity = 1.0;
+    else if (w.condition === 'thunderstorm') stormActivity = 0.85;
+    else if (w.condition === 'tropical_storm') stormActivity = 0.7;
+    else if (w.condition === 'monsoon') stormActivity = 0.55;
+
+    // 7. Aurora
+    let auroraActivity = 0;
+    if (w.condition === 'aurora') {
+      auroraActivity = 1.0;
+    } else if (Math.abs(loc.latitude) >= 53 && c.sun.altitudeDeg < -12 && cloudCoverage < 0.5) {
+      auroraActivity = 0.5;
+    }
+
+    // 8. Eclipses
+    let isEclipse = false;
+    let eclipseType: 'solar' | 'lunar' | undefined = undefined;
+    let eclipseObscuration = 0;
+    if (w.condition === 'solar_eclipse') {
+      isEclipse = true;
+      eclipseType = 'solar';
+      eclipseObscuration = 0.96;
+    } else if (w.condition === 'lunar_eclipse') {
+      isEclipse = true;
+      eclipseType = 'lunar';
+      eclipseObscuration = 1.0;
+    }
+
+    return {
+      season,
+      seasonalTemperatureBias: seasonalBias,
+      cloudCoverage,
+      cloudType,
+      cloudAltitude,
+      humidity: Math.max(0, Math.min(1, w.humidityPct / 100)),
+      visibilityKm,
+      haze,
+      dustAerosols,
+      heatShimmer,
+      freezingFrost,
+      precipitationType: precipType,
+      precipitationIntensity: precipIntensity,
+      windSpeedKmh: w.windSpeedKmh,
+      windDirectionDeg: w.windDirectionDeg,
+      stormActivity,
+      auroraActivity,
+      isEclipse,
+      eclipseType,
+      eclipseObscuration
+    };
   });
 
   private lastCrossCheckKey = '';

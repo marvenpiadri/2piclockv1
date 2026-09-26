@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
-import { WeatherAggressivenessLevel, WeatherCondition, WeatherData, WeatherOverrideConfig } from '../models/weather.model';
+import { Season, WeatherAggressivenessLevel, WeatherCondition, WeatherData, WeatherOverrideConfig } from '../models/weather.model';
 import { GeoLocation } from '../models/location.model';
 
 @Injectable({
@@ -145,26 +145,31 @@ export class WeatherService {
   });
 
   private lastFetchedKey = '';
+  private lastRequestedKey = '';
   private weatherCache = new Map<string, { weather: WeatherData; hourly: { timeMs: number; weather: WeatherData }[]; timestamp: number }>();
   private pendingKeys = new Set<string>();
   private requestSequence = 0;
   private readonly CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
   fetchWeatherForLocation(loc: GeoLocation): void {
-    const requestId = ++this.requestSequence;
+    ++this.requestSequence;
     const key = `${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}`;
+    if (this.lastRequestedKey && this.lastRequestedKey !== key) {
+      this.clearOverride();
+    }
+    this.lastRequestedKey = key;
 
     // Check memory cache first
     const cached = this.weatherCache.get(key);
     const now = Date.now();
-    if (cached && (now - cached.timestamp < this.CACHE_TTL_MS) && !this.overrideConfig().active) {
+    if (cached && (now - cached.timestamp < this.CACHE_TTL_MS)) {
       this.rawWeather.set(cached.weather);
       this.hourlyForecasts.set(cached.hourly);
       this.lastFetchedKey = key;
       return;
     }
 
-    if (this.lastFetchedKey === key && !this.rawWeather().isSimulated && !this.overrideConfig().active) {
+    if (this.lastFetchedKey === key && !this.rawWeather().isSimulated) {
       return;
     }
 
@@ -192,7 +197,7 @@ export class WeatherService {
       .subscribe({
         next: (data) => {
           this.isLoading.set(false);
-          if (requestId !== this.requestSequence) {
+          if (key !== this.lastRequestedKey) {
             this.pendingKeys.delete(key);
             return;
           }
@@ -323,7 +328,7 @@ export class WeatherService {
         },
         error: () => {
           this.pendingKeys.delete(key);
-          if (requestId !== this.requestSequence) return;
+          if (key !== this.lastRequestedKey) return;
           this.isLoading.set(false);
           this.rawWeather.set(this.generateRealisticWeather(loc));
         }
@@ -350,19 +355,21 @@ export class WeatherService {
     tempC: number
   ): { score: number; label: WeatherAggressivenessLevel } {
     let base = 10;
-    if (cond === 'clear') base = 5;
-    else if (cond === 'haze') base = 20;
-    else if (cond === 'partly_cloudy') base = 15;
-    else if (cond === 'cloudy' || cond === 'overcast') base = 25;
-    else if (cond === 'fog') base = 35;
-    else if (cond === 'drizzle') base = 30;
-    else if (cond === 'rain') base = 45;
+    if (cond === 'clear' || cond === 'clear_dry') base = 5;
+    else if (cond === 'haze' || cond === 'dust_haze' || cond === 'heat_haze') base = 20;
+    else if (cond === 'partly_cloudy' || cond === 'broken_clouds') base = 15;
+    else if (cond === 'cloudy' || cond === 'overcast' || cond === 'low_clouds') base = 25;
+    else if (cond === 'fog' || cond === 'freezing_fog') base = 35;
+    else if (cond === 'drizzle' || cond === 'snow_flurries') base = 30;
+    else if (cond === 'rain' || cond === 'sleet') base = 45;
     else if (cond === 'snow') base = 50;
     else if (cond === 'heavy_snow') base = 72;
-    else if (cond === 'heavy_rain') base = 70;
+    else if (cond === 'heavy_rain' || cond === 'heavy_downpour') base = 75;
     else if (cond === 'blizzard') base = 85;
     else if (cond === 'thunderstorm') base = 88;
-    else if (cond === 'severe_thunderstorm') base = 96;
+    else if (cond === 'severe_thunderstorm' || cond === 'severe_storm' || cond === 'monsoon' || cond === 'tropical_storm') base = 96;
+    else if (cond === 'winter_clear' || cond === 'winter_overcast') base = 40;
+    else if (cond === 'aurora' || cond === 'solar_eclipse' || cond === 'lunar_eclipse') base = 15;
 
     // Wind component
     const windScore = Math.min(30, (windKmh / 60) * 20 + (gustKmh / 80) * 10);
@@ -401,62 +408,145 @@ export class WeatherService {
     return 'partly_cloudy';
   }
 
-  private formatConditionLabel(c: WeatherCondition): string {
+  formatConditionLabel(c: WeatherCondition): string {
     switch (c) {
-      case 'clear': return 'Clear Sky';
+      case 'clear': return 'Crystal Clear';
+      case 'clear_dry': return 'Clear & Dry';
       case 'partly_cloudy': return 'Partly Cloudy';
+      case 'broken_clouds': return 'Broken Clouds';
       case 'cloudy': return 'Cloudy';
       case 'overcast': return 'Overcast';
+      case 'low_clouds': return 'Low Clouds';
       case 'drizzle': return 'Drizzle';
-      case 'rain': return 'Rain';
+      case 'rain': return 'Light Rain';
       case 'freezing_rain': return 'Freezing Rain';
       case 'hail': return 'Hail';
-      case 'heavy_rain': return 'Heavy Downpour';
-      case 'thunderstorm': return 'Thunderstorm & Lightning';
-      case 'severe_thunderstorm': return 'Severe Thunderstorm';
-      case 'snow': return 'Snowfall';
-      case 'heavy_snow': return 'Heavy Snow';
+      case 'heavy_rain': return 'Heavy Rain';
+      case 'heavy_downpour': return 'Heavy Downpour';
+      case 'thunderstorm': return 'Thunderstorm';
+      case 'severe_storm':
+      case 'severe_thunderstorm': return 'Severe Storm';
+      case 'snow_flurries': return 'Snow Flurries';
+      case 'snow': return 'Light Snow';
+      case 'heavy_snow': return 'Heavy Snowfall';
       case 'blizzard': return 'Winter Blizzard';
+      case 'sleet': return 'Sleet & Ice Rain';
       case 'fog': return 'Atmospheric Fog';
-      case 'haze': return 'Haze';
+      case 'freezing_fog': return 'Freezing Fog';
+      case 'haze': return 'Hazy';
+      case 'dust_haze': return 'Dust & Sand Haze';
+      case 'heat_haze': return 'Heat Haze';
+      case 'winter_clear': return 'Winter Clear';
+      case 'winter_overcast': return 'Winter Overcast';
+      case 'spring_mist': return 'Spring Mist';
+      case 'summer_heat_haze': return 'Summer Heat Haze';
+      case 'autumn_haze': return 'Autumn Haze';
+      case 'monsoon': return 'Monsoon';
+      case 'tropical_storm': return 'Tropical Storm';
+      case 'aurora': return 'Aurora Borealis';
+      case 'solar_eclipse': return 'Solar Eclipse';
+      case 'lunar_eclipse': return 'Lunar Eclipse';
       default: return 'Clear Sky';
     }
   }
 
-  private getConditionDefaultCloud(c: WeatherCondition): number {
+  getConditionDefaultCloud(c: WeatherCondition): number {
     switch (c) {
-      case 'clear': return 5;
-      case 'haze': return 30;
-      case 'partly_cloudy': return 40;
-      case 'cloudy': return 75;
-      case 'overcast': return 95;
-      case 'drizzle': return 65;
-      case 'rain': return 85;
-      case 'freezing_rain': return 90;
-      case 'hail': return 92;
-      case 'heavy_rain': return 100;
-      case 'thunderstorm': return 100;
-      case 'severe_thunderstorm': return 100;
-      case 'snow': return 90;
-      case 'heavy_snow': return 100;
-      case 'blizzard': return 100;
-      case 'fog': return 65;
+      case 'clear':
+      case 'clear_dry':
+      case 'winter_clear':
+      case 'heat_haze':
+      case 'summer_heat_haze':
+      case 'aurora':
+      case 'solar_eclipse':
+      case 'lunar_eclipse': return 5;
+      case 'dust_haze':
+      case 'spring_mist':
+      case 'autumn_haze':
+      case 'haze': return 25;
+      case 'partly_cloudy': return 35;
+      case 'snow_flurries': return 45;
+      case 'broken_clouds': return 60;
+      case 'low_clouds':
+      case 'drizzle':
+      case 'fog':
+      case 'freezing_fog': return 75;
+      case 'cloudy': return 80;
+      case 'rain':
+      case 'snow':
+      case 'sleet':
+      case 'freezing_rain': return 85;
+      case 'overcast':
+      case 'winter_overcast':
+      case 'heavy_snow': return 95;
+      case 'heavy_rain':
+      case 'heavy_downpour':
+      case 'thunderstorm':
+      case 'severe_storm':
+      case 'severe_thunderstorm':
+      case 'blizzard':
+      case 'monsoon':
+      case 'tropical_storm': return 100;
       default: return 20;
     }
   }
 
-  private getConditionDefaultPrecip(c: WeatherCondition): number {
+  getConditionDefaultPrecip(c: WeatherCondition): number {
     switch (c) {
+      case 'snow_flurries': return 20;
       case 'drizzle': return 35;
-      case 'rain': return 60;
-      case 'heavy_rain': return 95;
+      case 'rain':
+      case 'snow': return 60;
+      case 'sleet':
+      case 'freezing_rain': return 70;
+      case 'heavy_rain':
+      case 'heavy_snow': return 88;
       case 'thunderstorm': return 92;
-      case 'severe_thunderstorm': return 100;
-      case 'snow': return 75;
-      case 'heavy_snow': return 92;
-      case 'blizzard': return 98;
+      case 'heavy_downpour':
+      case 'blizzard':
+      case 'severe_storm':
+      case 'severe_thunderstorm':
+      case 'monsoon':
+      case 'tropical_storm': return 100;
       default: return 0;
     }
+  }
+
+  /**
+   * Determine astronomical season based on local calendar date and hemisphere
+   */
+  getSeason(date: Date, latitude: number): Season {
+    const month = date.getUTCMonth(); // 0 to 11
+    const isNorthern = latitude >= 0;
+
+    // Northern hemisphere:
+    // Dec(11), Jan(0), Feb(1) => winter
+    // Mar(2), Apr(3), May(4) => spring
+    // Jun(5), Jul(6), Aug(7) => summer
+    // Sep(8), Oct(9), Nov(10) => autumn
+    let northernSeason: 'winter' | 'spring' | 'summer' | 'autumn';
+    if (month === 11 || month === 0 || month === 1) {
+      northernSeason = 'winter';
+    } else if (month >= 2 && month <= 4) {
+      northernSeason = 'spring';
+    } else if (month >= 5 && month <= 7) {
+      northernSeason = 'summer';
+    } else {
+      northernSeason = 'autumn';
+    }
+
+    if (isNorthern) {
+      return northernSeason;
+    }
+
+    // Invert for southern hemisphere
+    const opposite: Record<'winter' | 'spring' | 'summer' | 'autumn', 'winter' | 'spring' | 'summer' | 'autumn'> = {
+      winter: 'summer',
+      spring: 'autumn',
+      summer: 'winter',
+      autumn: 'spring'
+    };
+    return opposite[northernSeason];
   }
 
   private generateRealisticWeather(loc: GeoLocation): WeatherData {

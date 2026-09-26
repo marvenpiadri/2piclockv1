@@ -262,10 +262,8 @@
                       @for (day of weeklyForecast(); track day.key) {
                         <div class="deck-week-row">
                           <span class="week-name">{{ day.label }}</span>
-                          <div class="week-condition">
-                            <app-weather-icon [condition]="day.condition" [label]="day.condition" size="sm"></app-weather-icon>
-                            <span>{{ day.condition }}</span>
-                          </div>
+                          <app-weather-icon class="week-icon" [condition]="day.condition" [label]="day.condition" size="sm"></app-weather-icon>
+                          <span class="week-text">{{ day.condition }}</span>
                           <span class="week-rain">{{ day.precipitationPct }}% rain</span>
                           <div class="week-temps">
                             <b>{{ isFahrenheit() ? day.highF : day.highC }}°</b>

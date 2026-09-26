@@ -107,11 +107,44 @@ export class App {
   readonly weatherClass = computed(() => {
     const w = this.currentWeather();
     const cond = w?.condition || 'clear';
-    if (cond === 'thunderstorm' || cond === 'severe_thunderstorm') return 'weather-storm';
-    if (cond === 'rain' || cond === 'heavy_rain' || cond === 'drizzle' || cond === 'freezing_rain' || cond === 'hail') return 'weather-rain';
-    if (cond === 'snow' || cond === 'heavy_snow' || cond === 'blizzard') return 'weather-snow';
-    if (cond === 'fog' || cond === 'haze') return 'weather-fog';
-    if (cond === 'cloudy' || cond === 'overcast' || cond === 'partly_cloudy') return 'weather-cloudy';
+    if (
+      cond === 'thunderstorm' ||
+      cond === 'severe_storm' ||
+      cond === 'severe_thunderstorm' ||
+      cond === 'monsoon' ||
+      cond === 'tropical_storm'
+    ) return 'weather-storm';
+    if (
+      cond === 'rain' ||
+      cond === 'heavy_rain' ||
+      cond === 'heavy_downpour' ||
+      cond === 'drizzle' ||
+      cond === 'freezing_rain' ||
+      cond === 'hail' ||
+      cond === 'sleet'
+    ) return 'weather-rain';
+    if (
+      cond === 'snow' ||
+      cond === 'snow_flurries' ||
+      cond === 'heavy_snow' ||
+      cond === 'blizzard'
+    ) return 'weather-snow';
+    if (
+      cond === 'fog' ||
+      cond === 'freezing_fog' ||
+      cond === 'haze' ||
+      cond === 'dust_haze' ||
+      cond === 'spring_mist' ||
+      cond === 'autumn_haze'
+    ) return 'weather-fog';
+    if (
+      cond === 'cloudy' ||
+      cond === 'overcast' ||
+      cond === 'partly_cloudy' ||
+      cond === 'broken_clouds' ||
+      cond === 'low_clouds' ||
+      cond === 'winter_overcast'
+    ) return 'weather-cloudy';
     return 'weather-clear';
   });
 

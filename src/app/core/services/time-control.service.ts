@@ -178,6 +178,70 @@ export class TimeControlService {
     this.simulatedEpochMs.set(d.getTime());
   }
 
+  /**
+   * Set simulation to an exact civil wall-clock time in the given timezone (e.g. 00:00:00 local midnight)
+   */
+  setLocalTimeHoursMinutes(hours: number, minutes: number, seconds = 0, timeZone?: string): void {
+    this.isLive.set(false);
+    if (!timeZone) {
+      this.setTimeHoursMinutes(hours, minutes, seconds);
+      return;
+    }
+    const current = this.currentActiveDate();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(current);
+    const val = (type: string) => Number(parts.find(p => p.type === type)?.value ?? 0);
+    const exact = TimeControlService.createExactZonedDateTime(
+      val('year'),
+      val('month'),
+      val('day'),
+      hours,
+      minutes,
+      seconds,
+      timeZone
+    );
+    this.setSpecificInstant(exact);
+  }
+
+  static createExactZonedDateTime(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    timeZone: string,
+    millisecond = 0
+  ): Date {
+    let guess = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(guess);
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(d);
+
+      const val = (type: string) => Number(parts.find(p => p.type === type)?.value ?? 0);
+      const measured = Date.UTC(val('year'), val('month') - 1, val('day'), val('hour'), val('minute'), val('second'), 0);
+      const target = Date.UTC(year, month - 1, day, hour, minute, second, 0);
+      const diff = target - measured;
+      if (diff === 0) break;
+      guess += diff;
+    }
+    return new Date(guess);
+  }
+
   setSpecificDate(year: number, month: number, day: number): void {
     const current = this.currentActiveDate();
     const d = new Date(current.getTime());

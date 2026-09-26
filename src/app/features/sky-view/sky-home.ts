@@ -60,6 +60,7 @@ export class SkyHomeComponent {
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
+  readonly atmosphericState = this.celestialService.atmosphericState;
   readonly hourlyForecasts = this.weatherService.hourlyForecasts;
   readonly activeAlerts = this.weatherService.activeAlerts;
   readonly showAlertsModal = signal<boolean>(false);

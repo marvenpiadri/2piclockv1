@@ -19,15 +19,26 @@
       </div>
     </div>
 
-    @if (overrideConfig().active) {
-      <button 
-        type="button"
-        class="reset-live-btn px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/20" 
-        (click)="resetToLiveWeather()">
-        <mat-icon class="text-sm">sync</mat-icon>
-        <span>Reset to Live Weather</span>
-      </button>
-    }
+    <div class="flex items-center gap-2">
+      @if (overrideConfig().active) {
+        <span class="font-mono text-xs px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1.5">
+          <mat-icon class="text-xs">tune</mat-icon>
+          <span>Manual Preset Active</span>
+        </span>
+        <button 
+          type="button"
+          class="reset-live-btn px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/20" 
+          (click)="resetToLiveWeather()">
+          <mat-icon class="text-sm">sync</mat-icon>
+          <span>Reset to Live {{ selectedLocation().country }} Atmosphere</span>
+        </button>
+      } @else {
+        <span class="font-mono text-xs px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 font-semibold flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Live {{ selectedLocation().country }} Atmosphere Active</span>
+        </span>
+      }
+    </div>
   </div>
 
   <!-- Flagship Visual Weather Aggressiveness Indicator & Dynamic Particle Visualizer -->
@@ -35,13 +46,36 @@
 
   <!-- Atmospheric Condition Preset Cards -->
   <section class="conditions-section p-4 sm:p-6 rounded-3xl bg-slate-950/85 border border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col gap-4">
-    <div class="section-heading flex items-center gap-2 text-sm font-bold text-white uppercase font-mono tracking-wider">
-      <mat-icon class="text-amber-400">tune</mat-icon>
-      <span>Select Atmospheric Condition Preset</span>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="section-heading flex items-center gap-2 text-sm font-bold text-white uppercase font-mono tracking-wider">
+        <mat-icon class="text-amber-400">tune</mat-icon>
+        <span>Atmospheric Conditions & Environmental States</span>
+      </div>
+
+      <!-- Category Filter Chips -->
+      <div class="category-chips flex flex-wrap items-center gap-1.5" role="tablist">
+        @for (cat of categories; track cat.id) {
+          <button 
+            type="button"
+            class="cat-chip px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5"
+            [class.bg-amber-400]="activeCategory() === cat.id"
+            [class.text-slate-950]="activeCategory() === cat.id"
+            [class.font-bold]="activeCategory() === cat.id"
+            [class.shadow-md]="activeCategory() === cat.id"
+            [class.shadow-amber-400\/20]="activeCategory() === cat.id"
+            [class.bg-white\/5]="activeCategory() !== cat.id"
+            [class.text-slate-300]="activeCategory() !== cat.id"
+            [class.hover:bg-white\/10]="activeCategory() !== cat.id"
+            (click)="setCategory(cat.id)">
+            <mat-icon class="text-xs">{{ cat.icon }}</mat-icon>
+            <span>{{ cat.label }}</span>
+          </button>
+        }
+      </div>
     </div>
 
     <div class="presets-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      @for (c of conditions; track c.id) {
+      @for (c of filteredConditions(); track c.id) {
         <button 
           type="button"
           class="condition-card p-3 rounded-2xl border transition-all cursor-pointer flex flex-col gap-2 text-left" 

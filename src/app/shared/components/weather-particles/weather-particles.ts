@@ -112,7 +112,11 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
   private getParticleCount(cond: WeatherCondition): number {
     switch (cond) {
       case 'heavy_rain':
+      case 'heavy_downpour':
+      case 'severe_storm':
       case 'severe_thunderstorm':
+      case 'monsoon':
+      case 'tropical_storm':
         return 160;
       case 'rain':
       case 'thunderstorm':
@@ -123,15 +127,29 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
       case 'heavy_snow':
         return 140;
       case 'snow':
+      case 'snow_flurries':
+      case 'sleet':
         return 90;
       case 'fog':
+      case 'freezing_fog':
       case 'haze':
-        return 35;
+      case 'dust_haze':
+      case 'spring_mist':
+      case 'autumn_haze':
+        return 40;
       case 'cloudy':
       case 'overcast':
       case 'partly_cloudy':
+      case 'broken_clouds':
+      case 'low_clouds':
+      case 'winter_overcast':
         return 40;
       case 'clear':
+      case 'clear_dry':
+      case 'heat_haze':
+      case 'summer_heat_haze':
+      case 'winter_clear':
+      case 'aurora':
       default:
         return 45; // Golden celestial dust motes
     }
@@ -143,8 +161,35 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
     const x = Math.random() * (w + 200) - 100;
     const y = randomY ? Math.random() * h : -20;
 
-    if (cond.includes('rain') || cond.includes('thunderstorm') || cond === 'drizzle') {
-      const isHeavy = cond === 'heavy_rain' || cond === 'severe_thunderstorm';
+    const isRainLike =
+      cond.includes('rain') ||
+      cond.includes('thunderstorm') ||
+      cond === 'drizzle' ||
+      cond === 'heavy_downpour' ||
+      cond === 'severe_storm' ||
+      cond === 'monsoon' ||
+      cond === 'tropical_storm';
+
+    const isSnowLike =
+      cond.includes('snow') ||
+      cond === 'blizzard' ||
+      cond === 'sleet' ||
+      cond === 'snow_flurries';
+
+    const isAtmospheric =
+      cond.includes('fog') ||
+      cond.includes('haze') ||
+      cond === 'spring_mist' ||
+      cond === 'autumn_haze';
+
+    if (isRainLike) {
+      const isHeavy =
+        cond === 'heavy_rain' ||
+        cond === 'heavy_downpour' ||
+        cond === 'severe_storm' ||
+        cond === 'severe_thunderstorm' ||
+        cond === 'monsoon' ||
+        cond === 'tropical_storm';
       return {
         x,
         y,
@@ -155,7 +200,7 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
         opacity: Math.random() * 0.4 + 0.4,
         color: 'rgba(186, 230, 253, '
       };
-    } else if (cond === 'snow' || cond === 'heavy_snow' || cond === 'blizzard') {
+    } else if (isSnowLike) {
       const isBlizzard = cond === 'blizzard' || cond === 'heavy_snow';
       return {
         x,
@@ -167,7 +212,8 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
         phase: Math.random() * Math.PI * 2,
         color: 'rgba(255, 255, 255, '
       };
-    } else if (cond === 'fog' || cond === 'haze') {
+    } else if (isAtmospheric) {
+      const isDust = cond === 'dust_haze';
       return {
         x,
         y: Math.random() * h,
@@ -176,9 +222,16 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
         size: Math.random() * 120 + 80,
         opacity: Math.random() * 0.15 + 0.05,
         phase: Math.random() * Math.PI * 2,
-        color: 'rgba(226, 232, 240, '
+        color: isDust ? 'rgba(245, 158, 11, ' : 'rgba(226, 232, 240, '
       };
-    } else if (cond === 'cloudy' || cond === 'overcast' || cond === 'partly_cloudy') {
+    } else if (
+      cond === 'cloudy' ||
+      cond === 'overcast' ||
+      cond === 'partly_cloudy' ||
+      cond === 'broken_clouds' ||
+      cond === 'low_clouds' ||
+      cond === 'winter_overcast'
+    ) {
       return {
         x,
         y: Math.random() * (h * 0.6),
@@ -190,7 +243,7 @@ export class WeatherParticlesComponent implements OnInit, OnDestroy {
         color: 'rgba(203, 213, 225, '
       };
     } else {
-      // Clear - Golden celestial dust motes floating gently up/sideways
+      // Clear / Solar / Aurora - Golden celestial dust motes floating gently up/sideways
       return {
         x: Math.random() * w,
         y: randomY ? Math.random() * h : h + 10,
