@@ -147,13 +147,16 @@ export class TimeControlService {
    */
   setSpecificInstant(date: Date): void {
     const instantMs = date.getTime();
+    if (!Number.isFinite(instantMs)) return;
+
     this.isLive.set(false);
+    this.simulationAccumulatorMs = 0;
+    this.lastSimulationEmitPerformanceMs = this.isBrowser ? performance.now() : 0;
     this.simulatedEpochMs.set(instantMs);
     this.baseDate.set(new Date(instantMs));
   }
 
   setTimeOfDayFraction(fraction: number): void {
-    this.isLive.set(false);
     const current = this.currentActiveDate();
     const d = new Date(current.getTime());
     const clampedFrac = Math.max(0, Math.min(0.999999, fraction));
@@ -161,12 +164,12 @@ export class TimeControlService {
     const hours = Math.floor(dayMs / 3600000);
     const minutes = Math.floor((dayMs % 3600000) / 60000);
     const seconds = Math.floor((dayMs % 60000) / 1000);
-    d.setUTCHours(hours, minutes, seconds, 0);
-    this.simulatedEpochMs.set(d.getTime());
+    const milliseconds = Math.floor(dayMs % 1000);
+    d.setUTCHours(hours, minutes, seconds, milliseconds);
+    this.setSpecificInstant(d);
   }
 
   setTimeHoursMinutes(hours: number, minutes: number, seconds = 0): void {
-    this.isLive.set(false);
     const current = this.currentActiveDate();
     const d = new Date(current.getTime());
     d.setUTCHours(
@@ -175,7 +178,7 @@ export class TimeControlService {
       Math.max(0, Math.min(59, seconds)),
       0
     );
-    this.simulatedEpochMs.set(d.getTime());
+    this.setSpecificInstant(d);
   }
 
   /**
@@ -252,20 +255,29 @@ export class TimeControlService {
   setSimulationSpeed(speed: SimulationSpeed): void {
     this.simulationSpeed.set(speed);
     this.isLive.set(false);
+    this.simulationAccumulatorMs = 0;
+    this.lastSimulationEmitPerformanceMs = this.isBrowser ? performance.now() : 0;
   }
 
   togglePlayPause(): void {
     if (this.isLive()) {
       this.isLive.set(false);
       this.isPlaying.set(false);
+      this.simulationAccumulatorMs = 0;
+      this.lastSimulationEmitPerformanceMs = this.isBrowser ? performance.now() : 0;
       return;
     }
 
     this.isPlaying.update(value => !value);
+    this.simulationAccumulatorMs = 0;
+    this.lastSimulationEmitPerformanceMs = this.isBrowser ? performance.now() : 0;
   }
 
   stepMinutes(minutes: number): void {
+    if (!Number.isFinite(minutes)) return;
     this.isLive.set(false);
+    this.simulationAccumulatorMs = 0;
+    this.lastSimulationEmitPerformanceMs = this.isBrowser ? performance.now() : 0;
     this.advanceSimulation(minutes * 60000);
   }
 }

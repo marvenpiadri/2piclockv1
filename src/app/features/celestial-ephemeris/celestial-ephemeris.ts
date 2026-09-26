@@ -5,6 +5,7 @@ import { CelestialService } from '../../core/services/celestial.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { LocationService } from '../../core/services/location.service';
 import { AstronomyDetails } from '../../shared/components';
+import * as Astronomy from 'astronomy-engine';
 
 @Component({
   selector: 'app-celestial-ephemeris',
@@ -27,12 +28,28 @@ export class CelestialEphemerisComponent {
 
   // Key Astronomical Milestones (Solstices & Equinoxes for the current year)
   readonly astronomicalSeasons = computed(() => {
-    const year = this.activeDate().getFullYear();
+    const date = this.activeDate();
+    const loc = this.selectedLocation();
+    const localYear = Number(new Intl.DateTimeFormat('en-US', {
+      timeZone: loc.timezone,
+      year: 'numeric'
+    }).format(date));
+    const seasons = Astronomy.Seasons(localYear);
+    const format = (d: Date) => d.toLocaleString('en-US', {
+      timeZone: loc.timezone,
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
     return [
-      { name: 'March Equinox (Vernal)', date: `Mar 20, ${year}`, desc: 'Equal day and night globally' },
-      { name: 'June Solstice (Summer/Winter)', date: `Jun 21, ${year}`, desc: 'Longest day in North, shortest in South' },
-      { name: 'September Equinox (Autumnal)', date: `Sep 22, ${year}`, desc: 'Solar equator crossing' },
-      { name: 'December Solstice (Winter/Summer)', date: `Dec 21, ${year}`, desc: 'Shortest day in North, longest in South' }
+      { name: 'March Equinox (Vernal)', date: format(seasons.mar_equinox.date), desc: 'Equinox: Sun crosses the celestial equator northward' },
+      { name: 'June Solstice (Summer/Winter)', date: format(seasons.jun_solstice.date), desc: 'Solstice: maximum northern solar declination' },
+      { name: 'September Equinox (Autumnal)', date: format(seasons.sep_equinox.date), desc: 'Equinox: Sun crosses the celestial equator southward' },
+      { name: 'December Solstice (Winter/Summer)', date: format(seasons.dec_solstice.date), desc: 'Solstice: maximum southern solar declination' }
     ];
   });
 
@@ -77,7 +94,16 @@ export class CelestialEphemerisComponent {
   // Current sun position on the chart
   readonly currentSunPointOnChart = computed(() => {
     const date = this.activeDate();
-    const hours = date.getUTCHours() + date.getUTCMinutes() / 60;
+    const loc = this.selectedLocation();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: loc.timezone,
+      hour: 'numeric',
+      minute: 'numeric',
+      hourCycle: 'h23'
+    }).formatToParts(date);
+    const localHour = Number(parts.find(part => part.type === 'hour')?.value ?? 0);
+    const localMinute = Number(parts.find(part => part.type === 'minute')?.value ?? 0);
+    const hours = localHour + localMinute / 60;
     const alt = this.celestial().sun.altitudeDeg;
 
     const width = 800;

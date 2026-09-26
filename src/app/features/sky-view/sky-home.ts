@@ -347,24 +347,17 @@ export class SkyHomeComponent {
     this.route.paramMap.subscribe(params => {
       const slug = params.get('location');
       const experience = params.get('experience') as string | null;
-      if (slug) {
-        const found = this.allPresets.find(loc => loc.id === slug);
-        if (found) this.locationService.selectLocation(found);
-      }
-
+      // Location-scoped routes are synchronized by validLocationGuard before
+      // this component renders. Do not select again here or a route change
+      // would clear weather overrides and trigger a duplicate refresh.
       const routeExperience = experience && ['time', 'weather', 'astronomy', 'tonight', 'world'].includes(experience)
         ? experience as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
         : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
       this.skyPageState.set(routeExperience);
     });
 
-    // Sky is a weather-aware experience, so request weather only while this
-    // route is mounted. Other product routes stay network-free.
-    effect(() => {
-      const location = this.selectedLocation();
-      this.weatherService.fetchWeatherForLocation(location);
-    });
-
+    // Weather refresh is owned by CelestialService so location changes have
+    // exactly one request path across the app.
     effect(() => {
       const location = this.selectedLocation();
       if (this.skyPage === 'world') this.worldEvents.loadForLocation(location, this.activeDate());
@@ -702,20 +695,6 @@ export class SkyHomeComponent {
     };
   }
 
-  private getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
-    const zone = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      timeZoneName: 'longOffset',
-      hour: '2-digit',
-      hourCycle: 'h23'
-    }).formatToParts(date).find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
-
-    const match = zone.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
-    if (!match) return 0;
-    const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
-    return match[1] === '+' ? minutes : -minutes;
-  }
-
   private getZonedDateTime(
     year: number,
     month: number,
@@ -726,15 +705,16 @@ export class SkyHomeComponent {
     timeZone: string,
     millisecond = 0
   ): Date {
-    const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
-    let instant = new Date(wallClockUtc - this.getTimeZoneOffsetMinutes(new Date(wallClockUtc), timeZone) * 60000);
-
-    // Re-check after applying the first offset so DST transitions are handled correctly.
-    const correctedOffset = this.getTimeZoneOffsetMinutes(instant, timeZone);
-    if (correctedOffset !== this.getTimeZoneOffsetMinutes(new Date(wallClockUtc), timeZone)) {
-      instant = new Date(wallClockUtc - correctedOffset * 60000);
-    }
-    return instant;
+    return TimeControlService.createExactZonedDateTime(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      timeZone,
+      millisecond
+    );
   }
 
   setLive(): void {

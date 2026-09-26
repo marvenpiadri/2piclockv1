@@ -17,6 +17,7 @@ import { EclipsePredictorComponent } from './features/eclipses/eclipse-predictor
 import { SatelliteTrackerComponent } from './features/satellites/satellite-tracker';
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { WidgetGeneratorComponent } from './features/widget-generator/widget-generator';
+import { WorldEventsComponent } from './features/world-events/world-events';
 
 const resolveRootLocation: CanActivateFn = async () => {
   const locationService = inject(LocationService);
@@ -29,9 +30,25 @@ const validLocationGuard: CanActivateFn = (route) => {
   const locationService = inject(LocationService);
   const router = inject(Router);
   const slug = route.paramMap.get('location');
-  const validPreset = !!slug && locationService.allPresets.some((loc: GeoLocation) => loc.id === slug);
+  const preset = slug
+    ? locationService.allPresets.find((loc: GeoLocation) => loc.id === slug)
+    : undefined;
+
+  if (preset) {
+    // The URL is authoritative for location-scoped pages. Keep the global
+    // location signal synchronized before the component renders so every
+    // downstream service (timezone, astronomy, weather, events) follows it.
+    if (locationService.selectedLocation().id !== preset.id) {
+      locationService.selectLocation(preset);
+    }
+    return true;
+  }
+
+  // Custom/GPS locations are only valid when they are already the active
+  // location; they are persisted by LocationService rather than encoded as
+  // a public preset slug.
   const validCurrent = slug === locationService.selectedLocation().id;
-  return validPreset || validCurrent ? true : router.createUrlTree(['/']);
+  return validCurrent ? true : router.createUrlTree(['/']);
 };
 
 export const routes: Routes = [
@@ -41,6 +58,7 @@ export const routes: Routes = [
   { path: 'weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: 'astronomy', component: AstronomySuiteComponent },
   { path: 'tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
+  { path: 'events', component: WorldEventsComponent },
 
   // Astronomical & Stargazing Suites (Option B)
   { path: 'stargazing', component: StargazingPlannerComponent },
@@ -90,6 +108,7 @@ export const routes: Routes = [
   { path: ':location/sun', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'daylight' } },
   { path: ':location/moon', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'moon' } },
   { path: ':location/astronomy', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'overview' } },
+  { path: ':location/events', component: WorldEventsComponent, canActivate: [validLocationGuard] },
   { path: ':location/stargazing', component: StargazingPlannerComponent, canActivate: [validLocationGuard] },
   { path: ':location/eclipses', component: EclipsePredictorComponent, canActivate: [validLocationGuard] },
   { path: ':location/satellites', component: SatelliteTrackerComponent, canActivate: [validLocationGuard] },

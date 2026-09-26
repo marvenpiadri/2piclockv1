@@ -54,7 +54,9 @@ export class PrecisionAstronomyService {
       sunCalcAzimuthDeg,
       altitudeDeltaDeg,
       azimuthDeltaDeg,
-      isValidated: altitudeDeltaDeg < 0.25
+      // Validate both coordinates. Azimuth gets a modestly wider tolerance
+      // because it becomes numerically unstable near the zenith/poles.
+      isValidated: altitudeDeltaDeg < 0.25 && azimuthDeltaDeg < 0.5
     };
   }
 

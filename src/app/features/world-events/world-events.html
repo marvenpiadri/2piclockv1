@@ -1,0 +1,43 @@
+<section class="events-page">
+  <header class="events-header">
+    <div>
+      <span class="section-eyebrow">WORLD EVENTS · {{ selectedLocation().name }}</span>
+      <h1>Holidays, Seasons & Religious Calendars</h1>
+      <p>Location-aware events connected to the same clock, astronomy and timezone used by 2piClock.</p>
+    </div>
+    <div class="events-location"><mat-icon>public</mat-icon><span>{{ selectedLocation().country }} · {{ selectedLocation().timezone }}</span></div>
+  </header>
+
+  <nav class="events-filters" aria-label="Event categories">
+    <button type="button" [class.active]="filter() === 'all'" (click)="setFilter('all')"><mat-icon>event</mat-icon><span>All</span></button>
+    <button type="button" [class.active]="filter() === 'civil'" (click)="setFilter('civil')"><mat-icon>flag</mat-icon><span>Public holidays</span></button>
+    <button type="button" [class.active]="filter() === 'religious'" (click)="setFilter('religious')"><mat-icon>church</mat-icon><span>Religious</span></button>
+    <button type="button" [class.active]="filter() === 'seasonal'" (click)="setFilter('seasonal')"><mat-icon>wb_sunny</mat-icon><span>Seasons</span></button>
+  </nav>
+
+  <div class="events-note"><mat-icon>info</mat-icon><span>Islamic dates are calculation-based and can differ from local moon-sighting decisions by about a day.</span></div>
+
+  @if (eventsService.isLoading()) {
+    <div class="events-loading"><mat-icon class="spin">sync</mat-icon> Updating local calendars…</div>
+  }
+
+  <div class="events-grid">
+    @for (event of visibleEvents(); track event.id) {
+      <article class="event-card">
+        <div class="event-icon"><mat-icon>{{ eventIcon(event) }}</mat-icon></div>
+        <div class="event-copy">
+          <div class="event-topline">
+            <span class="event-category">{{ event.category === 'solar' ? 'SEASONAL / ASTRONOMY' : event.category.toUpperCase() }}</span>
+            @if (event.tentative) { <span class="tentative">CALCULATED</span> }
+          </div>
+          <h2>{{ event.title }}</h2>
+          <div class="event-date">{{ formatEventDate(event) }} · {{ formatEventTime(event) }}</div>
+          <p>{{ event.description }}</p>
+          <footer>{{ event.source }} · {{ daysAway(event) === 0 ? 'Today' : daysAway(event) === 1 ? 'Tomorrow' : daysAway(event) > 1 ? 'In ' + daysAway(event) + ' days' : 'Passed' }}</footer>
+        </div>
+      </article>
+    } @empty {
+      <div class="events-empty"><mat-icon>event_busy</mat-icon><h2>No upcoming events in this view</h2><p>Calendar providers can fail independently without affecting the clock, sky or weather experience.</p></div>
+    }
+  </div>
+</section>

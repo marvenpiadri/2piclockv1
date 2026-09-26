@@ -19,6 +19,23 @@ function normalizeDeg(deg: number): number {
 }
 
 /**
+ * Recover the Sun's apparent ecliptic longitude from its equatorial
+ * coordinates. This keeps lunar phase geometry in the correct coordinate
+ * system without changing the public SolarPosition model.
+ */
+function trueSolarEclipticLongitude(sun: SolarPosition, t: number): number {
+  const omega = (125.04 - 1934.136 * t) * DEG2RAD;
+  const eps0 = 23 + (26 + (21.448 - t * (46.815 + t * (0.00059 - t * 0.001813))) / 60) / 60;
+  const eps = eps0 + 0.00256 * Math.cos(omega);
+  const alpha = sun.rightAscensionDeg * DEG2RAD;
+  const delta = sun.declinationDeg * DEG2RAD;
+  return normalizeDeg(Math.atan2(
+    Math.sin(alpha) * Math.cos(eps) + Math.tan(delta) * Math.sin(eps),
+    Math.cos(alpha)
+  ) * RAD2DEG);
+}
+
+/**
  * Calculates Julian Day Number from a UTC Date object
  */
 export function getJulianDate(date: Date): number {
@@ -202,6 +219,7 @@ export function calculateSolarEvents(
   }
 
   let startOfDay: Date;
+  let utcMidnightForLocalDate: Date;
   if (timeZone) {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone,
@@ -210,15 +228,27 @@ export function calculateSolarEvents(
       day: '2-digit'
     }).formatToParts(date);
     const value = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
-    const localNoon = zonedDateTimeToInstant(value('year'), value('month'), value('day'), 12, 0, 0, timeZone);
-    startOfDay = new Date(Date.UTC(
-      localNoon.getUTCFullYear(),
-      localNoon.getUTCMonth(),
-      localNoon.getUTCDate(),
-      0, 0, 0
-    ));
+    const localYear = value('year');
+    const localMonth = value('month');
+    const localDay = value('day');
+
+    // Keep the civil-day identity in the selected timezone, but perform the
+    // event math from UTC midnight for that same civil date. The solar-noon
+    // formula produces minutes from UTC midnight; adding them to local
+    // midnight would incorrectly introduce the timezone offset a second time.
+    startOfDay = zonedDateTimeToInstant(
+      localYear,
+      localMonth,
+      localDay,
+      0,
+      0,
+      0,
+      timeZone
+    );
+    utcMidnightForLocalDate = new Date(Date.UTC(localYear, localMonth - 1, localDay, 0, 0, 0));
   } else {
     startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+    utcMidnightForLocalDate = startOfDay;
   }
   const jd0 = getJulianDate(startOfDay);
   const t0 = getJulianCenturies(jd0);
@@ -237,7 +267,7 @@ export function calculateSolarEvents(
 
   // Solar noon in UTC minutes from midnight
   const solarNoonMinutes = 720 - 4 * lng - eTimeMin;
-  const noonDate = new Date(startOfDay.getTime() + solarNoonMinutes * 60000);
+  const noonDate = new Date(utcMidnightForLocalDate.getTime() + solarNoonMinutes * 60000);
 
   // Sun declination at noon
   const solarPosAtNoon = calculateSolarPosition(noonDate, lat, lng);
@@ -264,8 +294,8 @@ export function calculateSolarEvents(
     const setMinutes = solarNoonMinutes + deltaMinutes;
 
     return {
-      rise: new Date(startOfDay.getTime() + riseMinutes * 60000),
-      set: new Date(startOfDay.getTime() + setMinutes * 60000)
+      rise: new Date(utcMidnightForLocalDate.getTime() + riseMinutes * 60000),
+      set: new Date(utcMidnightForLocalDate.getTime() + setMinutes * 60000)
     };
   };
 
@@ -436,9 +466,10 @@ export function calculateLunarPosition(
   }
 
   // Lunar Phase Angle (i) & Illuminated Fraction (k)
-  // cos(i) = -cos(lambdaMoon - lambdaSun) * cos(betaMoon)
-  const sunLambda = actualSun.rightAscensionDeg; // approximate ecliptic long
-  const elongRad = Math.abs(lambdaMoonRad - (sunLambda * DEG2RAD));
+  // Use the Sun's apparent ecliptic longitude here. Right ascension is an
+  // equatorial coordinate and cannot be substituted for ecliptic longitude.
+  const sunLambda = normalizeDeg(trueSolarEclipticLongitude(actualSun, t));
+  const elongRad = Math.abs((lambdaMoonDeg - sunLambda) * DEG2RAD);
   const cosPhaseAngle = -Math.cos(elongRad) * Math.cos(betaMoonRad);
   const phaseAngleDeg = Math.acos(Math.max(-1, Math.min(1, cosPhaseAngle))) * RAD2DEG;
   const illuminationFraction = (1 + Math.cos(phaseAngleDeg * DEG2RAD)) / 2;
@@ -486,7 +517,9 @@ export function calculateLunarPosition(
     brightLimbAngleDeg,
     parallaxDeg,
     distanceKm,
-    isAboveHorizon: altitudeDeg > -0.5
+    isAboveHorizon: altitudeDeg > -0.5,
+    declinationDeg: declMoonRad * RAD2DEG,
+    rightAscensionDeg: raMoonDeg
   };
 }
 
@@ -621,7 +654,13 @@ export function get24HourSolarCurve(
   lng: number,
   timezone: string
 ): { timeString: string; altitude: number; isNight: boolean; hour: number }[] {
-  const cacheKey = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}_${lat.toFixed(2)}_${lng.toFixed(2)}_${timezone}`;
+  const localDateKey = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+  const cacheKey = `${localDateKey}_${lat.toFixed(2)}_${lng.toFixed(2)}_${timezone}`;
   const cached = solarCurveCache.get(cacheKey);
   if (cached) {
     return cached;
@@ -692,12 +731,12 @@ export function calculateSubsolarPoint(date: Date): {
   equationOfTimeMin: number;
 } {
   const sunPos = calculateSolarPosition(date, 0, 0);
-  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600 + date.getUTCMilliseconds() / 3600000;
-  
-  // Solar noon at Greenwich occurs at 12:00 UTC - EqOfTime
-  // Subsolar longitude: 0° at Solar Noon, moves 15° west per hour
-  const eotHours = sunPos.equationOfTimeMinutes / 60;
-  let subsolarLng = -((utcHours - 12 + eotHours) * 15);
+  // Subsolar longitude is the negative Greenwich Hour Angle.
+  // Using the Sun's actual right ascension and GMST avoids an UTC/equation-of-time approximation.
+  const jd = getJulianDate(date);
+  const t = getJulianCenturies(jd);
+  const gmst = getGMST(jd, t);
+  let subsolarLng = sunPos.rightAscensionDeg - gmst;
   
   // Normalize to [-180, 180]
   while (subsolarLng > 180) subsolarLng -= 360;
@@ -725,14 +764,18 @@ export function calculateSublunarPoint(date: Date): {
 } {
   const moonPos = calculateLunarPosition(date, 0, 0);
 
-  // Greenwich Hour Angle: Moon longitude on Earth
-  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-  let moonLng = -((utcHours - (moonPos.azimuthDeg / 15)) * 15);
+  // Sublunar longitude is the negative Greenwich Hour Angle, while the
+  // latitude is the Moon's declination. Moon altitude/azimuth at 0°N, 0°E
+  // are observer coordinates and must not be used as the ground point.
+  const jd = getJulianDate(date);
+  const t = getJulianCenturies(jd);
+  const gmst = getGMST(jd, t);
+  let moonLng = moonPos.rightAscensionDeg - gmst;
   while (moonLng > 180) moonLng -= 360;
   while (moonLng < -180) moonLng += 360;
 
   return {
-    latitude: Math.max(-28.5, Math.min(28.5, moonPos.altitudeDeg)),
+    latitude: moonPos.declinationDeg,
     longitude: moonLng,
     phaseName: moonPos.phaseName,
     illuminationFraction: moonPos.illuminationFraction,

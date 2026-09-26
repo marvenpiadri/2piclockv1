@@ -30,7 +30,8 @@ export class CelestialService {
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       let previousLocKey = '';
-      // Eagerly keep weather up to date when the active location changes
+      // Location is the single trigger for weather refresh. Keeping this here
+      // prevents LocationService and CelestialService from issuing competing requests.
       effect(() => {
         const loc = this.selectedLocation();
         if (loc) {

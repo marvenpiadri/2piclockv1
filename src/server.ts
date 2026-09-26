@@ -30,13 +30,14 @@ const angularApp = new AngularNodeAppEngine();
 // indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
   '/', '/weather', '/astronomy', '/tonight',
-  '/world', '/world-clocks',
+  '/world', '/world-clocks', '/events',
   '/maps/clocks', '/maps/weather', '/maps/radio',
   '/time/converter', '/time/difference', '/time/duration',
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
   '/time/unix-timestamp', '/time/world-matrix',
   '/radio/stations', '/radio/map', '/radio/favorites', '/radio/recent',
-  '/atmosphere', '/ephemeris', '/planner', '/space'
+  '/atmosphere', '/ephemeris', '/planner', '/space',
+  '/stargazing', '/eclipses', '/satellites'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const buildSitemap = () => {
@@ -48,6 +49,10 @@ const buildSitemap = () => {
     '/' + location.id + '/moon',
     '/' + location.id + '/tonight',
     '/' + location.id + '/astronomy',
+    '/' + location.id + '/events',
+    '/' + location.id + '/stargazing',
+    '/' + location.id + '/eclipses',
+    '/' + location.id + '/satellites',
   ]);
   const urls = [...staticSitemapUrls, ...placeUrls];
   const uniqueUrls = [...new Set(urls)];
