@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { GeoLocation } from '../models/location.model';
+import * as Astronomy from 'astronomy-engine';
 import { WorldEventEngineService } from './world-event-engine.service';
 
 export interface WorldEvent {
@@ -28,7 +29,8 @@ export class WorldEventsService {
   readonly prayerTimes = signal<Record<string,string>>({});
   readonly shabbatEvents = signal<{ title: string; date: string; category: string }[]>([]);
   readonly holidayEvents = signal<WorldEvent[]>([]);
-  readonly islamicEvents = signal<WorldEvent[]>([]);
+  readonly religiousEvents = signal<WorldEvent[]>([]);
+  readonly seasonalEvents = signal<WorldEvent[]>([]);
   readonly solarWindows = signal<{
     sunrise: string | null; sunset: string | null;
     goldenMorning: string | null; goldenEvening: string | null;
@@ -51,6 +53,7 @@ export class WorldEventsService {
 
     this.loadPrayerTimes(loc, dateKey, generation);
     this.loadCivilHolidays(loc, date, generation);
+    this.loadReligiousAndSeasonalEvents(loc, date, generation);
     this.loadIslamicCalendar(date, generation);
     this.loadHebrewEvents(loc, date, generation);
 
@@ -118,6 +121,79 @@ export class WorldEventsService {
     });
   }
 
+  private loadReligiousAndSeasonalEvents(loc: GeoLocation, date: Date, generation: number): void {
+    const year = this.localYear(date, loc.timezone);
+    const seasons = Astronomy.Seasons(year);
+    const events: WorldEvent[] = [
+      this.instantEvent('season-march-equinox', 'March equinox', new Date(seasons.mar_equinox.date), 'Astronomical beginning of spring in the Northern Hemisphere.', 'Astronomy Engine'),
+      this.instantEvent('season-june-solstice', 'June solstice', new Date(seasons.jun_solstice.date), 'Astronomical beginning of summer in the Northern Hemisphere.', 'Astronomy Engine'),
+      this.instantEvent('season-september-equinox', 'September equinox', new Date(seasons.sep_equinox.date), 'Astronomical beginning of autumn in the Northern Hemisphere.', 'Astronomy Engine'),
+      this.instantEvent('season-december-solstice', 'December solstice / Winter begins', new Date(seasons.dec_solstice.date), 'Astronomical beginning of winter in the Northern Hemisphere.', 'Astronomy Engine')
+    ];
+
+    // Christmas is a global calendar observance, while civil/public status is
+    // supplied separately by Nager.Date for the selected country.
+    const christmas = new Date(Date.UTC(year, 11, 25));
+    events.push({
+      id: 'christmas-' + year,
+      category: 'religious',
+      title: 'Christmas Day',
+      time: null,
+      date: christmas.toISOString().slice(0, 10),
+      description: 'Christian Christmas observance.',
+      source: '2piClock calendar',
+      allDay: true
+    });
+
+    const easter = this.calculateWesternEaster(year);
+    events.push({
+      id: 'easter-' + year,
+      category: 'religious',
+      title: 'Easter Sunday',
+      time: null,
+      date: easter.toISOString().slice(0, 10),
+      description: 'Western Christian Easter observance.',
+      source: '2piClock calendar',
+      allDay: true
+    });
+
+    if (generation === this.requestGeneration) {
+      this.seasonalEvents.set(events.filter(e => e.category === 'solar'));
+      this.religiousEvents.set(events.filter(e => e.category === 'religious'));
+    }
+  }
+
+  private instantEvent(id: string, title: string, instant: Date, description: string, source: string): WorldEvent {
+    return {
+      id,
+      category: 'solar',
+      title,
+      time: instant.toISOString(),
+      date: instant.toISOString().slice(0, 10),
+      description,
+      source,
+      allDay: false
+    };
+  }
+
+  private calculateWesternEaster(year: number): Date {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(Date.UTC(year, month - 1, day));
+  }
+
   private loadIslamicCalendar(date: Date, generation: number): void {
     this.http.get<any>('https://api.aladhan.com/v1/currentIslamicYear').subscribe({
       next: yearResponse => {
@@ -151,7 +227,7 @@ export class WorldEventsService {
             this.loadIslamicMonth(hijriYear, 10, 'Eid al-Fitr', 'Start of Shawwal and Eid al-Fitr.', generation, events);
           },
           error: () => {
-            if (generation === this.requestGeneration) this.islamicEvents.set([]);
+            if (generation === this.requestGeneration) this.religiousEvents.set([]);
           }
         });
       },
@@ -191,10 +267,10 @@ export class WorldEventsService {
             tentative: true
           });
         }
-        this.islamicEvents.set(seed.sort((a,b) => (a.date ?? '').localeCompare(b.date ?? '')));
+        this.religiousEvents.update(existing => [...existing, ...seed].sort((a,b) => (a.date ?? '').localeCompare(b.date ?? '')));
       },
       error: () => {
-        if (generation === this.requestGeneration) this.islamicEvents.set(seed);
+        if (generation === this.requestGeneration) this.religiousEvents.update(existing => [...existing, ...seed]);
       }
     });
   }
@@ -231,7 +307,7 @@ export class WorldEventsService {
             allDay: !item.date?.includes('T')
           }));
         if (jewish.length) {
-          this.islamicEvents.update(existing => [...existing, ...jewish]);
+          this.religiousEvents.update(existing => [...existing, ...jewish]);
         }
       },
       error: () => {
