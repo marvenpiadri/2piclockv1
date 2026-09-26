@@ -156,8 +156,8 @@
   gap: 8px;
   padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(245, 158, 11, 0.92);
-  border: 1px solid rgba(245, 158, 11, 0.98);
+  background: rgba(249, 115, 22, 0.96);
+  border: 1px solid rgba(249, 115, 22, 1);
   color: #1c1917;
   font-size: 12px;
   font-weight: 600;
@@ -167,8 +167,8 @@
 
 .btn-observatories:hover,
 .btn-observatories.menu-open {
-  background: rgba(245, 158, 11, 1);
-  border-color: rgba(251, 191, 36, 1);
+  background: #f97316;
+  border-color: #fb923c;
 }
 
 .btn-observatories .obs-icon {
@@ -316,8 +316,8 @@
   gap: 10px;
   padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(245, 158, 11, 0.92);
-  border: 1px solid rgba(245, 158, 11, 0.98);
+  background: rgba(249, 115, 22, 0.96);
+  border: 1px solid rgba(249, 115, 22, 1);
   color: #1c1917;
   cursor: pointer;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
@@ -326,8 +326,8 @@
 
 .location-pill-btn:hover,
 .location-pill-btn.menu-open {
-  background: rgba(245, 158, 11, 1);
-  border-color: rgba(251, 191, 36, 1);
+  background: #f97316;
+  border-color: #fb923c;
 }
 
 .loc-name-label {
@@ -462,8 +462,8 @@
 .btn-gps-action {
   padding: 8px;
   border-radius: 12px;
-  background: rgba(245, 158, 11, 0.92);
-  border: 1px solid rgba(245, 158, 11, 0.98);
+  background: rgba(249, 115, 22, 0.96);
+  border: 1px solid rgba(249, 115, 22, 1);
   color: #1c1917;
   cursor: pointer;
   flex-shrink: 0;
@@ -474,7 +474,7 @@
 }
 
  .btn-gps-action:hover {
-  background: rgba(245, 158, 11, 1);
+  background: #f97316;
   color: #1c1917;
 }
 
@@ -487,7 +487,7 @@
  .full-page-glass-substrate.glass-active {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  background-color: rgba(2, 6, 23, 0.58);
+  background-color: rgba(13, 17, 23, 0.62);
 }
 
 .full-page-glass-substrate.glass-inactive {
@@ -622,7 +622,7 @@
  * its existing watch treatment unchanged.
  */
 .sky-background-active .universal-top-header {
-  background: rgba(3, 7, 18, 0.78);
+  background: rgba(13, 17, 23, 0.94);
   border-bottom-color: rgba(255, 255, 255, 0.16);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
 }
@@ -640,13 +640,13 @@
 }
 
 .sky-background-active .nav-main-active {
-  background: rgba(3, 7, 18, 0.78);
+  background: rgba(13, 17, 23, 0.94);
 }
 
 .sky-background-active .nav-directory-menu,
 .sky-background-active .location-dropdown-menu,
 .sky-background-active .search-dropdown-menu {
-  background: rgba(3, 7, 18, 0.92) !important;
+  background: rgba(13, 17, 23, 0.97) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14);
   backdrop-filter: blur(24px);
@@ -654,16 +654,15 @@
 }
 
 .sky-background-active .search-input-wrap {
-  background: rgba(3, 7, 18, 0.78);
+  background: rgba(13, 17, 23, 0.94);
   border-color: rgba(255, 255, 255, 0.18);
 }
 .sky-background-active .btn-observatories,
 .sky-background-active .location-pill-btn,
 .sky-background-active .btn-gps-action {
-  background: rgba(245, 158, 11, 0.92);
-  border-color: rgba(245, 158, 11, 0.98);
+  background: rgba(249, 115, 22, 0.96);
+  border-color: #f97316;
   color: #1c1917;
-  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .sky-background-active .search-input-wrap input,
@@ -678,5 +677,37 @@
 }
 
 .sky-background-active .full-page-glass-substrate.glass-active {
-  background-color: rgba(2, 6, 23, 0.58);
+  background-color: rgba(13, 17, 23, 0.62);
+}
+
+
+/* Final launch shell: DooMath dark glass, never midnight-blue. */
+.app-layout.sky-background-active .universal-top-header,
+.app-layout.sky-background-active .nav-directory-menu,
+.app-layout.sky-background-active .location-dropdown-menu,
+.app-layout.sky-background-active .search-dropdown-menu {
+  background: rgba(13, 17, 23, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.app-layout.sky-background-active .universal-top-header {
+  backdrop-filter: blur(20px) saturate(115%);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+}
+
+.app-layout.sky-background-active .btn-observatories,
+.app-layout.sky-background-active .location-pill-btn,
+.app-layout.sky-background-active .btn-gps-action {
+  background: #f97316;
+  border-color: #f97316;
+  color: #1c1917;
+}
+
+.app-layout.sky-background-active .btn-observatories:hover,
+.app-layout.sky-background-active .location-pill-btn:hover,
+.app-layout.sky-background-active .btn-gps-action:hover,
+.app-layout.sky-background-active .btn-observatories.menu-open,
+.app-layout.sky-background-active .location-pill-btn.menu-open {
+  background: #fb923c;
+  border-color: #fb923c;
 }
