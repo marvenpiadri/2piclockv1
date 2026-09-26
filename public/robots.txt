@@ -1,5 +1,4 @@
-# X-Facture crawler policy
 User-agent: *
 Allow: /
 
-Sitemap: https://x-facture.com/sitemap.xml
+Sitemap: https://2piclock.com/sitemap.xml
