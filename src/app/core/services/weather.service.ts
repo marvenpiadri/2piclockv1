@@ -73,20 +73,25 @@ export class WeatherService {
     return alerts;
   });
 
-  // Compute weather status for any specific simulated date & time
+  // Compute weather status for any specific simulated date & time.
+  // Hourly forecast values are interpolated so simulated time does not jump
+  // between discrete forecast hours while the sky is moving.
   getWeatherForInstant(date: Date, _loc?: GeoLocation): WeatherData {
     const ovr = this.overrideConfig();
     const hourly = this.hourlyForecasts();
 
-    // If manual override is active
     if (ovr.active) {
       const raw = this.rawWeather();
       const condition = ovr.condition || raw.condition;
       const cloudCoverPct = ovr.cloudCoverPct !== undefined ? ovr.cloudCoverPct : this.getConditionDefaultCloud(condition);
       const precipitationPct = ovr.precipitationPct !== undefined ? ovr.precipitationPct : this.getConditionDefaultPrecip(condition);
-      const windSpeedKmh = ovr.windSpeedKmh !== undefined ? ovr.windSpeedKmh : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
+      const windSpeedKmh = ovr.windSpeedKmh !== undefined
+        ? ovr.windSpeedKmh
+        : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
       const windGustKmh = Math.round(windSpeedKmh * 1.45);
-      const { score, label } = this.calculateAggressiveness(condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC);
+      const { score, label } = this.calculateAggressiveness(
+        condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC
+      );
 
       return {
         ...raw,
@@ -102,28 +107,95 @@ export class WeatherService {
       };
     }
 
-    // Try finding exact hourly forecast match for this simulated time
     if (hourly.length > 0) {
       const targetMs = date.getTime();
-      let closest = hourly[0];
-      let minDiff = Math.abs(targetMs - closest.timeMs);
 
-      for (let i = 1; i < hourly.length; i++) {
-        const diff = Math.abs(targetMs - hourly[i].timeMs);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closest = hourly[i];
-        }
+      if (targetMs <= hourly[0].timeMs) {
+        return hourly[0].weather;
+      }
+      const last = hourly[hourly.length - 1];
+      if (targetMs >= last.timeMs) {
+        return last.weather;
       }
 
-      // If closest forecast is within 2 hours
-      if (minDiff <= 7200000) {
-        return closest.weather;
+      let upperIndex = 1;
+      while (upperIndex < hourly.length && hourly[upperIndex].timeMs < targetMs) {
+        upperIndex++;
       }
+
+      const upper = hourly[upperIndex];
+      const lower = hourly[upperIndex - 1];
+      const span = Math.max(1, upper.timeMs - lower.timeMs);
+      const ratio = Math.max(0, Math.min(1, (targetMs - lower.timeMs) / span));
+
+      return this.interpolateWeather(lower.weather, upper.weather, ratio);
     }
 
-    // Default: use current raw weather
     return this.rawWeather();
+  }
+
+  private interpolateWeather(a: WeatherData, b: WeatherData, ratio: number): WeatherData {
+    const lerp = (x: number, y: number) => x + (y - x) * ratio;
+    const rounded = (x: number, y: number, digits = 1) => {
+      const factor = 10 ** digits;
+      return Math.round(lerp(x, y) * factor) / factor;
+    };
+    const aDir = Number.isFinite(a.windDirectionDeg) ? a.windDirectionDeg : 0;
+    const bDir = Number.isFinite(b.windDirectionDeg) ? b.windDirectionDeg : aDir;
+    const directionDelta = ((bDir - aDir + 540) % 360) - 180;
+    const windDirectionDeg = (aDir + directionDelta * ratio + 360) % 360;
+    const condition = ratio < 0.5 ? a.condition : b.condition;
+    const windSpeedKmh = rounded(a.windSpeedKmh, b.windSpeedKmh);
+    const windGustKmh = rounded(a.windGustKmh ?? a.windSpeedKmh, b.windGustKmh ?? b.windSpeedKmh);
+    const precipitationPct = Math.round(lerp(a.precipitationPct, b.precipitationPct));
+    const { score, label } = this.calculateAggressiveness(
+      condition,
+      windSpeedKmh,
+      windGustKmh,
+      precipitationPct,
+      rounded(a.temperatureC, b.temperatureC)
+    );
+
+    return {
+      ...a,
+      condition,
+      conditionLabel: this.formatConditionLabel(condition),
+      temperatureC: rounded(a.temperatureC, b.temperatureC),
+      temperatureF: rounded(a.temperatureF, b.temperatureF),
+      feelsLikeC: rounded(a.feelsLikeC, b.feelsLikeC),
+      feelsLikeF: rounded(a.feelsLikeF, b.feelsLikeF),
+      humidityPct: Math.round(lerp(a.humidityPct, b.humidityPct)),
+      cloudCoverPct: Math.round(lerp(a.cloudCoverPct, b.cloudCoverPct)),
+      precipitationPct,
+      windSpeedKmh,
+      windDirectionDeg,
+      windGustKmh,
+      visibilityKm: rounded(a.visibilityKm, b.visibilityKm),
+      uvIndex: rounded(a.uvIndex, b.uvIndex),
+      dewPointC: rounded(a.dewPointC, b.dewPointC),
+      precipitationMm: rounded(a.precipitationMm, b.precipitationMm),
+      rainMm: rounded(a.rainMm, b.rainMm),
+      showersMm: rounded(a.showersMm, b.showersMm),
+      snowfallCm: rounded(a.snowfallCm, b.snowfallCm),
+      snowDepthCm: rounded(a.snowDepthCm, b.snowDepthCm),
+      cloudCoverLowPct: Math.round(lerp(a.cloudCoverLowPct, b.cloudCoverLowPct)),
+      cloudCoverMidPct: Math.round(lerp(a.cloudCoverMidPct, b.cloudCoverMidPct)),
+      cloudCoverHighPct: Math.round(lerp(a.cloudCoverHighPct, b.cloudCoverHighPct)),
+      freezingLevelM: Math.round(lerp(a.freezingLevelM, b.freezingLevelM)),
+      pressureHpa: Math.round(lerp(a.pressureHpa, b.pressureHpa)),
+      seaLevelPressureHpa: a.seaLevelPressureHpa !== undefined && b.seaLevelPressureHpa !== undefined
+        ? Math.round(lerp(a.seaLevelPressureHpa, b.seaLevelPressureHpa))
+        : (a.seaLevelPressureHpa ?? b.seaLevelPressureHpa),
+      isDay: ratio < 0.5 ? a.isDay : b.isDay,
+      aggressivenessIndex: score,
+      aggressivenessLabel: label,
+      lightningFrequencyPerMin: lerp(a.lightningFrequencyPerMin ?? 0, b.lightningFrequencyPerMin ?? 0),
+      winterFrostLevel: Math.round(lerp(a.winterFrostLevel ?? 0, b.winterFrostLevel ?? 0)),
+      snowAccumulationCm: rounded(a.snowAccumulationCm ?? 0, b.snowAccumulationCm ?? 0),
+      dataSource: a.dataSource || b.dataSource,
+      isSimulated: true,
+      updatedAt: a.updatedAt
+    };
   }
 
   // Active combined weather accounting for manual overrides
