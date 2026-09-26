@@ -49,17 +49,9 @@
       <mat-icon class="text-sm">cloud</mat-icon>
       <span>Weather</span>
     </a>
-    <a [routerLink]="['/', selectedLocation().id, 'astronomy']" [class.active]="skyPage === 'astronomy'">
-      <mat-icon class="text-sm">auto_awesome</mat-icon>
-      <span>Astronomy</span>
-    </a>
     <a [routerLink]="['/', selectedLocation().id, 'tonight']" [class.active]="skyPage === 'tonight'">
       <mat-icon class="text-sm">dark_mode</mat-icon>
       <span>Tonight</span>
-    </a>
-    <a routerLink="/world" [class.active]="skyPage === 'world'">
-      <mat-icon class="text-sm">public</mat-icon>
-      <span>World</span>
     </a>
   </nav>
 
@@ -124,10 +116,6 @@
               <button type="button" [class.active]="activeDeckTab() === 'weather'" (click)="setDeckTab('weather')" role="tab">
                 <mat-icon>cloud</mat-icon>
                 <span>Weather</span>
-              </button>
-              <button type="button" [class.active]="activeDeckTab() === 'astronomy'" (click)="setDeckTab('astronomy')" role="tab">
-                <mat-icon>auto_awesome</mat-icon>
-                <span>Astronomy</span>
               </button>
               <button type="button" [class.active]="activeDeckTab() === 'observations'" (click)="setDeckTab('observations')" role="tab">
                 <mat-icon>query_stats</mat-icon>
@@ -238,75 +226,6 @@
                 </div>
               }
 
-              <!-- TAB 2: ASTRONOMY -->
-              @if (activeDeckTab() === 'astronomy') {
-                <div class="deck-tab-pane">
-                  <!-- Solar Coordinates Card -->
-                  <div class="deck-astro-card">
-                    <div class="astro-card-head">
-                      <span class="metric-label"><mat-icon>sunny</mat-icon> SOLAR EPHEMERIS</span>
-                      <span class="astro-badge">{{ getTwilightLabel(celestial().twilightState) }}</span>
-                    </div>
-                    <div class="astro-data-row">
-                      <div><span>Solar Altitude</span><strong>{{ celestial().sun.altitudeDeg.toFixed(1) }}°</strong></div>
-                      <div><span>Azimuth</span><strong>{{ celestial().sun.azimuthDeg.toFixed(1) }}°</strong></div>
-                      <div><span>Day Length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong></div>
-                      <div><span>Solar Noon</span><strong>{{ formatTime(celestial().solarEvents.solarNoon) }}</strong></div>
-                    </div>
-                    <!-- Daylight Progress Bar -->
-                    <div class="daylight-progress-wrap">
-                      <div class="progress-labels">
-                        <span>Sunrise {{ formatTime(celestial().solarEvents.sunrise) }}</span>
-                        <span>Daylight {{ solarProgress() }}%</span>
-                        <span>Sunset {{ formatTime(celestial().solarEvents.sunset) }}</span>
-                      </div>
-                      <div class="progress-bar-track">
-                        <div class="progress-bar-fill" [style.width.%]="solarProgress()"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Lunar Coordinates Card -->
-                  <div class="deck-astro-card">
-                    <div class="astro-card-head">
-                      <span class="metric-label"><mat-icon>nightlight_round</mat-icon> LUNAR EPHEMERIS</span>
-                      <span class="astro-badge">{{ celestial().moon.phaseName }}</span>
-                    </div>
-                    <div class="astro-data-row">
-                      <div><span>Illumination</span><strong>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}%</strong></div>
-                      <div><span>Moon Altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong></div>
-                      <div><span>Azimuth</span><strong>{{ celestial().moon.azimuthDeg.toFixed(1) }}°</strong></div>
-                      <div><span>Earth Distance</span><strong>{{ formatMoonDistance(celestial().moon.distanceKm) }} km</strong></div>
-                    </div>
-                  </div>
-
-                  <!-- Twilight Phases Detailed Schedule -->
-                  <div class="deck-section-group">
-                    <div class="group-title-row">
-                      <span class="group-label">TWILIGHT & SOLAR WINDOWS</span>
-                      <span class="group-meta">Civil / Nautical / Astro</span>
-                    </div>
-                    <div class="twilight-schedule-table">
-                      <div class="twilight-row"><span>Civil Dawn</span><strong>{{ formatTime(celestial().solarEvents.civilDawn) }}</strong></div>
-                      <div class="twilight-row"><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
-                      <div class="twilight-row"><span>Golden Hour (Evening)</span><strong>{{ formatTime(celestial().solarEvents.goldenHourEvening.start) }}</strong></div>
-                      <div class="twilight-row"><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
-                      <div class="twilight-row"><span>Civil Dusk</span><strong>{{ formatTime(celestial().solarEvents.civilDusk) }}</strong></div>
-                      <div class="twilight-row"><span>Nautical Dusk</span><strong>{{ formatTime(celestial().solarEvents.nauticalDusk) }}</strong></div>
-                      <div class="twilight-row"><span>Astronomical Night</span><strong>{{ formatTime(celestial().solarEvents.astronomicalDusk) }}</strong></div>
-                    </div>
-                  </div>
-
-                  <div class="deck-actions-group">
-                    <button type="button" class="deck-primary-btn" (click)="openEventsPanel()">
-                      <mat-icon>event</mat-icon>
-                      <span>Explore Astronomical Events Calendar</span>
-                    </button>
-                  </div>
-                </div>
-              }
-
-              <!-- TAB 3: INSIGHTS & D3 TRENDS -->
               @if (activeDeckTab() === 'observations') {
                 <div class="deck-tab-pane">
                   <!-- Starlight Seeing & Observation Rating -->
@@ -538,118 +457,6 @@
       </section>
     }
 
-    @if (skyPage === 'astronomy') {
-      <section class="report-page astronomy-page">
-        <!-- Classical Astronomy Suite Overview -->
-        <div class="astronomy-hero" [class.eclipse-active]="activeEclipseState().isActive">
-          <div class="astronomy-sky-dome-wrapper">
-            <svg class="celestial-dome-svg" viewBox="-160 -160 320 320" aria-label="Celestial sky dome with sun and moon coordinates">
-              <circle cx="0" cy="0" r="148" fill="rgba(6, 9, 15, 0.88)" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.2" />
-              <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(245, 158, 11, 0.45)" stroke-width="1.5" stroke-dasharray="4 3" />
-              <circle cx="0" cy="0" r="66" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
-              <circle cx="0" cy="0" r="33" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="0.8" />
-              <text x="0" y="-136" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">N</text>
-              <text x="138" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700">E</text>
-              <text x="0" y="144" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="middle">S</text>
-              <text x="-142" y="3" fill="#fbbf24" font-size="8" font-family="monospace" font-weight="700" text-anchor="end">W</text>
-              <g [attr.transform]="'translate(' + sunCanvasPos().x + ',' + sunCanvasPos().y + ')'">
-                <circle cx="0" cy="0" r="13" fill="#f59e0b" />
-                <text x="0" y="22" fill="#fbbf24" font-size="7.5" font-family="monospace" font-weight="700" text-anchor="middle">SUN ({{ sunAltitude().toFixed(1) }}°)</text>
-              </g>
-              <g [attr.transform]="'translate(' + moonCanvasPos().x + ',' + moonCanvasPos().y + ')'">
-                <circle cx="0" cy="0" r="11" fill="#cbd5e1" />
-                <text x="0" y="22" fill="#e2e8f0" font-size="7.5" font-family="monospace" font-weight="700" text-anchor="middle">MOON ({{ moonAltitude().toFixed(1) }}°)</text>
-              </g>
-            </svg>
-            <div class="astronomy-now-badge">
-              <span class="eyebrow">{{ getTwilightLabel(celestial().twilightState) }}</span>
-              <strong class="time-val">{{ localTime() }}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="astro-grid">
-          <div><span>Moon phase</span><strong>{{ celestial().moon.phaseName }}</strong><small>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</small></div>
-          <div><span>Moon altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong><small>{{ formatMoonDistance(celestial().moon.distanceKm) }} km away</small></div>
-          <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong><small>Local time</small></div>
-          <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></div>
-          <div><span>Day length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong><small>Sun above horizon</small></div>
-          <div><span>Solar altitude</span><strong>{{ celestial().sun.altitudeDeg.toFixed(1) }}°</strong><small>Current position</small></div>
-        </div>
-
-        <div class="astronomy-actions">
-          <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
-          <a [routerLink]="['/', selectedLocation().id]" class="secondary-report-button">Back to Now <mat-icon>arrow_forward</mat-icon></a>
-        </div>
-      </section>
-    }
-
-    @if (skyPage === 'world') {
-      <section class="report-page world-page">
-        <div class="world-events-hero">
-          <span class="section-eyebrow">WORLD EVENTS · {{ selectedLocation().name }}</span>
-          <h2>Time, Sun & Sacred Horizons</h2>
-          <p>Local clocks now connect to daily solar windows and location-aware observances.</p>
-        </div>
-
-        <div class="world-event-grid">
-          <article class="world-event-card">
-            <span class="world-event-kicker">ISLAMIC TIMES</span>
-            @if (worldEvents.nextPrayer(activeDate()); as prayer) {
-              <strong>{{ prayer.time }}</strong><span>Next {{ prayer.name }}</span>
-            } @else {
-              <strong>—</strong><span>Prayer data unavailable</span>
-            }
-            <div class="world-event-mini">
-              <span>Fajr {{ worldEvents.prayerTimes()['Fajr'] || '—' }}</span>
-              <span>Maghrib {{ worldEvents.prayerTimes()['Maghrib'] || '—' }}</span>
-            </div>
-            <small>Source: Aladhan · Muslim World League method</small>
-          </article>
-
-          <article class="world-event-card">
-            <span class="world-event-kicker">SHABBAT HORIZON</span>
-            @if (worldEvents.shabbatEvents()[0]; as shabbat) {
-              <strong>{{ worldEvents.formatTime(shabbat.date, selectedLocation().timezone) }}</strong>
-              <span>{{ shabbat.title }}</span>
-            } @else {
-              <strong>—</strong><span>No upcoming Shabbat marker</span>
-            }
-            <small>Source: Hebcal · candle lighting / Havdalah</small>
-          </article>
-
-          <article class="world-event-card">
-            <span class="world-event-kicker">CROSS-BORDER TIME</span>
-            <strong>{{ worldEvents.timezoneOffsetMinutes(activeDate(), selectedLocation().timezone) / 60 }}h</strong>
-            <span>UTC offset · {{ selectedLocation().timezone }}</span>
-            <div class="world-event-mini">
-              <span>Compare with UTC</span>
-              <span>Political clock</span>
-            </div>
-            <small>Computed from the IANA timezone database</small>
-          </article>
-
-          <article class="world-event-card">
-            <span class="world-event-kicker">GOLDEN / BLUE HOUR</span>
-            <strong>{{ worldEvents.formatTime(worldEvents.solarWindows().goldenEvening, selectedLocation().timezone) }}</strong>
-            <span>Evening golden hour</span>
-            <div class="world-event-mini">
-              <span>Blue {{ worldEvents.formatTime(worldEvents.solarWindows().blueEvening, selectedLocation().timezone) }}</span>
-              <span>Sunset {{ worldEvents.formatTime(worldEvents.solarWindows().sunset, selectedLocation().timezone) }}</span>
-            </div>
-            <small>Source: <a href="https://sunrise-sunset.org/" target="_blank" rel="noopener noreferrer">Sunrise-Sunset.org</a> v2</small>
-          </article>
-        </div>
-
-        <div class="world-clock-list">
-          <div class="world-clock local-world-clock"><div><span class="world-city">Here</span><small>{{ selectedLocation().name }}</small></div><strong>{{ localTime() }}</strong><span>{{ timezoneDisplay() }}</span></div>
-          @for (city of worldClockCities; track city.name) {
-            <div class="world-clock"><div><span class="world-city">{{ city.name }}</span><small>{{ formatWorldDay(city.zone) }}</small></div><strong>{{ formatWorldTime(city.zone) }}</strong><span>{{ city.zone.split('/').pop()?.replace('_', ' ') }}</span></div>
-          }
-        </div>
-        <a routerLink="/world" class="secondary-report-button">Open full world clock <mat-icon>arrow_forward</mat-icon></a>
-      </section>
-    }
   </main>
 
   @if (isDrawerOpen()) {
