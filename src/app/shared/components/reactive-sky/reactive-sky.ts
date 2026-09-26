@@ -192,7 +192,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   ];
 
   private initStars(): void {
-    const starCount = 320;
+    // Keep the procedural field sparse; the real catalogue supplies the astronomical identity.
+    const starCount = 180;
     this.stars = [];
 
     let seed = 42;
@@ -212,8 +213,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     for (let i = 0; i < starCount; i++) {
       const x = rnd();
       const y = Math.pow(rnd(), 1.35) * 0.88;
-      const radius = 0.5 + rnd() * 1.5;
-      const baseBrightness = 0.35 + rnd() * 0.65;
+      const radius = 0.45 + rnd() * 1.05;
+      const baseBrightness = 0.28 + rnd() * 0.55;
       const flickerSpeed = 0.001 + rnd() * 0.004;
       const flickerPhase = rnd() * Math.PI * 2;
       const color = colors[Math.floor(rnd() * colors.length)];
@@ -236,7 +237,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       this.stars.push({
         x: 0,
         y: 0,
-        radius: Math.max(0.9, Math.min(2.4, 2.1 - star.magnitude * 0.3)),
+        radius: Math.max(0.8, Math.min(2.2, 1.85 - star.magnitude * 0.24)),
         baseBrightness: 0.95,
         flickerSpeed: 0.0015,
         flickerPhase: Math.random() * Math.PI * 2,
@@ -705,14 +706,19 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       let sy = star.y * horizonY;
 
       // Bright reference stars use their actual equatorial coordinates.
+      let projectedAltitude = 90;
       if (star.raDeg !== undefined && star.decDeg !== undefined) {
         const projected = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
         if (!projected || projected.altitude < -8) continue;
         sx = projected.x;
         sy = projected.y;
+        projectedAltitude = projected.altitude;
       }
-      const twinkle = 0.82 + Math.sin(time * star.flickerSpeed * windTurbulence + star.flickerPhase) * 0.18;
-      const alpha = star.baseBrightness * finalStarAlpha * twinkle;
+      // Atmospheric extinction: stars near the horizon are naturally dimmer.
+      // This keeps the upper sky readable while preserving a believable horizon fade.
+      const horizonExtinction = Math.max(0, Math.min(1, (projectedAltitude - 2) / 18));
+      const twinkle = 0.88 + Math.sin(time * star.flickerSpeed * windTurbulence + star.flickerPhase) * 0.12;
+      const alpha = star.baseBrightness * finalStarAlpha * horizonExtinction * twinkle;
       if (alpha <= 0.01) continue;
 
       ctx.beginPath();
@@ -746,12 +752,12 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         const star = starByName.get(name);
         if (!star) continue;
         const p = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
-        if (p && p.altitude > 3) points.set(name, p);
+        if (p && p.altitude > 8) points.set(name, p);
       }
       if (group.stars.some(name => !points.has(name))) continue;
 
       ctx.save();
-      ctx.strokeStyle = 'rgba(226,232,240,0.10)';
+      ctx.strokeStyle = 'rgba(226,232,240,0.065)';
       ctx.lineWidth = 0.8;
       ctx.beginPath();
 
@@ -796,14 +802,14 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       Math.cos(ha) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
     ) * 180 / Math.PI + 180 + 360) % 360;
 
-    const radius = Math.max(28, 126 - Math.max(-8, Math.min(90, altitude)) * 0.82);
-    const azRad = azimuth * Math.PI / 180;
-    const centerX = w / 2;
-    return {
-      x: centerX + Math.sin(azRad) * radius,
-      y: horizonY - Math.cos(azRad) * radius,
-      altitude
-    };
+    // Use the same wide azimuth/altitude projection as the Sun, Moon and planets.
+    // Stars should inhabit the whole visible dome, not cluster around the center.
+    const isSouthern = location.latitude < 0;
+    const x = this.projectAzimuthToScreenX(azimuth, w, isSouthern);
+    const maxZenithY = horizonY * 0.05;
+    const normalizedAltitude = Math.max(-8, Math.min(90, altitude)) / 90;
+    const y = horizonY - normalizedAltitude * (horizonY - maxZenithY);
+    return { x, y, altitude };
   }
 
   /**
@@ -850,7 +856,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     };
 
     for (const planet of planets) {
-      if (!planet.visible || planet.altitudeDeg <= 2) continue;
+      // Keep the Living Sky to naked-eye planets. Fainter outer planets belong in Astronomy.
+      if (!planet.visible || planet.altitudeDeg <= 4 || planet.magnitude > 5.2) continue;
       // Uranus/Neptune are kept extremely subtle in the naked-eye atmosphere;
       // their presence is still tied to the real ephemeris.
       const magnitudeVisibility = Math.max(0.16, Math.min(1, 1.15 - planet.magnitude / 4));
