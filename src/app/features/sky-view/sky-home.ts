@@ -224,6 +224,38 @@ export class SkyHomeComponent {
       });
   });
 
+  readonly tonightDarknessWindow = computed(() => {
+    const ev = this.celestial().solarEvents;
+    return {
+      civilDusk: ev.civilDusk,
+      nauticalDusk: ev.nauticalDusk,
+      astronomicalDusk: ev.astronomicalDusk,
+      astronomicalDawn: ev.astronomicalDawn,
+      nauticalDawn: ev.nauticalDawn,
+      civilDawn: ev.civilDawn
+    };
+  });
+
+  readonly moonObserving = computed(() => {
+    const c = this.celestial();
+    const moon = c.moon;
+    const ev = c.lunarEvents;
+    const sunAlt = c.sun.altitudeDeg;
+    const moonAbove = moon.altitudeDeg > 0;
+    const moonInterference = moonAbove ? Math.round(moon.illuminationFraction * 100) : 0;
+
+    return {
+      illuminationPct: Math.round(moon.illuminationFraction * 100),
+      altitudeDeg: moon.altitudeDeg,
+      azimuthDeg: moon.azimuthDeg,
+      phaseName: moon.phaseName,
+      rise: ev.moonrise,
+      set: ev.moonset,
+      aboveHorizon: moonAbove,
+      interferencePct: sunAlt < -12 ? moonInterference : Math.round(moonInterference * 0.35)
+    };
+  });
+
   readonly tonightTwilightSequence = computed(() => {
     const ev = this.celestial().solarEvents;
     return [
