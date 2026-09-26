@@ -17,6 +17,7 @@ import { EclipsePredictorComponent } from './features/eclipses/eclipse-predictor
 import { SatelliteTrackerComponent } from './features/satellites/satellite-tracker';
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { WidgetGeneratorComponent } from './features/widget-generator/widget-generator';
+import { WidgetEmbedComponent } from './features/widget-generator/widget-embed';
 import { WorldEventsComponent } from './features/world-events/world-events';
 import { AlertsComponent } from './features/alerts/alerts';
 
@@ -69,6 +70,7 @@ export const routes: Routes = [
   // Multi-City Dashboard & Widget Generator (Option C)
   { path: 'dashboard', component: DashboardComponent },
   { path: 'widget', component: WidgetGeneratorComponent },
+  { path: 'widget/embed/:location', component: WidgetEmbedComponent },
 
   // Product directories: each product gets a crawlable child URL.
   { path: 'time', pathMatch: 'full', redirectTo: 'time/converter' },
