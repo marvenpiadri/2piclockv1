@@ -38,6 +38,7 @@ export class WorldEventsService {
   }>({ sunrise:null, sunset:null, goldenMorning:null, goldenEvening:null, blueMorning:null, blueEvening:null });
 
   private lastKey = '';
+  private activeTimezone = 'UTC';
   private requestGeneration = 0;
 
   loadForLocation(loc: GeoLocation, date = new Date()): void {
@@ -49,6 +50,7 @@ export class WorldEventsService {
 
     const generation = ++this.requestGeneration;
     this.lastKey = key;
+    this.activeTimezone = loc.timezone;
     this.isLoading.set(true);
 
     this.loadPrayerTimes(loc, dateKey, generation);
@@ -225,6 +227,7 @@ export class WorldEventsService {
             add(first, 'Ramadan begins', 'First day of Ramadan by the selected Hijri calculation method.', true);
 
             this.loadIslamicMonth(hijriYear, 10, 'Eid al-Fitr', 'Start of Shawwal and Eid al-Fitr.', generation, events);
+            this.loadIslamicMonth(hijriYear, 12, 'Eid al-Adha', 'Eid al-Adha begins on 10 Dhu al-Hijjah; this marks the month containing the observance.', generation, events);
           },
           error: () => {
             if (generation === this.requestGeneration) this.religiousEvents.set([]);
@@ -337,7 +340,7 @@ export class WorldEventsService {
     const entries = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha']
       .map(name => ({ name, time: this.prayerTimes()[name] }))
       .filter(x => !!x.time);
-    const localParts = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+    const localParts = new Intl.DateTimeFormat('en-US', { timeZone: this.activeTimezone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
     const minutesNow = Number(localParts.find(p => p.type === 'hour')?.value ?? 0) * 60 + Number(localParts.find(p => p.type === 'minute')?.value ?? 0);
     for (const p of entries) {
       const [h,m] = p.time.split(':').map(Number);
