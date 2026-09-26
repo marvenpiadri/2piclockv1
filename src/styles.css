@@ -1027,3 +1027,42 @@ a:focus-visible {
 }
 
 .animate-fade-in { animation: tw-fadeIn 0.25s ease-out forwards; }
+
+
+/* ==========================================================================
+   Final UI consistency pass
+   Keep /now's simplified watch untouched.  Elsewhere, large utility-colored
+   cards should read as quiet surfaces rather than blue dashboards.
+   ========================================================================== */
+
+/* Card-sized blue utility backgrounds are reduced to the shared neutral
+   surface language. Small status/icon accents keep their original colors. */
+:is(.bg-blue-400, .bg-blue-500, .bg-blue-600,
+    .bg-sky-400, .bg-sky-500,
+    .bg-indigo-800, .bg-indigo-950).rounded-lg,
+:is(.bg-blue-400, .bg-blue-500, .bg-blue-600,
+    .bg-sky-400, .bg-sky-500,
+    .bg-indigo-800, .bg-indigo-950).rounded-xl,
+:is(.bg-blue-400, .bg-blue-500, .bg-blue-600,
+    .bg-sky-400, .bg-sky-500,
+    .bg-indigo-800, .bg-indigo-950).rounded-2xl {
+  background: var(--2pi-surface) !important;
+  color: var(--2pi-text);
+  border-color: var(--2pi-border) !important;
+  box-shadow: none;
+}
+
+/* The same rule catches card components whose border was given a blue
+   utility while leaving compact controls/icons alone. */
+:is(.border-blue-500\/20, .border-blue-500\/30, .border-sky-500\/20).rounded-lg,
+:is(.border-blue-500\/20, .border-blue-500\/30, .border-sky-500\/20).rounded-xl,
+:is(.border-blue-500\/20, .border-blue-500\/30, .border-sky-500\/20).rounded-2xl {
+  border-color: var(--2pi-border) !important;
+}
+
+/* Avoid nested "card inside card" treatment on the shared surfaces. */
+.app-surface .glass-card,
+.glass-panel .glass-card {
+  background: rgba(13, 17, 24, 0.52);
+  box-shadow: none;
+}
