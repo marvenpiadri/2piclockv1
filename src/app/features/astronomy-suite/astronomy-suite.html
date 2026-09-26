@@ -305,8 +305,8 @@
                     <div class="constellation-line"
                       [style.left.%]="constellationX(from.ra)"
                       [style.top.%]="constellationY(from.dec)"
-                      [style.width.%]="Math.hypot(constellationX(to.ra) - constellationX(from.ra), constellationY(to.dec) - constellationY(from.dec))"
-                      [style.transform]="'rotate(' + (Math.atan2(constellationY(to.dec) - constellationY(from.dec), constellationX(to.ra) - constellationX(from.ra)) * 180 / Math.PI) + 'deg)'">
+                      [style.width.%]="constellationLineWidth(line[0], line[1])"
+                      [style.transform]="'rotate(' + (constellationLineAngle(line[0], line[1])) + 'deg)'">
                     </div>
                   }
                 }
