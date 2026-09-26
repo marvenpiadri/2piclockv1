@@ -965,3 +965,26 @@
 .time-controls .time-tool { font-size: 11px; }
 .scrubber-head,
 .scrubber-labels { font-size: 11px; }
+
+
+/* Sky watch breathing room: separate the celestial watch from the controls below. */
+.time-stage {
+  min-height: 500px;
+  padding: 18px 0 26px;
+  box-sizing: border-box;
+}
+.time-controls {
+  margin-top: 12px;
+}
+@media (max-width: 900px) {
+  .time-stage {
+    min-height: 470px;
+    padding: 12px 0 22px;
+  }
+}
+@media (max-width: 640px) {
+  .time-stage {
+    min-height: 410px;
+    padding: 8px 0 18px;
+  }
+}
