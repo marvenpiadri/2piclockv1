@@ -14,7 +14,6 @@ import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterLink } from '@angular/router';
-import { WorldEventsService } from '../../core/services/world-events.service';
 
 @Component({
   selector: 'app-sky-home',
@@ -45,17 +44,16 @@ export class SkyHomeComponent {
   private locationService = inject(LocationService);
   readonly weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
-  readonly worldEvents = inject(WorldEventsService);
   private title = inject(Title);
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
 
   readonly tonightViewMode = signal<'celestial' | 'analog'>('celestial');
 
-  private readonly skyPageState = signal<'time' | 'weather' | 'astronomy' | 'tonight' | 'world'>(
-    (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
+  private readonly skyPageState = signal<'time' | 'weather' | 'tonight'>(
+    (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'tonight'
   );
-  get skyPage(): 'time' | 'weather' | 'astronomy' | 'tonight' | 'world' {
+  get skyPage(): 'time' | 'weather' | 'tonight' {
     return this.skyPageState();
   }
 
@@ -227,13 +225,13 @@ export class SkyHomeComponent {
   readonly isInspectorVisible = signal<boolean>(false);
   // Integrated right environmental deck: expanded by default, part of the page layout (not absolute or fixed modal)
   readonly isRightPanelExpanded = signal<boolean>(true);
-  readonly activeDeckTab = signal<'weather' | 'astronomy' | 'observations'>('weather');
+  readonly activeDeckTab = signal<'weather' | 'observations'>('weather');
 
   toggleRightPanel(): void {
     this.isRightPanelExpanded.update(v => !v);
   }
 
-  setDeckTab(tab: 'weather' | 'astronomy' | 'observations'): void {
+  setDeckTab(tab: 'weather' | 'observations'): void {
     this.activeDeckTab.set(tab);
   }
 
@@ -327,12 +325,10 @@ export class SkyHomeComponent {
     return { score: 55, label: 'Brisk / Demanding', color: '#fb923c', activity: 'Dress appropriately for conditions' };
   });
   // Route-driven Sky pages keep each subject focused and lightweight.
-  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'footer'>('time');
+  readonly activeSection = signal<'time' | 'weather' | 'footer'>('time');
   readonly skySections = [
     { id: 'time', label: 'Time', icon: 'schedule' },
     { id: 'weather', label: 'Weather', icon: 'cloud' },
-    { id: 'astronomy', label: 'Astronomy', icon: 'auto_awesome' },
-    { id: 'world', label: 'World Time', icon: 'public' },
     { id: 'footer', label: 'About', icon: 'info' }
   ] as const;
 
@@ -351,8 +347,8 @@ export class SkyHomeComponent {
       // Location-scoped routes are synchronized by validLocationGuard before
       // this component renders. Do not select again here or a route change
       // would clear weather overrides and trigger a duplicate refresh.
-      const routeExperience = experience && ['time', 'weather', 'astronomy', 'tonight', 'world'].includes(experience)
-        ? experience as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
+      const routeExperience = experience && ['time', 'weather', 'tonight'].includes(experience)
+        ? experience as 'time' | 'weather' | 'tonight'
         : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
       this.skyPageState.set(routeExperience);
     });
@@ -361,8 +357,7 @@ export class SkyHomeComponent {
     // exactly one request path across the app.
     effect(() => {
       const location = this.selectedLocation();
-      if (this.skyPage === 'world') this.worldEvents.loadForLocation(location, this.activeDate());
-    });
+      });
 
     effect(() => {
       const location = this.selectedLocation();
