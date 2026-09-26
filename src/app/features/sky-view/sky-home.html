@@ -5,24 +5,24 @@
     <div class="sky-header-left">
       @if (skyPage === 'time') {
         <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
-        <h1>Living Sky Horizon · {{ selectedLocation().name }}</h1>
-        <p>{{ localDate() }} · {{ timezoneDisplay() }} · Solar & Lunar 2π Coordinate</p>
+        <h1>{{ selectedLocation().name }}</h1>
+        <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
       } @else if (skyPage === 'weather') {
         <span class="section-eyebrow">METEOROLOGY · {{ selectedLocation().name }}</span>
-        <h1>Atmospheric Weather</h1>
-        <p>Live conditions, telemetry, and 24-hour predictive trend.</p>
+        <h1>Weather</h1>
+        <p>Current conditions and local forecast.</p>
       } @else if (skyPage === 'astronomy') {
         <span class="section-eyebrow">ASTRONOMICAL EPHEMERIS · {{ selectedLocation().name }}</span>
-        <h1>Celestial Altitude & Azimuth</h1>
-        <p>Solar zenith, lunar phases, golden hour and twilight intervals.</p>
+        <h1>Astronomy</h1>
+        <p>Sun, Moon, twilight and celestial positions.</p>
       } @else if (skyPage === 'tonight') {
         <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
-        <h1>Tonight's Sky</h1>
-        <p>Moonlight, twilight and conditions for observing the night sky.</p>
+        <h1>Tonight</h1>
+        <p>Moonlight, twilight and observing conditions.</p>
       } @else {
         <span class="section-eyebrow">GLOBAL CLOCKS</span>
-        <h1>World Observatories</h1>
-        <p>Precise local time and solar offsets across planetary zones.</p>
+        <h1>World Time</h1>
+        <p>Local time across selected cities.</p>
       }
     </div>
 
