@@ -259,13 +259,23 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   private startRenderLoop(): void {
     let lastTime = performance.now();
+    let renderAccumulator = 0;
+    // The sky is a background layer, so 30 FPS is enough for smooth celestial
+    // motion while avoiding unnecessary full-canvas work on every browser frame.
+    const targetFrameMs = 1000 / 30;
 
     const render = (time: number) => {
-      const delta = Math.min(time - lastTime, 100);
+      const frameDelta = Math.min(Math.max(0, time - lastTime), 100);
       lastTime = time;
+      renderAccumulator += frameDelta;
 
-      this.updateInterpolation(delta);
-      this.drawScene(time, delta);
+      if (renderAccumulator >= targetFrameMs) {
+        const delta = renderAccumulator;
+        renderAccumulator = 0;
+        this.updateInterpolation(delta);
+        this.drawScene(time, delta);
+      }
+
       this.animFrameId = requestAnimationFrame(render);
     };
 
@@ -920,8 +930,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
       if (!this.reducedMotion) {
         const windFactor = 0.4 + Math.min(3.0, weather.windSpeedKmh / 12);
-        const windDirection = Math.cos((weather.windDirectionDeg * Math.PI) / 180);
-        cloud.x += cloud.speed * delta * windFactor * (windDirection >= 0 ? 1 : -1);
+        // Weather APIs report wind direction as the direction the wind comes
+        // FROM, clockwise from north. Clouds move in the opposite direction.
+        const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
+        const horizontalWind = -Math.sin(windRadians);
+        cloud.x += cloud.speed * delta * windFactor * horizontalWind;
         if (cloud.x > 1.25) cloud.x = -0.25;
         if (cloud.x < -0.25) cloud.x = 1.25;
       }
@@ -1060,22 +1073,27 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         if (isSnowLike) {
           if (isBlizzard) {
             p.y += p.speedY * 0.9;
-            p.x += -0.012 - (weather.windSpeedKmh / 80) * 0.015;
+            const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
+            const horizontalWind = -Math.sin(windRadians);
+            p.x += horizontalWind * (0.004 + (weather.windSpeedKmh / 80) * 0.012);
           } else {
             p.y += p.speedY * (precipType === 'flurries' ? 0.3 : 0.5);
             p.x += Math.sin(time * 0.002 + p.wobblePhase) * 0.001;
           }
         } else if (isDrizzle) {
           p.y += p.speedY * 0.55;
-          p.x += p.speedX * 0.3;
+          const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
+          p.x += -Math.sin(windRadians) * (0.0008 + weather.windSpeedKmh / 25000);
         } else if (isSleet) {
           p.y += p.speedY * 1.8;
-          p.x += p.speedX * 1.2;
+          const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
+          p.x += -Math.sin(windRadians) * (0.002 + weather.windSpeedKmh / 9000);
         } else {
           // Rain or Downpour
           const rainSpeedMult = precipType === 'downpour' ? 2.4 : 1.4;
           p.y += p.speedY * rainSpeedMult;
-          p.x += p.speedX * (weather.windSpeedKmh / 20);
+          const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
+          p.x += -Math.sin(windRadians) * (0.002 + weather.windSpeedKmh / 7000);
         }
 
         if (p.y > 1) {
