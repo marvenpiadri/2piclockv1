@@ -357,8 +357,8 @@
               <div class="deep-sky-grid deep-sky-grid-dec"></div>
               <div class="deep-sky-crosshair"></div>
               <div class="deep-sky-object-point"
-                [style.left.%]="50 + Math.max(-46, Math.min(46, selectedDeepSkyPosition().hourAngleDeg / 180 * 46))"
-                [style.top.%]="50 - Math.max(-42, Math.min(42, selectedDeepSkyPosition().altitudeDeg / 90 * 42))">
+                [style.left.%]="deepSkyFieldLeft()"
+                [style.top.%]="deepSkyFieldTop()">
                 <i></i>
                 <span>{{ selectedDeepSkyData().name }}</span>
               </div>
