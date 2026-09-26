@@ -277,6 +277,16 @@ export class CelestialService {
     return this.cachedPlanetaryPositions;
   });
 
+  getPlanetRiseSet(
+    body: PlanetaryPosition['body'],
+    date: Date,
+    latitude: number,
+    longitude: number,
+    elevationMeters = 0
+  ): { rise: Date | null; set: Date | null } {
+    return this.precisionAstronomy.getRiseSet(body, date, latitude, longitude, elevationMeters);
+  }
+
   // 24-hour Solar Elevation curve for the active day/location
   readonly solarCurve = computed(() => {
     const loc = this.selectedLocation();
