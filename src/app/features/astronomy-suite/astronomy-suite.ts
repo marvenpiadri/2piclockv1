@@ -116,8 +116,8 @@ export class AstronomySuiteComponent implements OnInit {
     { id: 'm57', name: 'Ring Nebula', catalog: 'M57 · NGC 6720', type: 'Planetary nebula', ra: 283.3969, dec: 33.0292, mag: 8.80, size: '1.4′' },
     { id: 'm8', name: 'Lagoon Nebula', catalog: 'M8 · NGC 6523', type: 'Emission nebula', ra: 270.9200, dec: -24.3800, mag: 6.00, size: '90′ × 40′' },
     { id: 'm20', name: 'Trifid Nebula', catalog: 'M20 · NGC 6514', type: 'Emission nebula', ra: 270.6540, dec: -23.0300, mag: 6.30, size: '28′' },
-    { id: 'm4', name: 'Butterfly Cluster', catalog: 'M6 · NGC 6405', type: 'Open cluster', ra: 265.0700, dec: -32.2200, mag: 4.20, size: '25′' },
-    { id: 'm6', name: 'Ptolemy Cluster', catalog: 'M7 · NGC 6475', type: 'Open cluster', ra: 268.4600, dec: -34.7900, mag: 3.30, size: '80′' }
+    { id: 'm6', name: 'Butterfly Cluster', catalog: 'M6 · NGC 6405', type: 'Open cluster', ra: 265.0700, dec: -32.2200, mag: 4.20, size: '25′' },
+    { id: 'm7', name: 'Ptolemy Cluster', catalog: 'M7 · NGC 6475', type: 'Open cluster', ra: 268.4600, dec: -34.7900, mag: 3.30, size: '80′' }
   ] as const;
 
   readonly selectedDeepSkyData = computed(() =>
