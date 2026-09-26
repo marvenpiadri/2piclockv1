@@ -463,6 +463,61 @@
           </article>
         </div>
 
+        <section class="tonight-observing-grid">
+          <article class="tonight-observing-card">
+            <div class="tonight-section-head compact">
+              <div><span class="eyebrow">MOON CONDITIONS</span><h2>{{ moonObserving().phaseName }}</h2></div>
+              <span>{{ moonObserving().illuminationPct }}% illuminated</span>
+            </div>
+            <div class="tonight-observing-values">
+              <span><b>Altitude</b>{{ moonObserving().altitudeDeg.toFixed(1) }}°</span>
+              <span><b>Azimuth</b>{{ moonObserving().azimuthDeg.toFixed(0) }}°</span>
+              <span><b>Rise</b>{{ formatTime(moonObserving().rise) }}</span>
+              <span><b>Set</b>{{ formatTime(moonObserving().set) }}</span>
+            </div>
+            <p>{{ moonObserving().aboveHorizon ? 'Moonlight is currently contributing to the sky.' : 'Moon is below the horizon, so lunar interference is minimal.' }} Estimated interference: {{ moonObserving().interferencePct }}%.</p>
+          </article>
+
+          <article class="tonight-observing-card">
+            <div class="tonight-section-head compact">
+              <div><span class="eyebrow">VISIBLE CONSTELLATIONS</span><h2>Look up</h2></div>
+              <span>{{ visibleConstellations().length }} in the guide</span>
+            </div>
+            <div class="tonight-constellation-list">
+              @for (constellation of visibleConstellations().slice(0, 8); track constellation.name) {
+                <span><strong>{{ constellation.name }}</strong><small>{{ constellation.altitudeDeg.toFixed(0) }}° alt · {{ constellation.azimuthDeg.toFixed(0) }}° az</small></span>
+              }
+            </div>
+          </article>
+        </section>
+
+        <section class="tonight-section">
+          <div class="tonight-section-head">
+            <div><span class="eyebrow">DARKNESS WINDOW</span><h2>When the sky gets dark</h2></div>
+            <span>Local time</span>
+          </div>
+          <div class="tonight-twilight">
+            <article><span>Civil dusk</span><strong>{{ formatTime(tonightDarknessWindow().civilDusk) }}</strong><small>−6° Sun</small></article>
+            <article><span>Nautical dusk</span><strong>{{ formatTime(tonightDarknessWindow().nauticalDusk) }}</strong><small>−12° Sun</small></article>
+            <article><span>Full darkness</span><strong>{{ formatTime(tonightDarknessWindow().astronomicalDusk) }}</strong><small>−18° Sun</small></article>
+            <article><span>Darkness ends</span><strong>{{ formatTime(tonightDarknessWindow().astronomicalDawn) }}</strong><small>−18° Sun</small></article>
+            <article><span>Nautical dawn</span><strong>{{ formatTime(tonightDarknessWindow().nauticalDawn) }}</strong><small>−12° Sun</small></article>
+            <article><span>Civil dawn</span><strong>{{ formatTime(tonightDarknessWindow().civilDawn) }}</strong><small>−6° Sun</small></article>
+          </div>
+        </section>
+
+        <section class="tonight-section">
+          <div class="tonight-section-head">
+            <div><span class="eyebrow">NIGHTLY TIMELINE</span><h2>Tonight unfolds</h2></div>
+            <span>Sun · Moon · darkness</span>
+          </div>
+          <div class="tonight-timeline">
+            @for (event of tonightTimeline(); track event.label) {
+              <article><span>{{ event.label }}</span><strong>{{ formatTime(event.time) }}</strong><small>{{ event.detail }}</small></article>
+            }
+          </div>
+        </section>
+
         <div class="tonight-metrics">
           <article><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></article>
           <article><span>Astronomical darkness</span><strong>{{ formatTime(celestial().solarEvents.astronomicalDusk) }}</strong><small>Dark-sky threshold</small></article>
