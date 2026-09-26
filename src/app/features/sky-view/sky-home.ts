@@ -249,8 +249,8 @@ export class SkyHomeComponent {
       altitudeDeg: moon.altitudeDeg,
       azimuthDeg: moon.azimuthDeg,
       phaseName: moon.phaseName,
-      rise: ev.moonrise,
-      set: ev.moonset,
+      rise: moonEvents.rise,
+      set: moonEvents.set,
       aboveHorizon: moonAbove,
       interferencePct: sunAlt < -12 ? moonInterference : Math.round(moonInterference * 0.35)
     };
