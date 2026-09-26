@@ -722,3 +722,107 @@
     -webkit-backdrop-filter: none;
   }
 }
+
+/* Sky-native final pass: the atmosphere is the surface, not a dark dashboard. */
+.sky-report .sky-header,
+.sky-report .environmental-deck,
+.sky-report .deck-nav-tabs,
+.sky-report .home-info-panel,
+.sky-report .weather-current,
+.sky-report .weather-stats div,
+.sky-report .hour-item,
+.sky-report .week-day,
+.sky-report .astro-grid > div,
+.sky-report .world-clock,
+.sky-report .world-event-card,
+.sky-report .deck-weather-hero,
+.sky-report .deck-metric-card,
+.sky-report .deck-hour-item,
+.sky-report .deck-week-row,
+.sky-report .deck-astro-card,
+.sky-report .deck-insight-card,
+.sky-report .deck-d3-wrapper,
+.sky-report .deck-search-box,
+.sky-report .time-controls .live-status,
+.sky-report .time-controls .live-return,
+.sky-report .time-controls .time-tool,
+.sky-report .time-scrubber,
+.sky-report .weather-section-block > *,
+.sky-report .astronomy-now-badge .separation-tag {
+  background: rgba(255, 255, 255, .075);
+  border-color: rgba(255, 255, 255, .18);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, .08);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+}
+
+.sky-report .sky-header {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .05);
+}
+
+.sky-report .deck-metric-card:hover,
+.sky-report .nav-cat-btn:hover,
+.sky-report .location-item-row:hover {
+  background: rgba(255, 255, 255, .12);
+}
+
+.sky-report .sky-header h1,
+.sky-report .sky-header p,
+.sky-report .section-heading-row h2,
+.sky-report .world-events-hero h2,
+.sky-report .world-city,
+.sky-report .world-clock > strong,
+.sky-report .world-event-card strong,
+.sky-report .weather-current h2,
+.sky-report .weather-temperature,
+.sky-report .astro-grid strong {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .16);
+}
+
+.sky-report .sky-navigation {
+  background: rgba(255, 255, 255, .035);
+  border-color: rgba(255, 255, 255, .16);
+}
+
+.sky-report .sky-navigation a:hover {
+  background: rgba(255, 255, 255, .08);
+}
+
+.sky-report .sky-navigation a.active {
+  background: rgba(255, 255, 255, .105);
+}
+
+.sky-report .sky-drawer {
+  background: rgba(255, 255, 255, .085);
+  border-left-color: rgba(255, 255, 255, .2);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, .14);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+}
+
+.sky-report .drawer-backdrop {
+  background: rgba(0, 0, 0, .18);
+}
+
+.sky-report .location-list input {
+  background: rgba(255, 255, 255, .075);
+  border-color: rgba(255, 255, 255, .18);
+}
+
+.sky-report .secondary-report-button {
+  background: rgba(255, 255, 255, .075);
+  border-color: rgba(255, 255, 255, .18);
+  color: #f1f5f9;
+}
+
+/* Keep the time controls small: they support the clock instead of competing with it. */
+.sky-report .time-controls {
+  gap: 5px;
+}
+.sky-report .time-controls .live-status,
+.sky-report .time-controls .live-return,
+.sky-report .time-controls .time-tool {
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 9px;
+}
