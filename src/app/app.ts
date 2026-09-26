@@ -221,11 +221,18 @@ export class App {
       items: [
         {
           label: 'Sky Window & 2Pi Dial',
-          path: '/:location',
+          path: '/',
           view: 'sky',
           desc: 'Living horizon simulation, diurnal radian vector, and optical twilight gradient.',
           icon: 'radio_button_checked',
           tag: 'Real-Time'
+        },
+        {
+          label: 'Tonight · Night Sky',
+          path: '/tonight',
+          desc: 'A focused view of sunset, darkness, Moon conditions, twilight and visible bright planets.',
+          icon: 'dark_mode',
+          tag: 'Night'
         },
         {
           label: 'Solar & Daylight Calculator',
@@ -352,12 +359,6 @@ export class App {
           desc: 'Weather Aggressiveness Index, winter frost, barometric pressure, and visibility.',
           icon: 'thunderstorm'
         },
-        {
-          label: 'Wind & Weather Map',
-          path: '/maps/weather',
-          desc: 'Global meteorological maps and live weather observations.',
-          icon: 'air'
-        }
       ]
     }
   ];
