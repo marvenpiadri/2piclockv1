@@ -349,7 +349,7 @@ export class SkyHomeComponent {
       // would clear weather overrides and trigger a duplicate refresh.
       const routeExperience = experience && ['time', 'weather', 'tonight'].includes(experience)
         ? experience as 'time' | 'weather' | 'tonight'
-        : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
+        : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'tonight';
       this.skyPageState.set(routeExperience);
     });
 
@@ -357,23 +357,15 @@ export class SkyHomeComponent {
     // exactly one request path across the app.
     effect(() => {
       const location = this.selectedLocation();
-      });
-
-    effect(() => {
-      const location = this.selectedLocation();
       const labels = {
         time: `Now in ${location.name}, ${location.country}`,
         weather: `Weather in ${location.name}, ${location.country}`,
-        astronomy: `Astronomy in ${location.name}, ${location.country}`,
-        tonight: `Tonight in ${location.name}, ${location.country}`,
-        world: 'World Time'
+        tonight: `Tonight in ${location.name}, ${location.country}`
       };
       const descriptions = {
         time: `Current local time, sunrise, sunset, weather and astronomical conditions for ${location.name}, ${location.country}.`,
         weather: `Current conditions, hourly weather and a 7-day forecast for ${location.name}, ${location.country}.`,
-        astronomy: `Solar and lunar positions, moon phase, twilight and astronomical information for ${location.name}, ${location.country}.`,
-        tonight: `Tonight in ${location.name}: moon phase, twilight, stargazing conditions and the night sky.`,
-        world: 'Compare local time across major cities around the world.'
+        tonight: `Tonight in ${location.name}: moon phase, twilight, stargazing conditions and the night sky.`
       };
       const title = `${labels[this.skyPage]} | 2piClock`;
       const description = descriptions[this.skyPage];
