@@ -202,7 +202,26 @@ export class SkyHomeComponent {
   readonly planetaryPositions = this.celestialService.planetaryPositions;
 
   readonly visiblePlanetsTonight = computed(() => {
-    return this.planetaryPositions().filter(p => p.altitudeDeg > 0);
+    const location = this.selectedLocation();
+    const date = this.activeDate();
+
+    return this.planetaryPositions()
+      .filter(p => p.altitudeDeg > 0 && p.visible)
+      .map(planet => {
+        const riseSet = this.celestialService.getPlanetRiseSet(
+          planet.body,
+          date,
+          location.latitude,
+          location.longitude,
+          location.elevation
+        );
+
+        return {
+          ...planet,
+          rise: riseSet.rise,
+          set: riseSet.set
+        };
+      });
   });
 
   readonly tonightTwilightSequence = computed(() => {
