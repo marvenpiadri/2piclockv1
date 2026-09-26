@@ -188,7 +188,16 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     { name: 'Deneb', raDeg: 310.358, decDeg: 45.280, magnitude: 1.25, color: 'rgba(225,240,255,' },
     { name: 'Regulus', raDeg: 152.093, decDeg: 11.967, magnitude: 1.35, color: 'rgba(245,245,255,' },
     { name: 'Castor', raDeg: 113.650, decDeg: 31.888, magnitude: 1.58, color: 'rgba(230,240,255,' },
-    { name: 'Bellatrix', raDeg: 81.283, decDeg: 6.350, magnitude: 1.64, color: 'rgba(220,235,255,' }
+    { name: 'Bellatrix', raDeg: 81.283, decDeg: 6.350, magnitude: 1.64, color: 'rgba(220,235,255,' },
+    { name: 'Alnilam', raDeg: 84.053, decDeg: -1.202, magnitude: 1.69, color: 'rgba(220,235,255,' },
+    { name: 'Alnitak', raDeg: 85.190, decDeg: -1.943, magnitude: 1.74, color: 'rgba(220,235,255,' },
+    { name: 'Mirfak', raDeg: 51.080, decDeg: 49.861, magnitude: 1.79, color: 'rgba(245,235,215,' },
+    { name: 'Dubhe', raDeg: 165.932, decDeg: 61.751, magnitude: 1.79, color: 'rgba(255,235,205,' },
+    { name: 'Kochab', raDeg: 222.676, decDeg: 74.155, magnitude: 2.08, color: 'rgba(255,220,185,' },
+    { name: 'Denebola', raDeg: 177.265, decDeg: 14.572, magnitude: 2.14, color: 'rgba(235,245,255,' },
+    { name: 'Mintaka', raDeg: 83.001, decDeg: -0.299, magnitude: 2.23, color: 'rgba(225,240,255,' },
+    { name: 'Merak', raDeg: 165.460, decDeg: 56.382, magnitude: 2.37, color: 'rgba(225,240,255,' },
+    { name: 'Alnair', raDeg: 332.058, decDeg: -46.961, magnitude: 1.74, color: 'rgba(225,240,255,' }
   ];
 
   private initStars(): void {
@@ -579,6 +588,19 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       zRGB = lerpColor(zRGB, grayZenith, overcastFactor);
       mRGB = lerpColor(mRGB, grayMid, overcastFactor);
       hRGB = lerpColor(hRGB, grayHorizon, overcastFactor);
+    }
+
+    // 5. Natural moonlight wash: a restrained cool lift on clear dark nights.
+    // It is intentionally subtle; the Moon should shape the atmosphere, not paint it.
+    if (sunAlt < -6) {
+      const moon = this.celestialService.celestialState().moon;
+      const moonAltitude = Math.max(0, Math.min(1, moon.altitudeDeg / 45));
+      const moonlight = Math.min(0.08, moon.illuminationFraction * moonAltitude * 0.08);
+      if (moonlight > 0.002) {
+        zRGB = lerpColor(zRGB, [14, 20, 36], moonlight);
+        mRGB = lerpColor(mRGB, [24, 34, 54], moonlight);
+        hRGB = lerpColor(hRGB, [38, 50, 70], moonlight * 0.9);
+      }
     }
 
     // 5. Solar Eclipse Darkening
