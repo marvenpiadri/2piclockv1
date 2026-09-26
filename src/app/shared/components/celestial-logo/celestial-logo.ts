@@ -40,13 +40,4 @@ export class CelestialLogoComponent {
     return (this.illumination() * 100).toFixed(0);
   }
 
-  private localHour(): number {
-    const instant = this.activeDate();
-    const zone = this.celestialService.selectedLocation().timezone;
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: zone, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
-    }).formatToParts(instant);
-    const get = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
-    return get('hour') + get('minute') / 60 + get('second') / 3600;
-  }
 }
