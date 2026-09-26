@@ -29,6 +29,20 @@
   --color-money-green-medium: var(--color-math-orange-medium);
   --color-money-green-border: var(--color-math-orange-border);
 
+  /* 2piClock semantic UI tokens: one neutral/amber language across every route. */
+  --color-accent: var(--color-math-orange);
+  --color-accent-soft: var(--color-math-orange-light);
+  --color-accent-border: var(--color-math-orange-border);
+  --color-neutral-950: #020617;
+  --color-neutral-900: #0d1117;
+  --color-neutral-850: #111827;
+  --color-neutral-800: #161b22;
+  --color-neutral-700: #21262d;
+  --color-neutral-600: #30363d;
+  --color-neutral-500: #484f58;
+  --color-positive: #34d399;
+  --color-danger: #f87171;
+
   --color-canvas: #f8fafc;
   --color-surface: #ffffff;
   --color-surface-subtle: #f1f5f9;
