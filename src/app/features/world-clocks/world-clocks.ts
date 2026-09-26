@@ -9,13 +9,14 @@ import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { WorldClockPreferencesService } from '../../core/services/world-clock-preferences.service';
+import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 
 type ClockStyle='digital'|'analog';
 interface WorldClock { location:GeoLocation; hour:number; minute:number; second:number; hour24:number; time:string; offset:string; date:string; isDay:boolean; }
 
 @Component({
  selector:'app-world-clocks', standalone:true,
- imports:[MatIconModule,CountryFlagComponent,FormsModule,DragDropModule],
+ imports:[MatIconModule,CountryFlagComponent,AnalogClockComponent,FormsModule,DragDropModule],
  changeDetection:ChangeDetectionStrategy.OnPush, templateUrl:'./world-clocks.html', styleUrl:'./world-clocks.css'
 })
 export class WorldClocksComponent implements OnDestroy {
