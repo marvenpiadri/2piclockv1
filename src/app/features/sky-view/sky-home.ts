@@ -38,6 +38,8 @@ import { WorldEventsService } from '../../core/services/world-events.service';
   styleUrl: './sky-home.css'
 })
 export class SkyHomeComponent {
+  // Angular templates resolve identifiers against the component instance.
+  readonly Math = Math;
   private celestialService = inject(CelestialService);
   private timeControlService = inject(TimeControlService);
   private locationService = inject(LocationService);
