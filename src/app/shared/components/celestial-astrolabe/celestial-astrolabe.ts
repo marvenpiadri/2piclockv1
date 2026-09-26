@@ -22,10 +22,12 @@ import { TimeControlService } from '../../../core/services/time-control.service'
             <stop offset="72%" stop-color="#f4a51c" />
             <stop offset="100%" stop-color="#c97812" />
           </radialGradient>
-          <radialGradient id="watchMoon" cx="32%" cy="28%" r="70%">
+          <radialGradient id="watchMoon" cx="27%" cy="24%" r="76%">
             <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="45%" stop-color="#e8edf2" />
-            <stop offset="100%" stop-color="#9aa7b5" />
+            <stop offset="22%" stop-color="#f8fafc" />
+            <stop offset="55%" stop-color="#e7ebef" />
+            <stop offset="82%" stop-color="#cbd2d9" />
+            <stop offset="100%" stop-color="#aeb7c1" />
           </radialGradient>
           <filter id="watchGlow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="4" result="blur" />
@@ -67,7 +69,8 @@ import { TimeControlService } from '../../../core/services/time-control.service'
 
         <g [attr.transform]="'translate(' + moonCoords().x + ',' + moonCoords().y + ')'">
           <circle r="11" fill="rgba(226,232,240,.12)" filter="url(#watchGlow)" />
-          <circle r="6.2" fill="url(#watchMoon)" stroke="rgba(255,255,255,.6)" stroke-width=".7" />
+          <circle r="6.2" fill="url(#watchMoon)" stroke="rgba(255,255,255,.85)" stroke-width=".7" />
+          <ellipse cx="-1.8" cy="-2.1" rx="2.2" ry="1.3" fill="rgba(255,255,255,.34)" />
           <path [attr.d]="moonTerminatorPath()" fill="rgba(20,27,38,.86)" />
         </g>
 
