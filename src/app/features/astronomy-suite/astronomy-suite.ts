@@ -103,6 +103,121 @@ export class AstronomySuiteComponent implements OnInit {
 
   readonly selectedPlanet = signal('earth');
 
+  readonly selectedConstellation = signal('orion');
+
+  readonly constellationCatalog = [
+    {
+      id: 'orion',
+      name: 'Orion',
+      stars: [
+        { name: 'Betelgeuse', ra: 88.793, dec: 7.407, mag: 0.50 },
+        { name: 'Bellatrix', ra: 81.283, dec: 6.350, mag: 1.64 },
+        { name: 'Alnilam', ra: 84.053, dec: -1.202, mag: 1.69 },
+        { name: 'Alnitak', ra: 85.190, dec: -1.943, mag: 1.74 },
+        { name: 'Mintaka', ra: 83.001, dec: -0.299, mag: 2.23 },
+        { name: 'Rigel', ra: 78.634, dec: -8.202, mag: 0.13 }
+      ],
+      lines: [['Betelgeuse', 'Bellatrix'], ['Betelgeuse', 'Mintaka'], ['Bellatrix', 'Alnilam'], ['Mintaka', 'Alnilam'], ['Mintaka', 'Alnitak'], ['Alnilam', 'Alnitak'], ['Alnitak', 'Rigel'], ['Mintaka', 'Rigel']]
+    },
+    {
+      id: 'ursa-major',
+      name: 'Ursa Major',
+      stars: [
+        { name: 'Dubhe', ra: 165.932, dec: 61.751, mag: 1.79 },
+        { name: 'Merak', ra: 165.460, dec: 56.382, mag: 2.37 },
+        { name: 'Phecda', ra: 178.458, dec: 53.695, mag: 2.44 },
+        { name: 'Megrez', ra: 183.856, dec: 57.033, mag: 3.31 },
+        { name: 'Alioth', ra: 193.507, dec: 55.960, mag: 1.76 },
+        { name: 'Mizar', ra: 201.298, dec: 54.925, mag: 2.27 },
+        { name: 'Alkaid', ra: 206.885, dec: 49.313, mag: 1.86 }
+      ],
+      lines: [['Dubhe', 'Merak'], ['Merak', 'Phecda'], ['Phecda', 'Megrez'], ['Megrez', 'Alioth'], ['Alioth', 'Mizar'], ['Mizar', 'Alkaid'], ['Dubhe', 'Megrez']]
+    },
+    {
+      id: 'cassiopeia',
+      name: 'Cassiopeia',
+      stars: [
+        { name: 'Schedar', ra: 10.127, dec: 56.537, mag: 2.24 },
+        { name: 'Caph', ra: 2.295, dec: 59.150, mag: 2.27 },
+        { name: 'Gamma Cas', ra: 14.177, dec: 60.717, mag: 2.47 },
+        { name: 'Ruchbah', ra: 21.454, dec: 60.235, mag: 2.68 },
+        { name: 'Segin', ra: 28.599, dec: 63.670, mag: 3.35 }
+      ],
+      lines: [['Caph', 'Schedar'], ['Schedar', 'Gamma Cas'], ['Gamma Cas', 'Ruchbah'], ['Ruchbah', 'Segin']]
+    },
+    {
+      id: 'leo',
+      name: 'Leo',
+      stars: [
+        { name: 'Regulus', ra: 152.093, dec: 11.967, mag: 1.35 },
+        { name: 'Denebola', ra: 177.265, dec: 14.572, mag: 2.14 },
+        { name: 'Algieba', ra: 154.993, dec: 19.841, mag: 2.28 },
+        { name: 'Zosma', ra: 168.527, dec: 20.524, mag: 2.56 },
+        { name: 'Chertan', ra: 168.560, dec: 15.430, mag: 3.33 }
+      ],
+      lines: [['Regulus', 'Algieba'], ['Algieba', 'Zosma'], ['Zosma', 'Denebola'], ['Zosma', 'Chertan'], ['Chertan', 'Regulus']]
+    },
+    {
+      id: 'scorpius',
+      name: 'Scorpius',
+      stars: [
+        { name: 'Antares', ra: 247.352, dec: -26.432, mag: 1.06 },
+        { name: 'Dschubba', ra: 240.083, dec: -22.622, mag: 2.32 },
+        { name: 'Sargas', ra: 264.330, dec: -42.998, mag: 1.86 },
+        { name: 'Shaula', ra: 263.402, dec: -37.103, mag: 1.63 },
+        { name: 'Lesath', ra: 262.691, dec: -37.296, mag: 2.70 },
+        { name: 'Girtab', ra: 260.502, dec: -34.293, mag: 2.41 }
+      ],
+      lines: [['Dschubba', 'Antares'], ['Antares', 'Girtab'], ['Girtab', 'Sargas'], ['Girtab', 'Shaula'], ['Shaula', 'Lesath']]
+    }
+  ] as const;
+
+  readonly selectedConstellationData = computed(() =>
+    this.constellationCatalog.find(item => item.id === this.selectedConstellation()) ?? this.constellationCatalog[0]
+  );
+
+  readonly earthMoonSunSeparation = computed(() => {
+    const sun = this.solarResult().solarPos;
+    const moon = this.moonResult().lunarPos;
+    const ra1 = sun.rightAscensionDeg * Math.PI / 180;
+    const dec1 = sun.declinationDeg * Math.PI / 180;
+    const ra2 = moon.rightAscensionDeg * Math.PI / 180;
+    const dec2 = moon.declinationDeg * Math.PI / 180;
+    const cosine = Math.sin(dec1) * Math.sin(dec2) + Math.cos(dec1) * Math.cos(dec2) * Math.cos(ra1 - ra2);
+    return Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI;
+  });
+
+  constellationX(raDeg: number): number {
+    return ((raDeg / 360) * 94 + 3);
+  }
+
+  constellationY(decDeg: number): number {
+    return 50 - (decDeg / 90) * 44;
+  }
+
+  constellationStarRadius(magnitude: number): number {
+    return Math.max(1.1, Math.min(3.1, 3.3 - magnitude * 0.55));
+  }
+
+  constellationStarByName(name: string) {
+    return this.selectedConstellationData().stars.find(star => star.name === name);
+  }
+
+  selectConstellation(id: string): void {
+    this.selectedConstellation.set(id);
+  }
+
+  earthSkyNodeX(raDeg: number): number {
+    const angle = (raDeg - this.solarResult().solarPos.rightAscensionDeg) * Math.PI / 180;
+    return 50 + Math.sin(angle) * 35;
+  }
+
+  earthSkyNodeY(decDeg: number): number {
+    const delta = decDeg - this.solarResult().solarPos.declinationDeg;
+    return 50 - Math.max(-1, Math.min(1, delta / 90)) * 35;
+  }
+
+
   readonly solarSystemStates = computed<KeplerianOrbitalState[]>(() => {
     const instant = this.parsedInstant();
     const jd = getJulianDate(instant);
