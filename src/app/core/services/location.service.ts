@@ -129,8 +129,13 @@ export class LocationService {
   async ensureInitialLocation(): Promise<GeoLocation> {
     const current = this.selectedLocation();
     if (this.isBrowser) {
-      const saved = localStorage.getItem('2piclock_selected_location');
-      if (saved) return current;
+      try {
+        const saved = localStorage.getItem('2piclock_selected_location');
+        if (saved) return current;
+      } catch {
+        // Storage can be unavailable in private/restricted browser contexts.
+      }
+
       const detected = await this.detectUserLocation();
       if (detected) return detected;
     }
