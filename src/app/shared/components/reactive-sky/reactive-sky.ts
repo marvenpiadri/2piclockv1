@@ -360,6 +360,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     // 4. Draw Stars with Astronomical Extinction, Lunar Washout & Winter Crispness
     this.drawStars(ctx, w, h, sunAlt, celestial, weather, atmos, time);
 
+    // 4b. V2.0 constellation geometry — subtle lines only, never a chart overlay.
+    this.drawConstellations(ctx, w, h, celestial, sunAlt);
+
     // 5. Draw Solar Horizon Flare / Twilight Scattering Arch
     this.drawSolarGlow(ctx, w, h, sunAlt, sunAz, weather, isSouthern);
 
@@ -712,6 +715,51 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       ctx.arc(sx, sy, star.radius, 0, Math.PI * 2);
       ctx.fillStyle = `${star.color} ${alpha.toFixed(3)})`;
       ctx.fill();
+    }
+  }
+
+  private drawConstellations(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    celestial: CelestialState,
+    sunAlt: number
+  ): void {
+    if (sunAlt > -6) return;
+
+    const horizonY = h * 0.90;
+    const starByName = new Map(this.brightStarCatalog.map(star => [star.name, star]));
+    const groups: Array<{ stars: string[] }> = [
+      { stars: ['Betelgeuse', 'Bellatrix', 'Rigel', 'Procyon'] },
+      { stars: ['Vega', 'Deneb', 'Altair'] },
+      { stars: ['Aldebaran', 'Capella', 'Pollux', 'Castor'] },
+      { stars: ['Antares', 'Spica', 'Arcturus'] }
+    ];
+
+    const points = new Map<string, { x: number; y: number; altitude: number }>();
+    for (const group of groups) {
+      for (const name of group.stars) {
+        const star = starByName.get(name);
+        if (!star) continue;
+        const p = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
+        if (p && p.altitude > 3) points.set(name, p);
+      }
+      if (group.stars.some(name => !points.has(name))) continue;
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(226,232,240,0.10)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+
+      for (let i = 1; i < group.stars.length; i++) {
+        const a = points.get(group.stars[i - 1])!;
+        const b = points.get(group.stars[i])!;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
+
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
