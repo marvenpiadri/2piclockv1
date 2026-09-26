@@ -269,8 +269,8 @@
                 [style.top.%]="earthSkyNodeY(moonResult().lunarPos.declinationDeg)">
                 <i></i><span>MOON</span>
               </div>
-              <div class="relationship-axis sun-axis"></div>
-              <div class="relationship-axis moon-axis"></div>
+              <div class="relationship-axis sun-axis" [style.width.%]="relationshipLineWidth(solarResult().solarPos.rightAscensionDeg, solarResult().solarPos.declinationDeg)" [style.transform]="'rotate(' + relationshipLineAngle(solarResult().solarPos.rightAscensionDeg, solarResult().solarPos.declinationDeg) + 'deg)'"></div>
+              <div class="relationship-axis moon-axis" [style.width.%]="relationshipLineWidth(moonResult().lunarPos.rightAscensionDeg, moonResult().lunarPos.declinationDeg)" [style.transform]="'rotate(' + relationshipLineAngle(moonResult().lunarPos.rightAscensionDeg, moonResult().lunarPos.declinationDeg) + 'deg)'"></div>
             </div>
             <div class="relationship-detail">
               <div><span>MOON PHASE</span><strong>{{ moonResult().lunarPos.phaseName }}</strong></div>
