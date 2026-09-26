@@ -826,3 +826,12 @@
   padding: 7px 10px;
   border-radius: 9px;
 }
+
+/* Neutralize legacy utility surfaces inside this sky route. */
+.sky-report .bg-slate-900\/80,
+.sky-report .bg-slate-900\/60,
+.sky-report .bg-indigo-500\/20,
+.sky-report .bg-indigo-500\/10 {
+  background: rgba(255, 255, 255, .075) !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+}
