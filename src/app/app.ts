@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-sky';
 import { DeepSpaceBackdropComponent } from './shared/components/deep-space-backdrop/deep-space-backdrop';
-import { CountryFlagComponent, MiniRadioPlayerComponent } from './shared/components';
+import { CountryFlagComponent, MiniRadioPlayerComponent, CelestialLogoComponent } from './shared/components';
 import { PwaInstallComponent } from './shared/components/pwa-install/pwa-install';
 import { GlassThemeService } from './core/services/glass-theme.service';
 import { LocationService } from './core/services/location.service';
@@ -43,7 +43,8 @@ export interface NavCategory {
     DeepSpaceBackdropComponent,
     CountryFlagComponent,
     MiniRadioPlayerComponent,
-    PwaInstallComponent
+    PwaInstallComponent,
+    CelestialLogoComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
