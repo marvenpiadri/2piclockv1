@@ -403,7 +403,7 @@ export class SkyHomeComponent {
       }
     }
 
-    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'footer');
+    this.activeSection.set(nearest as 'time' | 'weather' | 'footer');
   }
 
   scrollToSection(id: string): void {
