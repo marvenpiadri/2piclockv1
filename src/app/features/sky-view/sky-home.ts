@@ -216,7 +216,7 @@ export class SkyHomeComponent {
           date,
           location.latitude,
           location.longitude,
-          location.elevation
+          location.elevationMeters ?? 0
         );
 
         return {
