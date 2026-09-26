@@ -205,7 +205,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   private initClouds(): void {
     this.clouds = [];
-    const count = 55;
+    const count = 42;
     for (let i = 0; i < count; i++) {
       const layer = Math.floor(Math.random() * 3);
       // layer 0: low stratus, layer 1: mid cumulus, layer 2: high cirrus
@@ -218,7 +218,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         y: baseY,
         radiusX: rx,
         radiusY: ry,
-        opacity: 0.12 + Math.random() * 0.38,
+        opacity: 0.08 + Math.random() * 0.24,
         speed: (layer === 2 ? 0.00002 : (layer === 0 ? 0.00007 : 0.00004)) + Math.random() * 0.00005,
         layer
       });
@@ -308,10 +308,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     // 1. Draw Layered Atmospheric Sky Gradient
     this.drawSkyGradient(ctx, w, h, sunAlt, sunAz, weather, atmos);
 
-    // 2. Astrolabe & Equinoctial Coordinate Datum Grid
-    this.drawAstrolabeGrid(ctx, w, h, sunAlt, celestial, isSouthern);
-
-    // 3. Draw Aurora Borealis / Australis Curtains (when active or polar night)
+    // 2. Draw Aurora Borealis / Australis Curtains (when active or polar night)
     if (this.interp.auroraActivity > 0.02 && sunAlt < -6) {
       this.drawAurora(ctx, w, h, sunAlt, this.interp.auroraActivity, time);
     }
@@ -338,8 +335,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     // 9. Draw Weather Precipitation, Storms, Fog, Frost & Dust Haze Particles
     this.drawWeatherEffects(ctx, w, h, weather, atmos, delta, time);
 
-    // 10. Draw Horizon Baseline with Compass Bearings & Heat Shimmer
-    this.drawHorizonLine(ctx, w, h, sunAlt, weather, atmos, isSouthern, time);
+    // Keep the horizon visually clean; the astronomical details belong to the UI surfaces, not the atmosphere.
   }
 
   /**
@@ -355,7 +351,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   ): void {
     const horizonY = h * 0.90;
     const isNight = sunAlt < -6;
-    const gridAlpha = isNight ? 0.07 : 0.035;
+    const gridAlpha = isNight ? 0.018 : 0.008;
 
     ctx.save();
     ctx.strokeStyle = `rgba(245, 158, 11, ${gridAlpha})`;
