@@ -493,7 +493,7 @@
 
         <div class="tonight-metrics">
           <article><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></article>
-          <article><span>Astronomical darkness</span><strong>{{ formatTime(celestial().solarEvents.astronomicalTwilightEnd) }}</strong><small>Dark-sky threshold</small></article>
+          <article><span>Astronomical darkness</span><strong>{{ formatTime(celestial().solarEvents.astronomicalDusk) }}</strong><small>Dark-sky threshold</small></article>
           <article><span>Moon altitude</span><strong>{{ moonAltitude().toFixed(1) }}°</strong><small>{{ moonAzimuth().toFixed(0) }}° azimuth</small></article>
           <article><span>Moon age</span><strong>{{ celestial().moon.ageDays.toFixed(1) }} days</strong><small>Current lunar cycle</small></article>
         </div>
