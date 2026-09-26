@@ -168,7 +168,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     window.addEventListener('resize', this.resizeHandler, { passive: true });
   }
 
-  private readonly brightStarCatalog: Array<{ name: string; raDeg: number; decDeg: number; magnitude: number; color: string }> = [
+  private readonly brightStarCatalog: { name: string; raDeg: number; decDeg: number; magnitude: number; color: string }[] = [
     { name: 'Sirius', raDeg: 101.287, decDeg: -16.716, magnitude: -1.46, color: 'rgba(235,245,255,' },
     { name: 'Canopus', raDeg: 95.988, decDeg: -52.696, magnitude: -0.74, color: 'rgba(255,245,225,' },
     { name: 'Arcturus', raDeg: 213.915, decDeg: 19.182, magnitude: -0.05, color: 'rgba(255,225,190,' },
@@ -761,7 +761,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
     const horizonY = h * 0.90;
     const starByName = new Map(this.brightStarCatalog.map(star => [star.name, star]));
-    const groups: Array<{ stars: string[] }> = [
+    const groups: { stars: string[] }[] = [
       { stars: ['Betelgeuse', 'Bellatrix', 'Rigel', 'Procyon'] },
       { stars: ['Vega', 'Deneb', 'Altair'] },
       { stars: ['Aldebaran', 'Capella', 'Pollux', 'Castor'] },
