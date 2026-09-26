@@ -988,3 +988,32 @@
     padding: 8px 0 18px;
   }
 }
+
+
+/* Forecast strips: let the living sky show through.
+   Next 24 Hours and 7 Days are data timelines, not cards. */
+.sky-report .weather-section-block > .hourly-forecast,
+.sky-report .weather-section-block > .weekly-forecast,
+.sky-report .hour-item,
+.sky-report .week-day,
+.sky-report .deck-hour-item,
+.sky-report .deck-week-row {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.sky-report .hour-item,
+.sky-report .week-day,
+.sky-report .deck-hour-item,
+.sky-report .deck-week-row {
+  border-color: rgba(255,255,255,.08);
+}
+
+.sky-report .hour-item:hover,
+.sky-report .week-day:hover,
+.sky-report .deck-hour-item:hover,
+.sky-report .deck-week-row:hover {
+  background: transparent;
+}
