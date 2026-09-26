@@ -452,3 +452,153 @@ h1 {
 .world-clock.world-clock-grid {
   background: rgba(255,255,255,.06);
 }
+
+
+/* World Clocks — compact card system, no glass. */
+.world-clocks-page {
+  max-width: 1200px;
+  padding: 28px 16px 72px;
+  background: transparent;
+}
+
+.world-clocks-header {
+  margin-bottom: 22px;
+}
+
+.world-clocks-header p {
+  max-width: 620px;
+  color: var(--2pi-muted);
+}
+
+.clock-style,
+.clock-count,
+.clock-search,
+.location-results,
+.world-clock,
+.world-clock.world-clock-grid,
+.location-result,
+.add-clock-hint {
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.clock-style {
+  padding: 3px;
+}
+
+.clock-style button.active {
+  background: #f97316;
+  color: #17100a;
+}
+
+.clock-search {
+  height: 40px;
+}
+
+.location-results {
+  padding: 8px;
+}
+
+.location-result {
+  background: #161b22;
+}
+
+.world-clock {
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 420px);
+  min-height: 164px;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.world-clock:hover {
+  border-color: rgba(249,115,22,.32);
+}
+
+.digital-clock {
+  position: relative;
+  isolation: isolate;
+  max-width: 420px;
+  min-height: 118px;
+  margin-left: auto;
+  padding: 16px 22px;
+  overflow: hidden;
+  border: 2px solid #242018;
+  border-radius: 5px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(249,115,22,.075), transparent 64%),
+    linear-gradient(180deg, #18130e 0%, #0c0b09 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(249,115,22,.08),
+    inset 0 0 24px rgba(0,0,0,.72),
+    0 3px 0 rgba(0,0,0,.35);
+}
+
+.digital-clock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .28;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 3px,
+    rgba(249,115,22,.045) 4px
+  );
+}
+
+.digital-screen-content {
+  width: 100%;
+}
+
+.digital-time {
+  width: 100%;
+  color: #ff9f2f;
+  font-family: "Share Tech Mono", "Courier New", ui-monospace, monospace;
+  font-size: clamp(34px, 5vw, 58px);
+  font-weight: 700;
+  line-height: .98;
+  letter-spacing: .035em;
+  white-space: nowrap;
+  text-align: center;
+  text-shadow:
+    0 0 3px rgba(255,159,47,.75),
+    0 0 12px rgba(249,115,22,.24);
+  font-variant-numeric: tabular-nums;
+}
+
+.digital-seconds {
+  color: #e98521;
+}
+
+.digital-footer {
+  margin-top: 11px;
+  color: #806d56;
+}
+
+.digital-footer span:last-child {
+  color: #a87843;
+}
+
+@media (max-width: 720px) {
+  .world-clock {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .digital-clock {
+    width: 100%;
+    max-width: none;
+    min-height: 108px;
+    padding: 14px 12px;
+  }
+
+  .digital-time {
+    font-size: clamp(31px, 10vw, 46px);
+    letter-spacing: .025em;
+  }
+}
