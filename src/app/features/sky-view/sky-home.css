@@ -908,3 +908,60 @@
 .tonight-actions { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:16px; }
 @media(max-width:800px){.tonight-hero{align-items:flex-start;flex-direction:column}.tonight-live{text-align:left}.tonight-overview{grid-template-columns:1fr}.tonight-sky-card{grid-template-columns:1fr}.tonight-planets{grid-template-columns:repeat(2,1fr)}.tonight-twilight{grid-template-columns:repeat(3,1fr)}.tonight-metrics{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:460px){.tonight-sky-orbit{width:190px;height:190px}.tonight-planets{grid-template-columns:1fr}.tonight-twilight{grid-template-columns:repeat(2,1fr)}}
+
+
+/* Final launch readability pass: slightly larger type without enlarging the UI chrome. */
+.sky-report {
+  font-size: 14px;
+}
+.sky-header-left p { font-size: 12px; }
+.section-eyebrow { font-size: 11px; }
+.location-action.obvious-country-pill { font-size: 12px; }
+.location-country { font-size: 11px; }
+.settings-action { font-size: 11px; }
+.sky-navigation a { font-size: 12px; }
+
+.deck-subtitle { font-size: 11px; }
+.deck-unit-btn { font-size: 11px; }
+.deck-nav-tabs button { font-size: 11px; }
+.deck-scroll-container { font-size: 14px; }
+
+.sky-info-section-label { font-size: 10px; }
+.sky-info-weather-main b { font-size: 14px; }
+.sky-info-weather-main span { font-size: 10px; }
+.sky-info-weather-grid span,
+.sky-info-astro-grid span { font-size: 10px; }
+.sky-info-sun-times span,
+.sky-info-sun-times b { font-size: 9px; }
+.sky-info-day-state { font-size: 18px; }
+
+.deck-weather-desc p { font-size: 11px; }
+.metric-label { font-size: 10px; }
+.deck-metric-card strong { font-size: 17px; }
+.deck-metric-card small { font-size: 10px; }
+.banner-left strong { font-size: 13px; }
+.banner-advice { font-size: 11px; }
+.group-label { font-size: 10px; }
+.group-meta { font-size: 9px; }
+.hour-time { font-size: 9px; }
+.hour-temp { font-size: 12px; }
+.hour-rain { font-size: 9px; }
+.week-name { font-size: 11px; }
+.week-text { font-size: 11px; }
+.week-rain { font-size: 10px; }
+.week-temps { font-size: 12px; }
+.astro-data-row div span { font-size: 9px; }
+.astro-data-row div strong { font-size: 12px; }
+.progress-labels { font-size: 9px; }
+.twilight-row { font-size: 10px; }
+.deck-primary-btn { font-size: 11px; }
+.insight-head h4 { font-size: 16px; }
+.insight-advice { font-size: 11px; }
+.loc-details strong { font-size: 12px; }
+.loc-details span { font-size: 10px; }
+.loc-coords { font-size: 9px; }
+.time-controls .live-status,
+.time-controls .live-return,
+.time-controls .time-tool { font-size: 11px; }
+.scrubber-head,
+.scrubber-labels { font-size: 11px; }
