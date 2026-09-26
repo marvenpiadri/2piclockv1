@@ -11,10 +11,6 @@
         <span class="section-eyebrow">METEOROLOGY · {{ selectedLocation().name }}</span>
         <h1>Weather</h1>
         <p>Current conditions and local forecast.</p>
-      } @else if (skyPage === 'astronomy') {
-        <span class="section-eyebrow">ASTRONOMICAL EPHEMERIS · {{ selectedLocation().name }}</span>
-        <h1>Astronomy</h1>
-        <p>Sun, Moon, twilight and celestial positions.</p>
       } @else if (skyPage === 'tonight') {
         <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
         <h1>Tonight</h1>
