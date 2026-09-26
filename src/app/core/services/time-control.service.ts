@@ -147,7 +147,11 @@ export class TimeControlService {
    */
   setSpecificInstant(date: Date): void {
     const instantMs = date.getTime();
+    if (!Number.isFinite(instantMs)) return;
+
     this.isLive.set(false);
+    this.simulationAccumulatorMs = 0;
+    this.lastSimulationEmitPerformanceMs = this.isBrowser ? performance.now() : 0;
     this.simulatedEpochMs.set(instantMs);
     this.baseDate.set(new Date(instantMs));
   }
