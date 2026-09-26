@@ -105,6 +105,29 @@
 .deck-scroll-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
 .deck-tab-pane{display:flex;flex-direction:column;gap:14px}
 
+.sky-info-card{width:100%;display:grid;grid-template-columns:minmax(280px,1.25fr) minmax(210px,.85fr) minmax(280px,1.15fr);gap:0;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(7,10,17,.9);box-shadow:0 12px 32px rgba(0,0,0,.28);overflow:hidden}
+.sky-info-card section{padding:14px 16px;min-width:0}
+.sky-info-card section+section{border-left:1px solid rgba(255,255,255,.09)}
+.sky-info-section-label{display:flex;align-items:center;gap:6px;color:#fbbf24;font:700 9px/1 monospace;letter-spacing:.1em;margin-bottom:9px}
+.sky-info-section-label mat-icon{font-size:15px;width:15px;height:15px}
+.sky-info-weather-main{display:flex;align-items:center;gap:12px}
+.sky-info-weather-main>strong{font:800 34px/1 monospace;color:#fff;letter-spacing:-.05em}
+.sky-info-weather-main>div{display:flex;flex-direction:column;gap:3px}
+.sky-info-weather-main b{font:700 13px system-ui,sans-serif;color:#f8fafc}
+.sky-info-weather-main span{font:9px monospace;color:#aab4c2}
+.sky-info-weather-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px;margin-top:11px}
+.sky-info-weather-grid span,.sky-info-astro-grid span{display:flex;align-items:center;gap:5px;min-width:0;color:#cbd5e1;font:9px monospace;white-space:nowrap}
+.sky-info-weather-grid mat-icon,.sky-info-weather-grid app-weather-icon,.sky-info-astro-grid mat-icon{font-size:13px;width:13px;height:13px;color:#f59e0b;flex:0 0 auto}
+.sky-info-day-state{font:700 17px/1.1 system-ui,sans-serif;color:#fff;margin-bottom:10px}
+.sky-info-sun-times{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.sky-info-sun-times span{display:flex;flex-direction:column;gap:3px;color:#aab4c2;font:8px monospace}
+.sky-info-sun-times mat-icon{font-size:14px;width:14px;height:14px;color:#f59e0b}
+.sky-info-sun-times b{color:#f8fafc;font-size:8px}
+.sky-info-astro-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.sky-info-astro-grid span{white-space:normal}
+.sky-info-astro-grid b{color:#f8fafc;margin-right:2px}
+@media (max-width:900px){.sky-info-card{grid-template-columns:1fr 1fr}.sky-info-card section:last-child{grid-column:1/-1;border-left:0;border-top:1px solid rgba(255,255,255,.09)}}
+@media (max-width:640px){.sky-info-card{grid-template-columns:1fr}.sky-info-card section+section{border-left:0;border-top:1px solid rgba(255,255,255,.09)}.sky-info-weather-grid{grid-template-columns:1fr 1fr}}
 .deck-weather-hero{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(18,21,28,.45)}
 .deck-weather-main{display:flex;align-items:baseline;gap:14px}
 .deck-temperature-readout{display:flex;align-items:flex-start}
