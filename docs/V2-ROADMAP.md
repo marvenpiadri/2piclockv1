@@ -114,10 +114,14 @@ Goal: give advanced astronomical exploration its own dedicated experience instea
 V2.6 now includes the Solar System explorer, planetary observing data, Earth/Moon/Sun geometry, coordinate exploration, constellation atlas, and the Deep Sky Atlas. The remaining Milky Way/galactic visualization is intentionally optional and can be added later without affecting the core Astronomy experience.
 
 ## V2.7 — Platform
-Goal: expose the 2piClock engine beyond the main website.
+Goal: expose the 2piClock engine beyond the main website and make the core experience portable, installable and shareable.
 
-- [ ] PWA
-- [ ] Widgets
-- [ ] Embeddable sky
-- [ ] Public API
-- [ ] Shareable sky URLs
+- [x] PWA
+- [x] Widgets
+- [x] Embeddable sky
+- [x] Public API
+- [x] Shareable sky URLs
+
+V2.7 is complete for launch. The platform now has an installable web-app manifest with progressive service-worker support, a widget generator and embeddable clock route, a read-only versioned astronomy API, and shareable location/time URLs that restore an exact astronomical instant.
+
+The public API is intentionally small and read-only for the launch freeze. It exposes the preset location catalogue and a solar-position snapshot rather than turning the platform into a broad backend product.
