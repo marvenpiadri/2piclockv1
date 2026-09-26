@@ -157,6 +157,41 @@
           <div class="horizon-scale"><span>0° horizon</span><span>45°</span><span>90° zenith</span></div>
         </div>
 
+        <section class="planetary-observatory">
+          <div class="planetary-header">
+            <div>
+              <span class="observatory-kicker">PLANETARY EPHEMERIS</span>
+              <h3>Solar System · {{ selectedLocation().name }}</h3>
+              <p>Topocentric positions for the selected observation time. Coordinates update with the Time Machine.</p>
+            </div>
+            <span class="planetary-count">{{ visiblePlanetaryPositions().length }} visible above horizon</span>
+          </div>
+
+          <div class="planetary-table-wrap">
+            <table class="planetary-table">
+              <thead>
+                <tr>
+                  <th>BODY</th><th>ALT</th><th>AZ</th><th>RA</th><th>DEC</th><th>DISTANCE</th><th>MAG</th><th>RISE / SET</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (planet of planetaryRiseSet(); track planet.name) {
+                  <tr [class.is-visible]="planet.visible && planet.altitudeDeg > 0">
+                    <td><strong>{{ planet.name }}</strong><small>{{ planet.visible && planet.altitudeDeg > 0 ? 'VISIBLE' : 'BELOW HORIZON' }}</small></td>
+                    <td>{{ planet.altitudeDeg.toFixed(1) }}°</td>
+                    <td>{{ planet.azimuthDeg.toFixed(0) }}°</td>
+                    <td>{{ planet.rightAscensionHours.toFixed(2) }}h</td>
+                    <td>{{ planet.declinationDeg.toFixed(1) }}°</td>
+                    <td>{{ planet.distanceAu.toFixed(3) }} AU</td>
+                    <td>{{ planet.magnitude.toFixed(1) }}</td>
+                    <td>{{ formatTime(planet.riseSet.rise) }} / {{ formatTime(planet.riseSet.set) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <div class="observatory-actions">
           <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>
           <button type="button" (click)="setTab('daylight')"><mat-icon>wb_twilight</mat-icon> Daylight & Twilight</button>
