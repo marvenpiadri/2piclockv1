@@ -400,15 +400,33 @@ export class WeatherService {
             }
 
           } else {
-            this.rawWeather.set(this.generateRealisticWeather(loc));
+            const stale = this.weatherCache.get(key);
+            if (stale) {
+              this.rawWeather.set(stale.weather);
+              this.hourlyForecasts.set(stale.hourly);
+              this.lastFetchedKey = key;
+            } else {
+              this.rawWeather.set(this.generateRealisticWeather(loc));
+            }
           }
           this.pendingKeys.delete(key);
+          if (key === this.lastRequestedKey) {
+            this.isLoading.set(false);
+          }
         },
         error: () => {
           this.pendingKeys.delete(key);
           if (key !== this.lastRequestedKey) return;
+          const stale = this.weatherCache.get(key);
+          if (stale) {
+            // Keep the last verified forecast when the provider is temporarily unavailable.
+            this.rawWeather.set(stale.weather);
+            this.hourlyForecasts.set(stale.hourly);
+            this.lastFetchedKey = key;
+          } else {
+            this.rawWeather.set(this.generateRealisticWeather(loc));
+          }
           this.isLoading.set(false);
-          this.rawWeather.set(this.generateRealisticWeather(loc));
         }
       });
   }
