@@ -4,9 +4,6 @@ import { isPlatformBrowser } from '@angular/common';
 import { Season, WeatherAggressivenessLevel, WeatherCondition, WeatherData, WeatherOverrideConfig } from '../models/weather.model';
 import { GeoLocation } from '../models/location.model';
 
-@Injectable({
-  providedIn: 'root'
-})
 export interface WorldWeatherSnapshot {
   locationId: string;
   temperatureC: number;
@@ -16,6 +13,9 @@ export interface WorldWeatherSnapshot {
   precipitationPct: number;
 }
 
+@Injectable({
+  providedIn: 'root'
+})
 export class WeatherService {
   private platformId = inject(PLATFORM_ID);
   private http = inject(HttpClient);
