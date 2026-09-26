@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Output, ViewChild, inject, PLATFORM_ID, AfterViewInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Output, ViewChild, inject, PLATFORM_ID, AfterViewInit, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { LocationService } from '../../../core/services/location.service';
@@ -27,6 +27,10 @@ import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine
         </div>
 
         <div class="actions">
+          <button type="button" class="secondary" (click)="copySkyLink()">
+            <mat-icon>{{ linkCopied() ? 'check' : 'link' }}</mat-icon>
+            {{ linkCopied() ? 'Link copied' : 'Copy sky link' }}
+          </button>
           <button type="button" class="secondary" (click)="dismissModal.emit()">Close</button>
           <button type="button" class="primary" (click)="shareOrDownload()">
             <mat-icon>{{ canShare() ? 'ios_share' : 'download' }}</mat-icon>
@@ -64,6 +68,7 @@ export class ShareExportModalComponent implements AfterViewInit {
   private readonly timeControlService = inject(TimeControlService);
   private readonly weatherService = inject(WeatherService);
   private readonly celestialService = inject(CelestialService);
+  readonly linkCopied = signal(false);
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) setTimeout(() => this.renderExportCard(), 30);
@@ -185,6 +190,22 @@ export class ShareExportModalComponent implements AfterViewInit {
   private formatEvent(value: Date | null, timezone:string): string {
     if(!value) return '—';
     try{return value.toLocaleTimeString('en-US',{timeZone:timezone,hour:'2-digit',minute:'2-digit'});}catch{return '—';}
+  }
+
+  async copySkyLink(): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const location = this.locationService.selectedLocation();
+    const instant = this.timeControlService.currentActiveDate().toISOString();
+    const path = window.location.pathname === '/' ? '/' + location.id : window.location.pathname;
+    const url = window.location.origin + path + '?at=' + encodeURIComponent(instant);
+
+    try {
+      await navigator.clipboard.writeText(url);
+      this.linkCopied.set(true);
+      window.setTimeout(() => this.linkCopied.set(false), 2200);
+    } catch {
+      // Clipboard access can be blocked; the picture share/download remains available.
+    }
   }
 
   canShare(): boolean {
