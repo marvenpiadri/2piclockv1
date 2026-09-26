@@ -51,22 +51,26 @@ Goal: make weather visibly change the atmosphere rather than only the informatio
 Goal: turn Tonight into a practical nightly observing experience without turning the Living Sky into an astronomy interface.
 
 - [x] Visible planets with rise/set information
-- [ ] Visible constellation list
-- [ ] Moon observing conditions
-- [ ] Astronomical darkness timeline
-- [ ] Stargazing conditions based on sky factors
+- [x] Visible constellation list
+- [x] Moon observing conditions
+- [x] Astronomical darkness timeline
+- [x] Stargazing conditions based on sky factors
 - [ ] Upcoming celestial events
-- [ ] Personalized nightly timeline
-- [ ] Shareable "Tonight under your sky" state
+- [x] Personalized nightly timeline
+- [x] Shareable "Tonight under your sky" state
+
+V2.2 implementation is now substantially complete. The remaining item is a dedicated upcoming-events feed; existing event tools remain available without duplicating them inside Tonight.
 
 ## V2.3 — My Sky
 Goal: make the experience personal.
 
-- [ ] Saved locations
+- [x] Saved locations
 - [ ] Personal observatories
-- [ ] Fast location switching
+- [x] Fast location switching
 - [ ] Location-specific sky preferences
-- [ ] Persistent sky state
+- [x] Persistent sky state
+
+My Sky foundation is in place through the persistent watchlist and location-first routing. Observatory profiles and per-location preferences remain for the next pass.
 
 ## V2.4 — Earth
 Goal: connect the local sky to the planet.
