@@ -30,12 +30,13 @@ const angularApp = new AngularNodeAppEngine();
 // Redirect-only intent aliases remain useful for navigation/search entry, but
 // indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
-  '/', '/weather', '/astronomy', '/tonight',
+  '/', '/api', '/weather', '/astronomy', '/tonight',
   '/world', '/world-clocks', '/events',
   '/maps/clocks', '/maps/radio',
   '/time/converter', '/time/difference', '/time/duration',
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
   '/time/unix-timestamp', '/time/world-matrix',
+  '/widget', '/world', '/world-clocks',
   '/radio/stations', '/radio/map', '/radio/favorites', '/radio/recent',
   '/atmosphere', '/ephemeris', '/planner', '/space',
   '/stargazing', '/eclipses', '/satellites'
