@@ -760,6 +760,44 @@ export class SkyHomeComponent {
     this.timeControlService.setSpecificInstant(forecastDate);
   }
 
+  readonly comparisonDateInput = signal('');
+  readonly isComparingDates = computed(() => this.comparisonDateInput().length === 10);
+
+  readonly timeMachineComparison = computed(() => {
+    const value = this.comparisonDateInput();
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null;
+    const [year, month, day] = value.split('-').map(Number);
+    const timezone = this.selectedLocation().timezone;
+    const comparisonDate = this.getZonedDateTime(year, month, day, 12, 0, 0, timezone);
+    const observer = new Astronomy.Observer(
+      this.selectedLocation().latitude,
+      this.selectedLocation().longitude,
+      this.selectedLocation().elevationM ?? 0
+    );
+    const rise = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, comparisonDate, 1);
+    const set = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, comparisonDate, 1);
+    const currentParts = this.getLocalDateParts(this.activeDate(), timezone);
+    const comparisonMs = Date.UTC(year, month - 1, day);
+    const currentMs = Date.UTC(currentParts.year, currentParts.month - 1, currentParts.day);
+    const dayDelta = Math.round((comparisonMs - currentMs) / 86400000);
+    const daylightMinutes = rise && set ? Math.round((set.date.getTime() - rise.date.getTime()) / 60000) : null;
+    return {
+      date: value,
+      dayDelta,
+      sunrise: rise ? this.formatTime(rise.date) : '--:--',
+      sunset: set ? this.formatTime(set.date) : '--:--',
+      daylightMinutes
+    };
+  });
+
+  setComparisonDate(value: string): void {
+    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) this.comparisonDateInput.set(value);
+  }
+
+  clearComparisonDate(): void {
+    this.comparisonDateInput.set('');
+  }
+
   readonly activeLocalDateInput = computed(() => {
     const p = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
     return p.year + '-' + String(p.month).padStart(2, '0') + '-' + String(p.day).padStart(2, '0');
