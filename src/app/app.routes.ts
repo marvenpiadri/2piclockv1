@@ -30,9 +30,25 @@ const validLocationGuard: CanActivateFn = (route) => {
   const locationService = inject(LocationService);
   const router = inject(Router);
   const slug = route.paramMap.get('location');
-  const validPreset = !!slug && locationService.allPresets.some((loc: GeoLocation) => loc.id === slug);
+  const preset = slug
+    ? locationService.allPresets.find((loc: GeoLocation) => loc.id === slug)
+    : undefined;
+
+  if (preset) {
+    // The URL is authoritative for location-scoped pages. Keep the global
+    // location signal synchronized before the component renders so every
+    // downstream service (timezone, astronomy, weather, events) follows it.
+    if (locationService.selectedLocation().id !== preset.id) {
+      locationService.selectLocation(preset);
+    }
+    return true;
+  }
+
+  // Custom/GPS locations are only valid when they are already the active
+  // location; they are persisted by LocationService rather than encoded as
+  // a public preset slug.
   const validCurrent = slug === locationService.selectedLocation().id;
-  return validPreset || validCurrent ? true : router.createUrlTree(['/']);
+  return validCurrent ? true : router.createUrlTree(['/']);
 };
 
 export const routes: Routes = [
