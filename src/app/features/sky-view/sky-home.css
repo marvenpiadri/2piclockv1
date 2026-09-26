@@ -473,12 +473,17 @@
   min-height: 430px;
 }
 
-.polar-clock-container {
+.analog-clock-container {
   width: min(58vh, 520px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  --analog-clock-size: min(58vh, 520px);
 }
 
-.sky-time-layout.panel-collapsed .polar-clock-container {
+.sky-time-layout.panel-collapsed .analog-clock-container {
   width: min(64vh, 590px);
+  --analog-clock-size: min(64vh, 590px);
 }
 
 .clock-time {
