@@ -16,7 +16,7 @@ interface WorldClock { location:GeoLocation; hour:number; minute:number; second:
 
 @Component({
  selector:'app-world-clocks', standalone:true,
- imports:[MatIconModule,CountryFlagComponent,AnalogClockComponent,FormsModule,DragDropModule],
+ imports:[MatIconModule,CountryFlagComponent,FormsModule,DragDropModule],
  changeDetection:ChangeDetectionStrategy.OnPush, templateUrl:'./world-clocks.html', styleUrl:'./world-clocks.css'
 })
 export class WorldClocksComponent implements OnDestroy {
