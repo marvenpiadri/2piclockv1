@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { LocationService } from '../../../core/services/location.service';
 import { TimeControlService } from '../../../core/services/time-control.service';
 import { WeatherService } from '../../../core/services/weather.service';
+import { CelestialService } from '../../../core/services/celestial.service';
 import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine';
 
 @Component({
@@ -62,6 +63,7 @@ export class ShareExportModalComponent implements AfterViewInit {
   private readonly locationService = inject(LocationService);
   private readonly timeControlService = inject(TimeControlService);
   private readonly weatherService = inject(WeatherService);
+  private readonly celestialService = inject(CelestialService);
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) setTimeout(() => this.renderExportCard(), 30);
