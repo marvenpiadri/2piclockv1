@@ -86,7 +86,6 @@ export const routes: Routes = [
   // Maps are a directory of distinct map products
   { path: 'maps', pathMatch: 'full', redirectTo: 'maps/clocks' },
   { path: 'maps/clocks', component: WorldViewComponent, data: { mapMode: 'clocks' } },
-  { path: 'maps/weather', component: WorldViewComponent, data: { mapMode: 'weather' } },
   { path: 'maps/radio', component: WorldRadioComponent, data: { tab: 'map' } },
 
   // World Radio directory
