@@ -14,6 +14,8 @@ import {
 import { GeoLocation } from '../../core/models/location.model';
 import { MoonPhaseIndicator } from '../../shared/components/moon-phase-indicator/moon-phase-indicator';
 import { Title, Meta } from '@angular/platform-browser';
+import { CelestialService } from '../../core/services/celestial.service';
+import { PlanetaryPosition } from '../../core/services/precision-astronomy.service';
 
 export type AstronomyTab = 'overview' | 'solar' | 'daylight' | 'moon' | 'events';
 
@@ -38,6 +40,7 @@ export class AstronomySuiteComponent implements OnInit {
   private astroCalc = inject(AstronomicalCalculatorService);
   private title = inject(Title);
   private meta = inject(Meta);
+  private celestialService = inject(CelestialService);
 
   readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<AstronomyTab>('overview');
@@ -87,6 +90,30 @@ export class AstronomySuiteComponent implements OnInit {
 
   readonly moonResult = computed<MoonCalculatorResult>(() => {
     return this.astroCalc.calculateMoon(this.selectedLocation(), this.parsedInstant());
+  });
+
+  readonly planetaryPositions = computed<PlanetaryPosition[]>(() => {
+    const location = this.selectedLocation();
+    return this.celestialService.planetaryPositions().map(planet => planet);
+  });
+
+  readonly visiblePlanetaryPositions = computed(() =>
+    this.planetaryPositions().filter(planet => planet.visible && planet.altitudeDeg > 0)
+  );
+
+  readonly planetaryRiseSet = computed(() => {
+    const location = this.selectedLocation();
+    const date = this.parsedInstant();
+    return this.planetaryPositions().map(planet => ({
+      ...planet,
+      riseSet: this.celestialService.getPlanetRiseSet(
+        planet.body,
+        date,
+        location.latitude,
+        location.longitude,
+        location.elevationMeters ?? 0
+      )
+    }));
   });
 
   readonly eventsResult = computed<AstronomicalEventItem[]>(() => {
