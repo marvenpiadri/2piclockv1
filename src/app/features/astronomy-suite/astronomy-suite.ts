@@ -93,7 +93,6 @@ export class AstronomySuiteComponent implements OnInit {
   });
 
   readonly planetaryPositions = computed<PlanetaryPosition[]>(() => {
-    const location = this.selectedLocation();
     return this.celestialService.planetaryPositions().map(planet => planet);
   });
 
