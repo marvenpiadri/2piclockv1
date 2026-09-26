@@ -453,6 +453,17 @@ export class SkyHomeComponent {
   constructor() {
     // A single SkyHome component powers the location-first routes. The URL
     // supplies both the location slug and the focused experience.
+    // Restore a shared astronomical instant from ?at=<ISO timestamp>.
+    // Location remains authoritative from the route; the timestamp is optional.
+    this.route.queryParamMap.subscribe(params => {
+      const sharedAt = params.get('at');
+      if (!sharedAt) return;
+      const date = new Date(sharedAt);
+      if (Number.isFinite(date.getTime())) {
+        this.timeControlService.setSpecificInstant(date);
+      }
+    });
+
     this.route.paramMap.subscribe(params => {
       const experience = params.get('experience') as string | null;
       // Location-scoped routes are synchronized by validLocationGuard before
