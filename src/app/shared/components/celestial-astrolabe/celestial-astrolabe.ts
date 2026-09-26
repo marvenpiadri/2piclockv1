@@ -80,7 +80,7 @@ import { TimeControlService } from '../../../core/services/time-control.service'
             [attr.transform]="'rotate(' + (localDayFraction() * 8640) + ')'"
             stroke="#f4b52b" stroke-width="2" stroke-linecap="round" />
           <line x1="0" y1="10" x2="0" y2="-91"
-            [attr.transform]="'rotate(' + (localDayFraction() * 518400) + ')'"
+            [attr.transform]="'rotate(' + secondHandAngle() + ')'"
             stroke="rgba(255,255,255,.7)" stroke-width=".8" stroke-linecap="round" />
           <circle r="4.5" fill="#f5ad20" stroke="#fff4c4" stroke-width=".8" />
           <circle r="1.6" fill="#1b1408" />
@@ -204,6 +204,13 @@ export class CelestialAstrolabeComponent {
       x: Math.round(Math.sin(moonAngleRad) * radius * 10) / 10,
       y: Math.round(-Math.cos(moonAngleRad) * radius * 10) / 10
     };
+  });
+
+  // The second hand is deliberately discrete: one exact 6° move per second.
+  // It must never chase animation frames or fractional milliseconds.
+  readonly secondHandAngle = computed(() => {
+    const totalSeconds = Math.floor(this.localDayFraction() * 86400);
+    return (totalSeconds % 60) * 6;
   });
 
   readonly solarRaySpin = computed(() => {
