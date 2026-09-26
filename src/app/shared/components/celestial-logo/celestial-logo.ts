@@ -28,7 +28,7 @@ export class CelestialLogoComponent {
     return (altitude + 6) / 12;
   });
   readonly moonOpacity = computed(() => 1 - this.celestialOpacity());
-  readonly moonTerminatorRx = computed(() => Math.max(1.5, Math.abs(2 * this.illumination() - 1) * 18));
+  readonly moonLitPath = computed(() => this.createMoonLitPath());
   readonly moonTerminatorRotation = computed(() => this.phaseAngle());
   // Use the calculated solar azimuth rather than a synthetic 24-hour rotation.\n  // This keeps the identity mark tied to the same real sky model as the clock/sky view.\n  readonly sunRotation = computed(() => this.celestial().sun.azimuthDeg);
   readonly phaseLabel = computed(() => {
@@ -38,6 +38,34 @@ export class CelestialLogoComponent {
 
   illuminationPercentage(): string {
     return (this.illumination() * 100).toFixed(0);
+  }
+
+  /**
+   * Draw the illuminated lunar portion as an actual crescent/gibbous shape.
+   * The geometry is driven by the calculated illumination fraction rather than
+   * a generic ellipse, so new/quarter/full phases remain visually coherent.
+   */
+  private createMoonLitPath(): string {
+    const r = 15;
+    const f = this.illumination();
+    const rx = r * Math.abs(2 * f - 1);
+    const isGibbous = f > 0.5;
+
+    if (isGibbous) {
+      return [
+        `M 24 9`,
+        `A ${r} ${r} 0 0 0 24 39`,
+        `A ${Math.max(0.01, rx)} ${r} 0 0 1 24 9`,
+        'Z'
+      ].join(' ');
+    }
+
+    return [
+      `M 24 9`,
+      `A ${r} ${r} 0 0 1 24 39`,
+      `A ${Math.max(0.01, rx)} ${r} 0 0 1 24 9`,
+      'Z'
+    ].join(' ');
   }
 
 }
