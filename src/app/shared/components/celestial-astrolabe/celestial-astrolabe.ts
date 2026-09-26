@@ -111,7 +111,7 @@ import { TimeControlService } from '../../../core/services/time-control.service'
     @media (prefers-reduced-motion: reduce) {
       .watch-svg { filter:none; }
     }
-  `,
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CelestialAstrolabeComponent {
