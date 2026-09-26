@@ -56,6 +56,16 @@ import { TimeControlService } from '../../../core/services/time-control.service'
         <text x="0" y="137" fill="rgba(255,220,130,.65)" font-size="7" font-family="monospace" text-anchor="middle">00</text>
         <text x="-132" y="2.5" fill="rgba(255,220,130,.65)" font-size="7" font-family="monospace" text-anchor="middle">06</text>
 
+        <!-- V2.0: real bright-star field projected from RA/Dec into the local sky. -->
+        @for (star of visibleStars(); track star.name) {
+          <circle
+            [attr.cx]="star.x"
+            [attr.cy]="star.y"
+            [attr.r]="star.radius"
+            [attr.opacity]="star.opacity"
+            fill="#f8fafc" />
+        }
+
         <!-- Actual celestial positions -->
         <line x1="0" y1="0" [attr.x2]="sunCoords().x" [attr.y2]="sunCoords().y"
           stroke="rgba(245,158,11,.16)" stroke-width="1" />
@@ -174,6 +184,82 @@ export class CelestialAstrolabeComponent {
   })();
 
   // True Solar Coordinates on Astrolabe Coordinate Ring
+  /*
+   * V2.0 astronomical sky layer.
+   * These are bright, named reference stars (J2000 RA/Dec). Their positions
+   * are recomputed from UTC, longitude and observer latitude, so the field
+   * rotates with the actual sky instead of using decorative random dots.
+   */
+  private readonly brightStars = [
+    { name: 'Sirius', ra: 6.75248, dec: -16.7161, mag: -1.46 },
+    { name: 'Canopus', ra: 6.39920, dec: -52.6957, mag: -0.74 },
+    { name: 'Arcturus', ra: 14.26103, dec: 19.1825, mag: -0.05 },
+    { name: 'Vega', ra: 18.61565, dec: 38.7837, mag: 0.03 },
+    { name: 'Capella', ra: 5.27815, dec: 45.9980, mag: 0.08 },
+    { name: 'Rigel', ra: 5.24230, dec: -8.2016, mag: 0.13 },
+    { name: 'Procyon', ra: 7.65503, dec: 5.2250, mag: 0.34 },
+    { name: 'Achernar', ra: 1.62857, dec: -57.2368, mag: 0.46 },
+    { name: 'Betelgeuse', ra: 5.91953, dec: 7.4070, mag: 0.50 },
+    { name: 'Hadar', ra: 14.06373, dec: -60.3730, mag: 0.61 },
+    { name: 'Altair', ra: 19.84639, dec: 8.8683, mag: 0.77 },
+    { name: 'Aldebaran', ra: 4.59868, dec: 16.5093, mag: 0.85 },
+    { name: 'Spica', ra: 13.41988, dec: -11.1614, mag: 0.97 },
+    { name: 'Antares', ra: 16.49013, dec: -26.4320, mag: 1.06 },
+    { name: 'Pollux', ra: 7.75525, dec: 28.0262, mag: 1.14 },
+    { name: 'Fomalhaut', ra: 22.96085, dec: -29.6222, mag: 1.16 },
+    { name: 'Deneb', ra: 20.69053, dec: 45.2803, mag: 1.25 },
+    { name: 'Regulus', ra: 10.13953, dec: 11.9672, mag: 1.35 },
+    { name: 'Castor', ra: 7.57667, dec: 31.8883, mag: 1.58 },
+    { name: 'Bellatrix', ra: 5.41885, dec: 6.3497, mag: 1.64 }
+  ] as const;
+
+  readonly visibleStars = computed(() => {
+    const d = this.activeDateValue();
+    const lat = this.latitude;
+    const lon = this.longitude;
+    const jd = this.julianDate(d);
+    const centuries = (jd - 2451545.0) / 36525;
+    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)
+      + 0.000387933 * centuries * centuries
+      - centuries * centuries * centuries / 38710000) % 360;
+    const lst = (gmst + lon + 360) % 360;
+    const latRad = lat * Math.PI / 180;
+
+    return this.brightStars.flatMap(star => {
+      const decRad = star.dec * Math.PI / 180;
+      const hourAngle = ((lst - star.ra * 15 + 540) % 360) - 180;
+      const haRad = hourAngle * Math.PI / 180;
+      const sinAlt = Math.sin(latRad) * Math.sin(decRad)
+        + Math.cos(latRad) * Math.cos(decRad) * Math.cos(haRad);
+      const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * 180 / Math.PI;
+
+      if (altitude < -8) return [];
+
+      const azimuth = Math.atan2(
+        Math.sin(haRad),
+        Math.cos(haRad) * Math.sin(latRad) - Math.tan(decRad) * Math.cos(latRad)
+      ) * 180 / Math.PI + 180;
+
+      // Project the local sky dome: horizon near the outer ring, zenith toward center.
+      const radius = 118 - Math.max(-8, Math.min(90, altitude)) * 0.43;
+      const azRad = azimuth * Math.PI / 180;
+      const x = Math.sin(azRad) * radius;
+      const y = -Math.cos(azRad) * radius;
+
+      // Apparent brightness: brighter stars get a larger point and remain visible
+      // without turning the watch into a dense planetarium.
+      const radiusPx = Math.max(0.65, Math.min(2.0, 1.8 - star.mag * 0.35));
+      const altitudeFade = altitude < 5 ? Math.max(0.16, (altitude + 8) / 13) : 1;
+      const opacity = Math.max(0.18, Math.min(0.92, (1.55 - star.mag * 0.16) * altitudeFade));
+
+      return [{ name: star.name, x: Number(x.toFixed(1)), y: Number(y.toFixed(1)), radius: Number(radiusPx.toFixed(2)), opacity: Number(opacity.toFixed(2)) }];
+    });
+  });
+
+  private julianDate(date: Date): number {
+    return date.getTime() / 86400000 + 2440587.5;
+  }
+
   readonly sunCoords = computed(() => {
     // 24-hour solar rotation angle around limbus (Noon = top / 0 deg, 18:00 = right / 90 deg, Midnight = bottom / 180 deg)
     const solarFraction = this.localDayFraction();
