@@ -646,7 +646,13 @@ export function get24HourSolarCurve(
   lng: number,
   timezone: string
 ): { timeString: string; altitude: number; isNight: boolean; hour: number }[] {
-  const cacheKey = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}_${lat.toFixed(2)}_${lng.toFixed(2)}_${timezone}`;
+  const localDateKey = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+  const cacheKey = `${localDateKey}_${lat.toFixed(2)}_${lng.toFixed(2)}_${timezone}`;
   const cached = solarCurveCache.get(cacheKey);
   if (cached) {
     return cached;
