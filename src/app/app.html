@@ -191,6 +191,7 @@
             }
 
             <!-- Fresh random city preset from the complete library catalogue -->
+            @if (!searchQuery()) {
             <div class="preset-locations-scroll">
               <span class="search-section-label">Random Cities</span>
               @for (loc of filteredLocations(); track loc.id) {
@@ -212,6 +213,7 @@
                 </button>
               }
             </div>
+            }
           </div>
         }
       </div>
