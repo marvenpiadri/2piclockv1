@@ -5,9 +5,10 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import {join} from 'node:path';
+import {dirname, join} from 'node:path';
+import {createRequire} from 'node:module';
+import {readdirSync, readFileSync} from 'node:fs';
 import { GeoLocation } from './app/core/models/location.model';
-import { getCountries, getAllCitiesInWorld } from '@countrystatecity/countries';
 import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -68,11 +69,17 @@ const apiError = (res: express.Response, status: number, code: string, message: 
 interface CityRecord {
   id?: number;
   name?: string;
+  country_code?: string;
   countryCode?: string;
-  stateCode?: string;
   latitude?: string | number;
   longitude?: string | number;
-  timezone?: string;
+  timezone?: string | null;
+}
+
+interface CountryRecord {
+  name?: string;
+  iso2?: string;
+  emoji?: string;
 }
 
 let locationIndexPromise: Promise<GeoLocation[]> | undefined;
@@ -89,59 +96,68 @@ const normalizeLocationText = (value: string) =>
 const slugifyLocation = (value: string) =>
   normalizeLocationText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-const buildLocationIndex = async (): Promise<GeoLocation[]> => {
-  const [countries, cities] = await Promise.all([
-    getCountries(),
-    getAllCitiesInWorld()
-  ]);
+const packageDataDirectory = (): string => {
+  const require = createRequire(import.meta.url);
+  const countriesFile = require.resolve('@countrystatecity/countries/data/countries.json');
+  return dirname(countriesFile);
+};
 
+const readJsonFile = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
+
+const buildLocationIndex = async (): Promise<GeoLocation[]> => {
+  const dataDirectory = packageDataDirectory();
+  const countries = readJsonFile<CountryRecord[]>(join(dataDirectory, 'countries.json'));
   const countryByCode = new Map(
     countries.map(country => [
       String(country.iso2 ?? '').toUpperCase(),
-      {
-        name: String(country.name ?? ''),
-        flag: String(country.emoji ?? '')
-      }
+      { name: String(country.name ?? ''), flag: String(country.emoji ?? '') }
     ])
   );
 
   const locations: GeoLocation[] = [];
+  const countryDirectories = readdirSync(dataDirectory, { withFileTypes: true })
+    .filter(entry => entry.isDirectory());
 
-  for (const city of cities as CityRecord[]) {
-    const name = String(city.name ?? '').trim();
-    const countryCode = String(city.countryCode ?? '').toUpperCase();
-    const latitude = Number(city.latitude);
-    const longitude = Number(city.longitude);
+  for (const countryDirectory of countryDirectories) {
+    const countryCode = countryDirectory.name.split('-').at(-1)?.toUpperCase() ?? '';
+    if (!countryByCode.has(countryCode)) continue;
+    const countryPath = join(dataDirectory, countryDirectory.name);
+    const stateDirectories = readdirSync(countryPath, { withFileTypes: true })
+      .filter(entry => entry.isDirectory());
 
-    if (
-      !name ||
-      !countryCode ||
-      !Number.isFinite(latitude) ||
-      !Number.isFinite(longitude)
-    ) {
-      continue;
+    for (const stateDirectory of stateDirectories) {
+      const citiesPath = join(countryPath, stateDirectory.name, 'cities.json');
+      try {
+        const cities = readJsonFile<CityRecord[]>(citiesPath);
+        for (const city of cities) {
+          const name = String(city.name ?? '').trim();
+          const cityCountryCode = String(city.country_code ?? city.countryCode ?? countryCode).toUpperCase();
+          const latitude = Number(city.latitude);
+          const longitude = Number(city.longitude);
+          if (!name || !cityCountryCode || !Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
+          const country = countryByCode.get(cityCountryCode);
+          const cityId = city.id != null ? String(city.id) : slugifyLocation(name) + '-' + latitude + '-' + longitude;
+          locations.push({
+            id: cityCountryCode.toLowerCase() + '-' + cityId,
+            name,
+            country: country?.name || cityCountryCode,
+            countryCode: cityCountryCode,
+            flag: country?.flag || '',
+            latitude,
+            longitude,
+            timezone: String(city.timezone || 'UTC'),
+            tier: 3
+          });
+        }
+      } catch {
+        // Administrative directories without city data are ignored.
+      }
     }
-
-    const country = countryByCode.get(countryCode);
-    const cityId = city.id != null ? String(city.id) : `${slugifyLocation(name)}-${latitude}-${longitude}`;
-    const id = `${countryCode.toLowerCase()}-${cityId}`;
-
-    locations.push({
-      id,
-      name,
-      country: country?.name || countryCode,
-      countryCode,
-      flag: country?.flag || '',
-      latitude,
-      longitude,
-      timezone: String(city.timezone || 'UTC'),
-      tier: 3
-    });
   }
 
+  if (!locations.length) throw new Error('The bundled country/city catalogue loaded but contained no cities.');
   return locations;
 };
-
 const getLocationIndex = (): Promise<GeoLocation[]> => {
   if (!locationIndexPromise) {
     locationIndexPromise = buildLocationIndex().then(locations => {
