@@ -420,7 +420,8 @@ app.get('/api/v1/events', async (req, res) => {
 });
 
 const redirectLegacyLocationUrl = async (req: express.Request, res: express.Response, section?: string) => {
-  const legacyId = section ? req.params['location'] : req.params['location'];
+  const legacyParam = req.params['location'];
+  const legacyId = Array.isArray(legacyParam) ? legacyParam[0] : legacyParam;
   if (!/^[a-z]{2}-\d+$/i.test(legacyId)) return false;
   const location = await resolveLocation(legacyId);
   if (!location) return false;
