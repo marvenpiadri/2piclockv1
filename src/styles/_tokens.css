@@ -62,8 +62,6 @@ body[data-theme="dark"],
   --color-accent: #f59e0b;
   --color-accent-soft: rgba(245, 158, 11, 0.14);
   --color-accent-border: rgba(245, 158, 11, 0.38);
-  --color-accent-soft: rgba(245, 158, 11, 0.14);
-  --color-accent-border: rgba(245, 158, 11, 0.38);
   --color-neutral-950: #020617;
   --color-neutral-900: #0d1117;
   --color-neutral-850: #111827;
@@ -94,9 +92,9 @@ body[data-theme="dark"],
   --color-status-sent: #58a6ff;
   --color-status-sent-bg: rgba(56, 139, 253, 0.15);
   --color-status-sent-border: rgba(56, 139, 253, 0.35);
-  --color-status-paid: #f59e0b;
-  --color-status-paid-bg: rgba(245, 158, 11, 0.14);
-  --color-status-paid-border: rgba(245, 158, 11, 0.38);
+  --color-status-paid: var(--color-accent);
+  --color-status-paid-bg: var(--color-accent-soft);
+  --color-status-paid-border: var(--color-accent-border);
   --color-status-overdue: #f85149;
   --color-status-overdue-bg: rgba(248, 81, 73, 0.15);
   --color-status-overdue-border: rgba(248, 81, 73, 0.35);
