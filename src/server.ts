@@ -48,7 +48,7 @@ const buildUrlSet = (paths: string[]) => {
   const uniqueUrls = [...new Set(paths)];
   const entries = uniqueUrls
     .map(path => `  <url><loc>https://2piclock.com${escapeXml(path)}</loc></url>`)
-    .join('\\n');
+    .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries}
@@ -65,7 +65,7 @@ const buildSitemapIndex = (locationSitemapCount: number) => {
   ];
   const entries = sitemapUrls
     .map(url => `  <sitemap><loc>${escapeXml(url)}</loc></sitemap>`)
-    .join('\\n');
+    .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries}
