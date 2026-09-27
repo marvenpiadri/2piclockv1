@@ -6,7 +6,6 @@ import { TimeControlService } from '../../../core/services/time-control.service'
 import { WeatherService } from '../../../core/services/weather.service';
 import { CelestialService } from '../../../core/services/celestial.service';
 import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine';
-const METEOCONS_CDN = 'https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/fill';
 
 @Component({
   selector: 'app-share-export-modal',
