@@ -1,4 +1,4 @@
-import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, REQUEST, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { GeoLocation } from '../models/location.model';
 import { WeatherService } from './weather.service';
@@ -7,6 +7,7 @@ import { WeatherService } from './weather.service';
 export class LocationService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly request = inject(REQUEST, { optional: true });
   private readonly weatherService = inject(WeatherService);
   private readonly randomLocationsUrl = '/api/v1/locations/random?count=50';
   private readonly selectedLocationStore = 'selected-location';
@@ -24,7 +25,7 @@ export class LocationService {
   async loadLocations(): Promise<GeoLocation[]> {
     if (this.locations().length > 0) return this.locations();
     if (this.locationLoadPromise) return this.locationLoadPromise;
-    this.locationLoadPromise = fetch(this.randomLocationsUrl).then(async response => {
+    this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl)).then(async response => {
       if (!response.ok) throw new Error('Location discovery unavailable');
       const data = await response.json() as { locations?: GeoLocation[] };
       const locations = Array.isArray(data.locations) ? data.locations : [];
@@ -37,7 +38,7 @@ export class LocationService {
   async getLocation(id: string): Promise<GeoLocation | null> {
     const normalizedId = id.trim(); if (!normalizedId) return null;
     const local = this.locations().find(location => location.id === normalizedId); if (local) return local;
-    try { const response = await fetch('/api/v1/locations/' + encodeURIComponent(normalizedId)); if (!response.ok) return null; const data = await response.json() as { location?: GeoLocation }; return data.location ?? null; } catch { return null; }
+    try { const response = await fetch(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalizedId))); if (!response.ok) return null; const data = await response.json() as { location?: GeoLocation }; return data.location ?? null; } catch { return null; }
   }
 
   async ensureInitialLocation(): Promise<GeoLocation> {
@@ -70,6 +71,12 @@ export class LocationService {
   addToWatchlist(loc: GeoLocation): void { if (!this.watchlist().some(item => item.id === loc.id)) { this.watchlist.update(list => [...list, loc]); void this.persistWatchlist(); } }
   removeFromWatchlist(locId: string): void { this.watchlist.update(list => list.filter(item => item.id !== locId)); void this.persistWatchlist(); }
   getCountryFlag(countryCode: string): string { if (!countryCode || countryCode.length !== 2) return countryCode === 'GPS' ? '📍' : '🌐'; try { return String.fromCodePoint(...countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0))); } catch { return '🏳️'; } }
+  private apiUrl(path: string): string {
+    if (this.isBrowser) return path;
+    const requestUrl = this.request?.url;
+    return requestUrl ? new URL(path, requestUrl).toString() : path;
+  }
+
   private createNeutralLocation(): GeoLocation { return { id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true }; }
   private async restoreStoredLocations(): Promise<void> { const [selected, saved] = await Promise.all([this.readSelectedLocation(), this.readSavedLocations()]); if (selected) this.selectedLocation.set(selected); this.watchlist.set(saved); }
   private openDatabase(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const request = indexedDB.open('2piClockLocations', 1); request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains(this.selectedLocationStore)) db.createObjectStore(this.selectedLocationStore); if (!db.objectStoreNames.contains(this.savedLocationsStore)) db.createObjectStore(this.savedLocationsStore, { keyPath: 'id' }); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error ?? new Error('IndexedDB unavailable')); }); }
