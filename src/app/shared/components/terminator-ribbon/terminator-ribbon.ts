@@ -124,7 +124,7 @@ export class TerminatorRibbonComponent implements OnInit, OnChanges, OnDestroy {
    * Pre-calculates normalized coordinates for all cities once
    */
   private initCityProjections(): void {
-    const presets = this.locationService.allPresets;
+    const presets = this.locationService.locations();
     this.precalculatedCities = presets.map(city => ({
       location: city,
       name: city.name,
@@ -290,7 +290,7 @@ export class TerminatorRibbonComponent implements OnInit, OnChanges, OnDestroy {
     const x = event.clientX - rect.left;
     const ratio = x / rect.width;
     const clickedLng = ratio * 360 - 180;
-    const presets = this.locationService.allPresets;
+    const presets = this.locationService.locations();
 
     let closest = presets[0];
     let minDiff = 360;
