@@ -29,7 +29,7 @@ import {
   calculateSolarPosition,
   calculateSolarEvents
 } from '../../../core/astronomy/astronomy-engine';
-import { Marker, GeoJSONSource } from 'maplibre-gl';
+import { Map as MapLibreMap, Marker, GeoJSONSource } from 'maplibre-gl';
 
 export interface WorldHubStatus {
   location: GeoLocation;
@@ -339,6 +339,16 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly showWorldWeather = signal<boolean>(false);
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
+
+  readonly searchQuery = signal('');
+  readonly inspectedLocation = signal<GeoLocation | null>(null);
+  private map: MapLibreMap | null = null;
+  private readonly cityMarkers = new Map<string, Marker>();
+  private observerMarker: Marker | null = null;
+  private subsolarMarker: Marker | null = null;
+  private sublunarMarker: Marker | null = null;
+  private probeMarker: Marker | null = null;
+  readonly probePoint = signal<MapProbePoint | null>(null);
 
   private lastLocationId = '';
 
