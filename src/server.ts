@@ -44,15 +44,36 @@ const staticSitemapUrls = [
   '/stargazing', '/eclipses', '/satellites'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-const buildSitemap = () => {
-  const urls = [...staticSitemapUrls];
-  const uniqueUrls = [...new Set(urls)];
-  const entries = uniqueUrls.map(path => `  <url><loc>https://2piclock.com${escapeXml(path)}</loc></url>`).join('\n');
+const buildUrlSet = (paths: string[]) => {
+  const uniqueUrls = [...new Set(paths)];
+  const entries = uniqueUrls
+    .map(path => `  <url><loc>https://2piclock.com${escapeXml(path)}</loc></url>`)
+    .join('\\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries}
 </urlset>`;
 };
+
+const buildSitemapIndex = (locationSitemapCount: number) => {
+  const sitemapUrls = [
+    'https://2piclock.com/sitemap-pages.xml',
+    ...Array.from(
+      { length: locationSitemapCount },
+      (_, index) => `https://2piclock.com/sitemap-locations-${index}.xml`
+    )
+  ];
+  const entries = sitemapUrls
+    .map(url => `  <sitemap><loc>${escapeXml(url)}</loc></sitemap>`)
+    .join('\\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</sitemapindex>`;
+};
+
+const locationSitemapChunkSize = 40000;
+
 
 const apiHeaders = (res: express.Response) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -485,8 +506,47 @@ app.get('/robots.txt', (_req, res) => {
   res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n`);
 });
 
-app.get('/sitemap.xml', (_req, res) => {
-  res.type('application/xml').send(buildSitemap());
+app.get('/sitemap.xml', async (_req, res) => {
+  try {
+    const locations = await getLocationIndex();
+    const locationSitemapCount = Math.ceil(locations.length * 4 / locationSitemapChunkSize);
+    res.type('application/xml').send(buildSitemapIndex(locationSitemapCount));
+  } catch {
+    res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
+  }
+});
+
+app.get('/sitemap-pages.xml', (_req, res) => {
+  res.type('application/xml').send(buildUrlSet(staticSitemapUrls));
+});
+
+app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
+  const chunkParam = String(req.params['chunk'] ?? '');
+  if (!/^\\d+$/.test(chunkParam)) {
+    res.status(404).type('text/plain').send('Sitemap not found.');
+    return;
+  }
+
+  try {
+    const locations = await getLocationIndex();
+    const chunk = Number(chunkParam);
+    const pagesPerChunk = Math.floor(locationSitemapChunkSize / 4);
+    const start = chunk * pagesPerChunk;
+    const end = Math.min(locations.length, start + pagesPerChunk);
+    if (start >= locations.length) {
+      res.status(404).type('text/plain').send('Sitemap not found.');
+      return;
+    }
+
+    const paths: string[] = [];
+    for (const location of locations.slice(start, end)) {
+      const base = '/' + locationSlug(location);
+      paths.push(base, base + '/weather', base + '/astronomy', base + '/tonight');
+    }
+    res.type('application/xml').send(buildUrlSet(paths));
+  } catch {
+    res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
+  }
 });
 
 /**
