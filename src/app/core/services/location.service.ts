@@ -13,6 +13,7 @@ export class LocationService {
 
   private readonly catalogueUrl = '/api/v1/locations';
   private catalogue?: GeoLocation[];
+  readonly randomLocations = signal<GeoLocation[]>([]);
   readonly selectedLocation = signal<GeoLocation>(this.createNeutralLocation());
   readonly watchlist = signal<GeoLocation[]>([]);
 
@@ -21,6 +22,7 @@ export class LocationService {
 
   constructor() {
     if (this.isBrowser) {
+      void this.loadCatalogue().then(() => this.refreshRandomLocations());
       try {
         const savedWatchlist = localStorage.getItem('2piclock_watchlist');
         if (savedWatchlist) {
@@ -189,6 +191,25 @@ export class LocationService {
       this.catalogue = [];
     }
     return this.catalogue;
+  }
+
+  /**
+   * Build a fresh, non-curated 50-city preset from the complete library catalogue.
+   * The sample changes whenever the application is loaded.
+   */
+  refreshRandomLocations(): void {
+    const catalogue = this.catalogue ?? [];
+    if (catalogue.length === 0) {
+      this.randomLocations.set([]);
+      return;
+    }
+
+    const sample = [...catalogue];
+    for (let i = sample.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [sample[i], sample[j]] = [sample[j], sample[i]];
+    }
+    this.randomLocations.set(sample.slice(0, 50));
   }
 
   addToWatchlist(loc: GeoLocation): void {
