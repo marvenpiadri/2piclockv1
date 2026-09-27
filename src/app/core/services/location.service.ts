@@ -90,7 +90,42 @@ export class LocationService {
     if (!this.isBrowser || !navigator.geolocation) { this.locationError.set('Geolocation is not supported by your browser.'); return Promise.resolve(null); }
     this.isLocating.set(true); this.locationError.set(null);
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(
-      pos => { this.isLocating.set(false); const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; const userLoc: GeoLocation = { id: 'current-location', name: 'Current Location', country: 'GPS Detected', countryCode: 'GPS', flag: '📍', latitude: Math.round(pos.coords.latitude * 10000) / 10000, longitude: Math.round(pos.coords.longitude * 10000) / 10000, timezone: tz, elevationMeters: pos.coords.altitude || 10, isCustom: true }; this.selectLocation(userLoc); resolve(userLoc); },
+      async pos => {
+        const latitude = Math.round(pos.coords.latitude * 10000) / 10000;
+        const longitude = Math.round(pos.coords.longitude * 10000) / 10000;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+        try {
+          const response = await fetch(this.apiUrl('/api/v1/locations/nearest?latitude=' + latitude + '&longitude=' + longitude));
+          if (response.ok) {
+            const data = await response.json() as { location?: GeoLocation };
+            if (data.location) {
+              this.isLocating.set(false);
+              this.selectLocation(data.location);
+              resolve(data.location);
+              return;
+            }
+          }
+        } catch {
+          // Fall back to the exact GPS coordinates when the city catalogue is unavailable.
+        }
+
+        this.isLocating.set(false);
+        const userLoc: GeoLocation = {
+          id: 'current-location',
+          name: 'Current Location',
+          country: 'GPS Detected',
+          countryCode: 'GPS',
+          flag: '📍',
+          latitude,
+          longitude,
+          timezone,
+          elevationMeters: pos.coords.altitude || 10,
+          isCustom: true
+        };
+        this.selectLocation(userLoc);
+        resolve(userLoc);
+      },
       err => { this.isLocating.set(false); this.locationError.set(err.message || 'Unable to retrieve location.'); resolve(null); },
       { timeout: 5000, enableHighAccuracy: false }
     ));
