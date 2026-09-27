@@ -47,8 +47,12 @@ const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, 
 const buildSitemap = () => {
   const urls = [...staticSitemapUrls];
   const uniqueUrls = [...new Set(urls)];
-  const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n');
-  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>';
+  const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('
+');
+  return '<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+' + entries + '
+</urlset>';
 };
 
 const apiHeaders = (res: express.Response) => {
@@ -213,7 +217,9 @@ const randomSample = <T>(items: T[], count: number): T[] => {
 };
 
 
-app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));\n\napp.get('/api/v1/assets/meteocon/:slug', async (req, res) => {
+app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));
+
+app.get('/api/v1/assets/meteocon/:slug', async (req, res) => {
   const slug = String(req.params['slug'] ?? '');
   if (!/^[a-z0-9-]+$/.test(slug)) return apiError(res, 400, 'INVALID_ASSET', 'Invalid weather icon.');
   try {
@@ -477,7 +483,10 @@ app.get(/^\/([a-z]{2}-\d+)\/([a-z0-9-]+)$/, async (req, res, next) => {
 });
 
 app.get('/robots.txt', (_req, res) => {
-  res.type('text/plain').send('User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n');
+  res.type('text/plain').send('User-agent: *
+Allow: /
+Sitemap: https://2piclock.com/sitemap.xml
+');
 });
 
 app.get('/sitemap.xml', (_req, res) => {
