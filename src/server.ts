@@ -164,9 +164,7 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
   for (const location of locations) {
     const key = [
       normalizeLocationText(location.name),
-      normalizeLocationText(location.countryCode),
-      location.latitude.toFixed(5),
-      location.longitude.toFixed(5)
+      normalizeLocationText(location.countryCode)
     ].join('|');
     if (!uniqueLocations.has(key)) uniqueLocations.set(key, location);
   }
