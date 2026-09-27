@@ -11,7 +11,7 @@ export class LocationService {
   private isBrowser = isPlatformBrowser(this.platformId);
   private weatherService = inject(WeatherService);
 
-  private readonly catalogueUrl = '/api/v1/locations';
+  private readonly catalogueUrl = '/data/locations.json';
   private readonly randomLocationsStorageKey = '2piclock_random_locations_v1';
   private catalogue?: GeoLocation[];
   readonly randomLocations = signal<GeoLocation[]>([]);
