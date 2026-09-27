@@ -612,8 +612,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       this.updateCelestialGridLayer(this.showCelestialGrid());
       this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
       this.updateWorldWeatherLayer(this.showWorldWeather());
-      this.weatherService.fetchWorldWeather(this.allMapLocations);
-
       // Fetch weather for initial location
       this.weatherService.fetchWeatherForLocation(loc);
     });
@@ -1097,6 +1095,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       if (!this.map || !locations.length) return;
 
       this.allMapLocations = locations;
+      this.weatherService.fetchWorldWeather(locations);
       this.mapLocationById.clear();
       for (const location of locations) this.mapLocationById.set(location.id, location);
 
