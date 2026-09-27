@@ -6,16 +6,7 @@ import { TimeControlService } from '../../../core/services/time-control.service'
 import { WeatherService } from '../../../core/services/weather.service';
 import { CelestialService } from '../../../core/services/celestial.service';
 import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine';
-import clearDayIcon from '@meteocons/svg/fill/clear-day.svg';
-import clearNightIcon from '@meteocons/svg/fill/clear-night.svg';
-import partlyCloudyDayIcon from '@meteocons/svg/fill/partly-cloudy-day.svg';
-import partlyCloudyNightIcon from '@meteocons/svg/fill/partly-cloudy-night.svg';
-import overcastIcon from '@meteocons/svg/fill/overcast.svg';
-import fogIcon from '@meteocons/svg/fill/fog.svg';
-import drizzleIcon from '@meteocons/svg/fill/drizzle.svg';
-import rainIcon from '@meteocons/svg/fill/rain.svg';
-import snowIcon from '@meteocons/svg/fill/snow.svg';
-import thunderstormsIcon from '@meteocons/svg/fill/thunderstorms-day-rain.svg';
+const METEOCONS_CDN = 'https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/fill';
 
 @Component({
   selector: 'app-share-export-modal',
@@ -102,15 +93,16 @@ export class ShareExportModalComponent implements AfterViewInit {
 
   private weatherIconUrl(condition: string, isDay: boolean): string {
     const key = condition.toLowerCase();
-    if (key === 'clear') return isDay ? clearDayIcon : clearNightIcon;
-    if (key === 'partly_cloudy') return isDay ? partlyCloudyDayIcon : partlyCloudyNightIcon;
-    if (key === 'overcast') return overcastIcon;
-    if (key === 'fog') return fogIcon;
-    if (key === 'drizzle') return drizzleIcon;
-    if (key === 'rain' || key === 'heavy_rain' || key === 'freezing_rain') return rainIcon;
-    if (key === 'snow' || key === 'heavy_snow' || key === 'blizzard') return snowIcon;
-    if (key === 'thunderstorm' || key === 'severe_thunderstorm') return thunderstormsIcon;
-    return isDay ? partlyCloudyDayIcon : partlyCloudyNightIcon;
+    let slug = isDay ? 'partly-cloudy-day' : 'partly-cloudy-night';
+    if (key === 'clear') slug = isDay ? 'clear-day' : 'clear-night';
+    else if (key === 'partly_cloudy') slug = isDay ? 'partly-cloudy-day' : 'partly-cloudy-night';
+    else if (key === 'overcast') slug = 'overcast';
+    else if (key === 'fog') slug = 'fog';
+    else if (key === 'drizzle') slug = 'drizzle';
+    else if (key === 'rain' || key === 'heavy_rain' || key === 'freezing_rain') slug = 'rain';
+    else if (key === 'snow' || key === 'heavy_snow' || key === 'blizzard') slug = 'snow';
+    else if (key === 'thunderstorm' || key === 'severe_thunderstorm') slug = 'thunderstorms-day-rain';
+    return `${METEOCONS_CDN}/${slug}.svg`;
   }
 
   private loadImage(src: string, crossOrigin = false): Promise<HTMLImageElement> {
