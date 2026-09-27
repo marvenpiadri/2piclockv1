@@ -30,6 +30,10 @@ export class GeocodingService {
     );
   }
 
+  getCountries(): Observable<GeoLocation[]> {
+    return this.getRandomLocations();
+  }
+
   getRandomLocations(): Observable<GeoLocation[]> { return this.randomLocations$; }
 
   getMapLocations(limit = 2500): Observable<GeoLocation[]> {
