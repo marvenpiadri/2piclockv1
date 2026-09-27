@@ -340,6 +340,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
 
+  readonly isSearchOpen = signal(false);
   readonly searchQuery = signal('');
   readonly inspectedLocation = signal<GeoLocation | null>(null);
   private map: MapLibreMap | null = null;
@@ -366,6 +367,9 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly remoteSearchResults = signal<GeoLocation[]>([]);
   readonly isRemoteSearching = signal(false);
   private remoteSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly observatories = FAMOUS_OBSERVATORIES;
+  readonly worldWeatherSourceReady = signal(false);
 
   readonly searchResults = computed<GeoLocation[]>(() => {
     const q = this.searchQuery().trim().toLowerCase();
