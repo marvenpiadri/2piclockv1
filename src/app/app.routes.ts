@@ -1,5 +1,6 @@
 import { GeoLocation } from './core/models/location.model';
-import { inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { inject, PLATFORM_ID } from '@angular/core';
 import { Routes, CanActivateFn, Router } from '@angular/router';
 import { LocationService } from './core/services/location.service';
 import { SkyHomeComponent } from './features/sky-view/sky-home';
@@ -26,31 +27,26 @@ import { ApiDocsComponent } from './features/api-docs/api-docs';
 const resolveRootLocation: CanActivateFn = async () => {
   const locationService = inject(LocationService);
   const router = inject(Router);
+  const platformId = inject(PLATFORM_ID);
+  if (!isPlatformBrowser(platformId)) return true;
   const location = await locationService.ensureInitialLocation();
   return router.createUrlTree(['/', location.id]);
 };
 
-const validLocationGuard: CanActivateFn = (route) => {
+const validLocationGuard: CanActivateFn = async (route) => {
   const locationService = inject(LocationService);
   const router = inject(Router);
   const slug = route.paramMap.get('location');
-  const preset = slug
-    ? locationService.locations().find((loc: GeoLocation) => loc.id === slug)
-    : undefined;
+  if (!slug) return router.createUrlTree(['/']);
+  const location = await locationService.getLocation(slug);
 
-  if (preset) {
-    // The URL is authoritative for location-scoped pages. Keep the global
-    // location signal synchronized before the component renders so every
-    // downstream service (timezone, astronomy, weather, events) follows it.
-    if (locationService.selectedLocation().id !== preset.id) {
-      locationService.selectLocation(preset);
+  if (location) {
+    if (locationService.selectedLocation().id !== location.id) {
+      locationService.selectLocation(location);
     }
     return true;
   }
 
-  // Custom/GPS locations are only valid when they are already the active
-  // location; they are persisted by LocationService rather than encoded as
-  // a public preset slug.
   const validCurrent = slug === locationService.selectedLocation().id;
   return validCurrent ? true : router.createUrlTree(['/']);
 };
