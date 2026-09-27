@@ -43,7 +43,7 @@ export class AstronomySuiteComponent implements OnInit {
   private meta = inject(Meta);
   private celestialService = inject(CelestialService);
 
-  readonly allLocations = this.locationService.locations;
+  readonly allLocations = computed(() => this.locationService.locations());
   readonly activeTab = signal<AstronomyTab>('overview');
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly selectedDate = signal<string>(
