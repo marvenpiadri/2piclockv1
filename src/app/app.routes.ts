@@ -40,6 +40,10 @@ const validSeoLocationGuard: CanActivateFn = async (route) => {
   if (!country || !city) return router.createUrlTree(['/']);
   const location = await locationService.getLocation(country + '/' + city);
   if (!location) return router.createUrlTree(['/']);
+  const canonical = locationService.getLocationSlug(location);
+  if (country + '/' + city !== canonical) {
+    return router.createUrlTree(['/', ...canonical.split('/')]);
+  }
   if (locationService.selectedLocation().id !== location.id) {
     locationService.selectLocation(location);
   }
@@ -48,7 +52,7 @@ const validSeoLocationGuard: CanActivateFn = async (route) => {
 
 export const routes: Routes = [
   // The root is the entry point only. Resolve a concrete location before rendering
-  // the living experience so every normal page has a stable /:location URL.
+  // the living experience so every location page has a stable country/city URL.
   { path: '', pathMatch: 'full', canActivate: [resolveRootLocation], component: SkyHomeComponent, data: { skyPage: 'time' } },
   { path: 'weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: 'astronomy', component: AstronomySuiteComponent },
