@@ -369,7 +369,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private remoteSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly observatories = FAMOUS_OBSERVATORIES;
-  readonly worldWeatherSourceReady = signal(false);
+  private worldWeatherSourceReady = false;
 
   readonly searchResults = computed<GeoLocation[]>(() => {
     const q = this.searchQuery().trim().toLowerCase();
