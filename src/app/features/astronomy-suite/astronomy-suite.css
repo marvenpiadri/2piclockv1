@@ -395,7 +395,7 @@
 .arc-east{left:4%}.arc-west{right:4%}
 .sun-path-dot{position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(245,158,11,.22);transition:transform .2s}
 .sun-path-dot.above{background:rgba(251,191,36,.6);box-shadow:0 0 8px rgba(245,158,11,.3)}
-.sun-current{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#ffd76a;box-shadow:0 0 18px rgba(255,215,106,.8),0 0 42px rgba(245,158,11,.35);transition:left .3s,top .3s}
+.sun-current{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--color-star);box-shadow:0 0 18px rgba(255,215,106,.8),0 0 42px rgba(245,158,11,.35);transition:left .3s,top .3s}
 .arc-hours{display:flex;justify-content:space-between;padding:0 4%;font:700 8px monospace;color:var(--color-text-muted)}
 
 /* Daylight Hero */
@@ -476,7 +476,7 @@
 .tl-segment.night-pre, .tl-segment.night-post { background: var(--color-neutral-950); }
 .tl-segment.astro-dawn, .tl-segment.astro-dusk { background: var(--color-neutral-800); }
 .tl-segment.naut-dawn, .tl-segment.naut-dusk { background: var(--color-neutral-600); }
-.tl-segment.civil-dawn, .tl-segment.civil-dusk { background: #d97706; }
+.tl-segment.civil-dawn, .tl-segment.civil-dusk { background: var(--color-accent-deep); }
 .tl-segment.daylight { background: var(--color-accent); }
 
 .twilight-table-grid {
@@ -820,7 +820,7 @@
 .horizon-n{left:50%;top:8%}.horizon-e{right:3%;bottom:10%}.horizon-s{left:50%;bottom:3%}.horizon-w{left:3%;bottom:10%}
 .celestial-marker{position:absolute;transform:translate(-50%,50%);display:flex;flex-direction:column;align-items:center;gap:5px;font:700 8px monospace}
 .celestial-marker i{display:block;width:13px;height:13px;border-radius:50%;box-shadow:0 0 20px currentColor}
-.sun-marker{color:var(--color-accent)}.sun-marker i{background:#ffd76a}
+.sun-marker{color:var(--color-accent)}.sun-marker i{background:var(--color-star)}
 .moon-marker{color:var(--color-text-main)}.moon-marker i{background:var(--color-text-secondary)}
 .horizon-scale{display:flex;justify-content:space-between;padding:7px 2px 0;font:8px monospace;color:var(--color-text-muted)}
 .observatory-actions{display:flex;flex-wrap:wrap;gap:8px}
