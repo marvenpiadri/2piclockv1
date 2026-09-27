@@ -76,6 +76,8 @@ interface CityRecord {
 }
 
 let locationIndexPromise: Promise<GeoLocation[]> | undefined;
+const locationById = new Map<string, GeoLocation>();
+const locationSearchCache = new Map<string, GeoLocation[]>();
 
 const normalizeLocationText = (value: string) =>
   value
@@ -142,8 +144,14 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
 
 const getLocationIndex = (): Promise<GeoLocation[]> => {
   if (!locationIndexPromise) {
-    locationIndexPromise = buildLocationIndex().catch(error => {
+    locationIndexPromise = buildLocationIndex().then(locations => {
+      locationById.clear();
+      for (const location of locations) locationById.set(location.id.toLowerCase(), location);
+      locationSearchCache.clear();
+      return locations;
+    }).catch(error => {
       locationIndexPromise = undefined;
+      locationById.clear();
       throw error;
     });
   }
@@ -152,9 +160,17 @@ const getLocationIndex = (): Promise<GeoLocation[]> => {
 
 const resolveLocation = async (value: unknown): Promise<GeoLocation | undefined> => {
   if (typeof value !== 'string') return undefined;
-  const id = value.trim().toLowerCase();
-  const locations = await getLocationIndex();
-  return locations.find(item => item.id === id);
+  await getLocationIndex();
+  return locationById.get(value.trim().toLowerCase());
+};
+
+const randomSample = <T>(items: T[], count: number): T[] => {
+  const sample = items.slice();
+  for (let i = sample.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sample[i], sample[j]] = [sample[j], sample[i]];
+  }
+  return sample.slice(0, count);
 };
 
 
@@ -230,8 +246,9 @@ app.get('/api/v1', (_req, res) => {
     version: '1',
     documentation: 'https://2piclock.com/api',
     endpoints: [
-      '/api/v1/locations',
       '/api/v1/locations/search?q=casablanca',
+      '/api/v1/locations/random?count=50',
+      '/api/v1/locations/{id}',
       '/api/v1/locations/search?q=paris',
       '/api/v1/weather?location=paris&current=temperature_2m,weather_code&hourly=temperature_2m&forecast_days=7&timezone=UTC',
       '/api/v1/solar?location=paris&at=2026-09-26T12:00:00Z',
@@ -247,82 +264,54 @@ app.get('/api/v1/locations/search', async (req, res) => {
   const rawQuery = typeof req.query['q'] === 'string' ? req.query['q'].trim() : '';
   const query = normalizeLocationText(rawQuery);
   const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 12) || 12));
-
+  if (query.length < 2) return res.json({ version: '1', query, count: 0, locations: [] });
   try {
-    const locations = await getLocationIndex();
-    const results = locations
-      .filter(location => {
-        if (!query) return true;
-        return [
-          location.name,
-          location.country,
-          location.countryCode,
-          location.id,
-          location.timezone
-        ].some(value => normalizeLocationText(String(value)).includes(query));
-      })
-      .sort((a, b) => {
-        if (!query) return (a.tier ?? 3) - (b.tier ?? 3);
-
-        const aName = normalizeLocationText(a.name);
-        const bName = normalizeLocationText(b.name);
-        const aCountry = normalizeLocationText(a.country);
-        const bCountry = normalizeLocationText(b.country);
-        const aId = normalizeLocationText(a.id);
-        const bId = normalizeLocationText(b.id);
-        const aCode = normalizeLocationText(a.countryCode);
-        const bCode = normalizeLocationText(b.countryCode);
-
-        const aExact = [aId, aName, aCode].includes(query);
-        const bExact = [bId, bName, bCode].includes(query);
-        const aPrefix = aName.startsWith(query);
-        const bPrefix = bName.startsWith(query);
-        const aWordPrefix = aName.split(/\s+/).some(word => word.startsWith(query));
-        const bWordPrefix = bName.split(/\s+/).some(word => word.startsWith(query));
-        const aCountryPrefix = aCountry.startsWith(query);
-        const bCountryPrefix = bCountry.startsWith(query);
-
-        return Number(bExact) - Number(aExact)
-          || Number(bPrefix) - Number(aPrefix)
-          || Number(bWordPrefix) - Number(aWordPrefix)
-          || Number(bCountryPrefix) - Number(aCountryPrefix)
-          || (a.tier ?? 3) - (b.tier ?? 3)
-          || a.name.localeCompare(b.name);
-      })
-      .slice(0, count);
-
-    res.json({
-      version: '1',
-      query,
-      count: results.length,
-      totalLocations: locations.length,
-      source: 'country-state-city-database',
-      locations: results
-    });
+    let matches = locationSearchCache.get(query);
+    if (!matches) {
+      const locations = await getLocationIndex();
+      matches = locations.filter(location => [location.name, location.country, location.countryCode, location.id, location.timezone]
+        .some(value => normalizeLocationText(String(value)).includes(query)))
+        .sort((a, b) => {
+          const aName = normalizeLocationText(a.name), bName = normalizeLocationText(b.name);
+          const aCountry = normalizeLocationText(a.country), bCountry = normalizeLocationText(b.country);
+          const aExact = [aName, normalizeLocationText(a.id), normalizeLocationText(a.countryCode)].includes(query);
+          const bExact = [bName, normalizeLocationText(b.id), normalizeLocationText(b.countryCode)].includes(query);
+          const aPrefix = aName.startsWith(query), bPrefix = bName.startsWith(query);
+          const aWordPrefix = aName.split(/\\s+/).some(word => word.startsWith(query));
+          const bWordPrefix = bName.split(/\\s+/).some(word => word.startsWith(query));
+          const aCountryPrefix = aCountry.startsWith(query), bCountryPrefix = bCountry.startsWith(query);
+          return Number(bExact) - Number(aExact) || Number(bPrefix) - Number(aPrefix)
+            || Number(bWordPrefix) - Number(aWordPrefix) || Number(bCountryPrefix) - Number(aCountryPrefix)
+            || a.name.localeCompare(b.name);
+        });
+      locationSearchCache.set(query, matches);
+      if (locationSearchCache.size > 100) locationSearchCache.delete(locationSearchCache.keys().next().value as string);
+    }
+    const results = matches.slice(0, count);
+    res.json({ version: '1', query, count: results.length, locations: results });
   } catch {
     apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
   }
 });
 
-app.get('/api/v1/locations', async (_req, res) => {
+app.get('/api/v1/locations/random', async (req, res) => {
   apiHeaders(res);
+  const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 50) || 50));
   try {
     const locations = await getLocationIndex();
-    res.json({
-      version: '1',
-      count: locations.length,
-      source: 'country-state-city-database',
-      locations: locations.map(location => ({
-        id: location.id,
-        name: location.name,
-        country: location.country,
-        countryCode: location.countryCode,
-        flag: location.flag,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        timezone: location.timezone
-      }))
-    });
+    const results = randomSample(locations, count);
+    res.json({ version: '1', count: results.length, locations: results });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/locations/:id', async (req, res) => {
+  apiHeaders(res);
+  try {
+    const location = await resolveLocation(req.params['id']);
+    if (!location) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'The requested location was not found.');
+    res.json({ version: '1', location });
   } catch {
     apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
   }
