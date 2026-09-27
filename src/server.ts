@@ -419,6 +419,33 @@ app.get('/api/v1/events', async (req, res) => {
   res.json({ version: '1', date: rawDate || date.toISOString().slice(0, 10), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, events });
 });
 
+const redirectLegacyLocationUrl = async (req: express.Request, res: express.Response, section?: string) => {
+  const legacyId = section ? req.params['location'] : req.params['location'];
+  if (!/^[a-z]{2}-\\d+$/i.test(legacyId)) return false;
+  const location = await resolveLocation(legacyId);
+  if (!location) return false;
+  const canonical = '/' + locationSlug(location) + (section ? '/' + section : '');
+  res.redirect(301, canonical);
+  return true;
+};
+
+app.get(/^\\/([a-z]{2}-\\d+)$/, async (req, res, next) => {
+  try {
+    if (!(await redirectLegacyLocationUrl(req, res))) next();
+  } catch {
+    next();
+  }
+});
+
+app.get(/^\\/([a-z]{2}-\\d+)\\/([a-z0-9-]+)$/, async (req, res, next) => {
+  try {
+    const section = req.path.split('/')[2];
+    if (!(await redirectLegacyLocationUrl(req, res, section))) next();
+  } catch {
+    next();
+  }
+});
+
 app.get('/robots.txt', (_req, res) => {
   res.type('text/plain').send('User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n');
 });
