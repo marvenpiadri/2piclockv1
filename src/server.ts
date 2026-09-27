@@ -6,7 +6,8 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
-import { PRESET_LOCATIONS } from './app/core/models/location.model';
+import { PRESET_LOCATIONS, GeoLocation } from './app/core/models/location.model';
+import { getAllCountries, getCitiesOfCountry } from '@countrystatecity/countries';
 import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -68,10 +69,7 @@ const apiHeaders = (res: express.Response) => {
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
 };
 
-const resolveApiLocation = (value: unknown) => {
-  if (typeof value !== 'string') return undefined;
-  return PRESET_LOCATIONS.find(item => item.id === value);
-};
+const resolveApiLocation = resolveLocation;
 
 const resolveApiDate = (value: unknown): Date | null => {
   if (typeof value !== 'string' || !value) return new Date();
@@ -82,6 +80,81 @@ const resolveApiDate = (value: unknown): Date | null => {
 const apiError = (res: express.Response, status: number, code: string, message: string) => {
   res.status(status).json({ error: { code, message } });
 };
+type CityRecord = {
+  id?: number;
+  name?: string;
+  countryCode?: string;
+  stateCode?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  timezone?: string;
+};
+
+let locationIndexPromise: Promise<GeoLocation[]> | undefined;
+
+const slugifyLocation = (value: string) =>
+  value.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const buildLocationIndex = async (): Promise<GeoLocation[]> => {
+  const countries = await getAllCountries();
+  const locations: GeoLocation[] = [...PRESET_LOCATIONS];
+  const seen = new Set(locations.map(location => location.id));
+
+  for (const country of countries) {
+    const countryCode = String(country.iso2 ?? '').toUpperCase();
+    if (!countryCode) continue;
+
+    const countryCities = await getCitiesOfCountry(countryCode);
+    const countryTimezone = country.timezones?.[0]?.zoneName ?? 'UTC';
+
+    for (const city of countryCities as CityRecord[]) {
+      const name = String(city.name ?? '').trim();
+      const latitude = Number(city.latitude);
+      const longitude = Number(city.longitude);
+      if (!name || !Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
+
+      const id = `${countryCode.toLowerCase()}-${slugifyLocation(name)}`;
+      if (seen.has(id)) continue;
+
+      const timezone = city.timezone || countryTimezone;
+      locations.push({
+        id,
+        name,
+        country: String(country.name ?? countryCode),
+        countryCode,
+        flag: String(country.emoji ?? ''),
+        latitude,
+        longitude,
+        timezone,
+        tier: 3
+      });
+      seen.add(id);
+    }
+  }
+
+  return locations;
+};
+
+const getLocationIndex = (): Promise<GeoLocation[]> => {
+  if (!locationIndexPromise) {
+    locationIndexPromise = buildLocationIndex().catch(error => {
+      locationIndexPromise = undefined;
+      throw error;
+    });
+  }
+  return locationIndexPromise;
+};
+
+const resolveLocation = async (value: unknown): Promise<GeoLocation | undefined> => {
+  if (typeof value !== 'string') return undefined;
+  const id = value.trim().toLowerCase();
+  const preset = PRESET_LOCATIONS.find(item => item.id === id);
+  if (preset) return preset;
+  const locations = await getLocationIndex();
+  return locations.find(item => item.id === id);
+};
+
 
 app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));
 
@@ -93,6 +166,7 @@ app.get('/api/v1', (_req, res) => {
     documentation: 'https://2piclock.com/api',
     endpoints: [
       '/api/v1/locations',
+      '/api/v1/locations/search?q=casablanca',
       '/api/v1/locations/search?q=paris',
       '/api/v1/solar?location=paris&at=2026-09-26T12:00:00Z',
       '/api/v1/lunar?location=paris&at=2026-09-26T12:00:00Z',
@@ -102,51 +176,79 @@ app.get('/api/v1', (_req, res) => {
   });
 });
 
-app.get('/api/v1/locations/search', (req, res) => {
+app.get('/api/v1/locations/search', async (req, res) => {
   apiHeaders(res);
   const query = typeof req.query['q'] === 'string' ? req.query['q'].trim().toLocaleLowerCase() : '';
   const count = Math.min(20, Math.max(1, Number(req.query['count'] ?? 8) || 8));
 
-  const locations = PRESET_LOCATIONS
-    .filter(location => {
-      if (!query) return true;
-      return [
-        location.name,
-        location.country,
-        location.countryCode,
-        location.id,
-        location.timezone
-      ].some(value => value.toLocaleLowerCase().includes(query));
-    })
-    .sort((a, b) => {
-      if (!query) return (a.tier ?? 3) - (b.tier ?? 3);
-      const aExact = [a.id, a.name.toLocaleLowerCase(), a.countryCode.toLocaleLowerCase()].includes(query);
-      const bExact = [b.id, b.name.toLocaleLowerCase(), b.countryCode.toLocaleLowerCase()].includes(query);
-      return Number(bExact) - Number(aExact) || (a.tier ?? 3) - (b.tier ?? 3);
-    })
-    .slice(0, count);
+  try {
+    const locations = await getLocationIndex();
+    const results = locations
+      .filter(location => {
+        if (!query) return true;
+        return [
+          location.name,
+          location.country,
+          location.countryCode,
+          location.id,
+          location.timezone
+        ].some(value => value.toLocaleLowerCase().includes(query));
+      })
+      .sort((a, b) => {
+        if (!query) return (a.tier ?? 3) - (b.tier ?? 3);
+        const aName = a.name.toLocaleLowerCase();
+        const bName = b.name.toLocaleLowerCase();
+        const aExact = [a.id, aName, a.countryCode.toLocaleLowerCase()].includes(query);
+        const bExact = [b.id, bName, b.countryCode.toLocaleLowerCase()].includes(query);
+        const aPrefix = aName.startsWith(query);
+        const bPrefix = bName.startsWith(query);
+        return Number(bExact) - Number(aExact)
+          || Number(bPrefix) - Number(aPrefix)
+          || (a.tier ?? 3) - (b.tier ?? 3)
+          || a.name.localeCompare(b.name);
+      })
+      .slice(0, count);
 
-  res.json({ version: '1', query, count: locations.length, locations });
+    res.json({
+      version: '1',
+      query,
+      count: results.length,
+      totalLocations: locations.length,
+      source: 'country-state-city-database',
+      locations: results
+    });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
 });
 
-app.get('/api/v1/locations', (_req, res) => {
+app.get('/api/v1/locations', async (_req, res) => {
   apiHeaders(res);
-  res.json({
-    version: '1',
-    locations: PRESET_LOCATIONS.map(location => ({
-      id: location.id,
-      name: location.name,
-      country: location.country,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      timezone: location.timezone
-    }))
-  });
+  try {
+    const locations = await getLocationIndex();
+    res.json({
+      version: '1',
+      count: locations.length,
+      source: 'country-state-city-database',
+      locations: locations.map(location => ({
+        id: location.id,
+        name: location.name,
+        country: location.country,
+        countryCode: location.countryCode,
+        flag: location.flag,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timezone: location.timezone
+      }))
+    });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
 });
 
-app.get('/api/v1/solar', (req, res) => {
+app.get('/api/v1/solar', async (req, res) => {
   apiHeaders(res);
-  const location = resolveApiLocation(req.query['location']);
+  const location = await resolveApiLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
   const date = resolveApiDate(req.query['at']);
   if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
@@ -154,7 +256,7 @@ app.get('/api/v1/solar', (req, res) => {
   res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, solar });
 });
 
-app.get('/api/v1/lunar', (req, res) => {
+app.get('/api/v1/lunar', async (req, res) => {
   apiHeaders(res);
   const location = resolveApiLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
@@ -165,7 +267,7 @@ app.get('/api/v1/lunar', (req, res) => {
   res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, moon: lunar });
 });
 
-app.get('/api/v1/celestial', (req, res) => {
+app.get('/api/v1/celestial', async (req, res) => {
   apiHeaders(res);
   const location = resolveApiLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
@@ -175,7 +277,7 @@ app.get('/api/v1/celestial', (req, res) => {
   res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, celestial });
 });
 
-app.get('/api/v1/events', (req, res) => {
+app.get('/api/v1/events', async (req, res) => {
   apiHeaders(res);
   const location = resolveApiLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
