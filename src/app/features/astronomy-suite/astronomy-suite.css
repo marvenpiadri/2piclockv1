@@ -11,10 +11,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(10, 10, 12, 0.72);
+  background: var(--color-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 20px 24px;
 }
@@ -125,8 +125,8 @@
 }
 
 .param-item select, .param-item input {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   color: var(--color-text-main);
   padding: 8px 10px;
   border-radius: 8px;
@@ -147,7 +147,7 @@
   align-items: center;
   gap: 8px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   padding: 8px 14px;
   border-radius: 12px;
@@ -193,10 +193,10 @@
 }
 
 .tool-card {
-  background: rgba(10, 10, 12, 0.70);
+  background: var(--color-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 22px;
   display: flex;
@@ -230,8 +230,8 @@
 }
 
 .stat-cell {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 12px;
   border-radius: 12px;
   text-align: center;
@@ -293,8 +293,8 @@
 }
 
 .event-pill {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 10px;
   border-radius: 10px;
   text-align: center;
@@ -327,8 +327,8 @@
 
 .trajectory-chart-wrap {
   padding: 16px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -406,8 +406,8 @@
 }
 
 .daylight-hero-card {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 16px;
   border-radius: 14px;
   text-align: center;
@@ -436,8 +436,8 @@
 /* Visual Timeline */
 .visual-timeline-box {
   padding: 16px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   display: flex;
   flex-direction: column;
@@ -486,8 +486,8 @@
 }
 
 .tw-col {
-  background: rgba(13,17,23, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 14px;
   display: flex;
@@ -507,7 +507,7 @@
   justify-content: space-between;
   padding: 6px 10px;
   border-radius: 6px;
-  background: rgba(13,17,23, 0.4);
+  background: var(--color-surface-subtle);
   font: 11px monospace;
   color: var(--color-text-secondary);
 }
@@ -525,8 +525,8 @@
   align-items: center;
   gap: 20px;
   padding: 18px 20px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   position: relative;
   overflow: hidden;
@@ -542,7 +542,7 @@
   position: relative;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(13,17,23, 0.9) 0%, rgba(2, 6, 23, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
   box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 }
@@ -580,8 +580,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(10, 10, 12, 0.70);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
 }
 
@@ -615,7 +615,7 @@
 
 /* "When Is?" Engine */
 .when-is-card {
-  background: rgba(10, 10, 12, 0.86);
+  background: var(--color-surface-elevated);
   border-color: rgba(245, 158, 11, 0.35);
 }
 
@@ -626,7 +626,7 @@
 }
 
 .query-select-group select {
-  background: rgba(13,17,23, 0.9);
+  background: var(--color-input-bg);
   border: 1px solid rgba(245, 158, 11, 0.4);
   color: var(--color-accent);
   padding: 12px;
@@ -685,8 +685,8 @@
 
 .year-picker input {
   width: 80px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   color: var(--color-text-main);
   padding: 6px 10px;
   border-radius: 8px;
@@ -700,8 +700,8 @@
 }
 
 .event-card-item {
-  background: rgba(10, 10, 12, 0.70);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -836,7 +836,7 @@
   flex-direction: column;
   gap: 14px;
   padding: 20px;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   background: rgba(8,10,14,.72);
   overflow: hidden;
