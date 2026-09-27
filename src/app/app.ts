@@ -473,15 +473,15 @@ export class App {
     const path = this.router.url.split('?')[0].replace(/^\//, '');
     const parts = path.split('/').filter(Boolean);
     const focusedExperiences = new Set(['time', 'weather', 'sun', 'moon', 'tonight', 'astronomy']);
-    let target: string[] = [loc.id];
+    let section: string | undefined;
 
     if (parts.length === 1 && focusedExperiences.has(parts[0])) {
-      target = [loc.id, parts[0]];
+      section = parts[0];
     } else if (parts.length >= 2 && focusedExperiences.has(parts[1])) {
-      target = [loc.id, parts[1]];
+      section = parts[1];
     }
 
-    this.router.navigate(target);
+    this.router.navigate(this.locationService.getLocationPath(loc, section));
   }
 
   async detectGPS(): Promise<void> {
