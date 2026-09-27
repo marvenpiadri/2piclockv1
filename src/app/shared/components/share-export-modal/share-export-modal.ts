@@ -102,7 +102,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     else if (key === 'rain' || key === 'heavy_rain' || key === 'freezing_rain') slug = 'rain';
     else if (key === 'snow' || key === 'heavy_snow' || key === 'blizzard') slug = 'snow';
     else if (key === 'thunderstorm' || key === 'severe_thunderstorm') slug = 'thunderstorms-day-rain';
-    return `${METEOCONS_CDN}/${slug}.svg`;
+    return `/api/v1/assets/meteocon/${slug}`;
   }
 
   private loadImage(src: string, crossOrigin = false): Promise<HTMLImageElement> {
@@ -142,7 +142,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     const code = countryCode.trim().toLowerCase();
     if (!/^[a-z]{2}$/.test(code)) return;
     try {
-      const image = await this.loadImage(`https://flagcdn.com/w160/${code}.png`, true);
+      const image = await this.loadImage(`/api/v1/assets/flag/${code}`);
       ctx.save();
       ctx.beginPath();
       ctx.roundRect(x, y, width, height, 5);
@@ -315,7 +315,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     const instant = this.timeControlService.currentActiveDate().toISOString();
     const pathname = window.location.pathname;
     const experience = pathname === '/weather' ? 'weather' : pathname === '/tonight' ? 'tonight' : 'time';
-    const path = pathname.startsWith('/' + location.id) ? pathname : '/' + location.id + '/' + experience;
+    const locationPath = this.locationService.getLocationSlug(location);\n    const path = pathname.startsWith('/' + locationPath) ? pathname : '/' + locationPath + '/' + experience;
     const url = window.location.origin + path + '?at=' + encodeURIComponent(instant);
 
     try {
@@ -332,7 +332,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     const canvas = this.canvasRef.nativeElement;
     const loc = this.locationService.selectedLocation();
     const link = document.createElement('a');
-    link.download = `2piclock-${loc.id}.png`;
+    link.download = `2piclock-${this.locationService.getLocationSlug(loc).replace('/', '-')}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
