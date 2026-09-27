@@ -15,6 +15,7 @@
         "@angular/platform-server": "^22.0.0",
         "@angular/router": "^22.0.0",
         "@angular/ssr": "^22.0.0",
+        "@countrystatecity/countries": "^1.0.9",
         "@date-fns/tz": "^1.5.0",
         "@meteocons/svg": "^0.1.0",
         "astronomy-engine": "^2.1.19",
@@ -45,6 +46,7 @@
     },
   },
   "packages": {
+    "@countrystatecity/countries": ["@countrystatecity/countries@1.0.9", "", {}],
     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],
 
     "@angular-devkit/architect": ["@angular-devkit/architect@0.2202.0", "", { "dependencies": { "@angular-devkit/core": "22.2.0", "rxjs": "7.8.2" }, "bin": { "architect": "bin/cli.js" } }, "sha512-HxY8JxLd3WxFj45BtDUHZ9I6hO4KebTz32UQ4ZkPh0EMK/TZdspbSgwd2lo1jE6a90knRAQkAsnBTKwWvGSm3A=="],
