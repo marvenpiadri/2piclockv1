@@ -148,3 +148,7 @@ SEO implementation is now frozen for launch. The remaining items below are delib
 - [ ] Add EN/FR/ES route architecture and hreflang when translated content is actually available
 - [ ] Run Search Console / production indexation audit after the production domain is live
 - [ ] Run final production SSR/browser metadata verification
+
+
+## Final verification
+Location search uses the internal global city catalogue and weather is served through the internal API proxy.
