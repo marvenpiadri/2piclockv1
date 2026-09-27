@@ -62,7 +62,7 @@ export class WidgetEmbedComponent {
   readonly activeDate = this.timeControl.currentActiveDate;
   readonly location = computed(() => {
     const id = this.route.snapshot.paramMap.get('location');
-    return this.locationService.allPresets.find(x => x.id === id) ?? this.locationService.selectedLocation();
+    return this.locationService.locations().find(x => x.id === id) ?? this.locationService.selectedLocation();
   });
   readonly style = computed<'analog'|'digital'>(() =>
     this.route.snapshot.queryParamMap.get('style') === 'analog' ? 'analog' : 'digital'
