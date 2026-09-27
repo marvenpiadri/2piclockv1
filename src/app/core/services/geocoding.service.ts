@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, of, shareReplay, from } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, from, switchMap } from 'rxjs';
 import { GeoLocation } from '../models/location.model';
 import { LocationService } from './location.service';
 
@@ -51,7 +51,12 @@ export class GeocodingService {
       .set('count', Math.min(50, Math.max(1, count)));
 
     return this.http.get<InternalLocationSearchResponse>(this.endpoint, { params }).pipe(
-      map(response => (response.locations ?? []).slice(0, count)),
+      switchMap(response => {
+        const locations = (response.locations ?? []).slice(0, count);
+        return locations.length > 0
+          ? of(locations)
+          : this.getAllLocations().pipe(map(catalogue => this.filterCatalogue(catalogue, term, count)));
+      }),
       catchError(() => this.getAllLocations().pipe(
         map(locations => this.filterCatalogue(locations, term, count))
       )),
