@@ -397,13 +397,7 @@ export class App {
     }
   ];
 
-  readonly filteredLocations = computed(() => {
-    const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.randomLocations();
-    return this.randomLocations().filter(
-      l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
-    );
-  });
+  readonly filteredLocations = computed(() => this.searchQuery().trim() ? this.remoteLocations() : this.randomLocations());
 
   toggleLocationDropdown(): void {
     this.showLocationDropdown.update(v => !v);
