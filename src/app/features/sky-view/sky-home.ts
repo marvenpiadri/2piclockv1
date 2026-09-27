@@ -63,6 +63,10 @@ export class SkyHomeComponent implements OnDestroy {
     return this.skyPageState();
   }
 
+  locationPath(section?: string): string[] {
+    return this.locationService.getLocationPath(this.selectedLocation(), section);
+  }
+
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
