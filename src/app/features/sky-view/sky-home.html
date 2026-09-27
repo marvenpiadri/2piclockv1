@@ -30,15 +30,15 @@
         </button>
       }
       <nav class="sky-header-navigation" aria-label="Sky Sub-Views">
-        <a [routerLink]="['/', selectedLocation().id]" [class.active]="skyPage === 'time'">
+        <a [routerLink]="locationPath()" [class.active]="skyPage === 'time'">
           <mat-icon>schedule</mat-icon>
           <span>Now</span>
         </a>
-        <a [routerLink]="['/', selectedLocation().id, 'weather']" [class.active]="skyPage === 'weather'">
+        <a [routerLink]="locationPath('weather')" [class.active]="skyPage === 'weather'">
           <mat-icon>cloud</mat-icon>
           <span>Weather</span>
         </a>
-        <a [routerLink]="['/', selectedLocation().id, 'tonight']" [class.active]="skyPage === 'tonight'">
+        <a [routerLink]="locationPath('tonight')" [class.active]="skyPage === 'tonight'">
           <mat-icon>dark_mode</mat-icon>
           <span>Tonight</span>
         </a>
