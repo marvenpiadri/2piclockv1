@@ -696,7 +696,7 @@ export class SkyHomeComponent implements OnDestroy {
 
     this.drawerLocationSearching.set(true);
     this.drawerSearchTimer = setTimeout(() => {
-      this.drawerSearchSubscription = this.geocodingService.search(q, 20).subscribe({
+      this.drawerSearchSubscription = this.geocodingService.search(q, 50).subscribe({
         next: results => {
           this.drawerLocationResults.set(results);
           this.drawerLocationSearching.set(false);
