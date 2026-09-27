@@ -190,7 +190,7 @@ body[data-theme="light"],
   --color-header-link: #334155;
   --color-header-link-hover: #0f172a;
   --color-header-link-hover-bg: #f1f5f9;
-  --color-header-link-active: #f97316;
+  --color-header-link-active: var(--color-accent);
   --color-header-link-active-bg: #fff7ed;
 
   --color-text-main: #0f172a;
