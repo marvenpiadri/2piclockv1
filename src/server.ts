@@ -243,7 +243,7 @@ app.get('/api/v1', (_req, res) => {
 app.get('/api/v1/locations/search', async (req, res) => {
   apiHeaders(res);
   const query = typeof req.query['q'] === 'string' ? req.query['q'].trim().toLocaleLowerCase() : '';
-  const count = Math.min(20, Math.max(1, Number(req.query['count'] ?? 8) || 8));
+  const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 12) || 12));
 
   try {
     const locations = await getLocationIndex();
