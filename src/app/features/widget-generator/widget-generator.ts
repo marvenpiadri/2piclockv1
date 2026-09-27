@@ -30,7 +30,7 @@ type WidgetTheme = 'dark' | 'light';
           <div class="section">
             <label>Location</label>
             <select [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event)">
-              @for (loc of allPresets; track loc.id) { <option [value]="loc.id">{{ loc.name }} · {{ loc.country }}</option> }
+              @for (loc of allLocations(); track loc.id) { <option [value]="loc.id">{{ loc.name }} · {{ loc.country }}</option> }
             </select>
           </div>
 
