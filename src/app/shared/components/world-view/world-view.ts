@@ -331,39 +331,15 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly currentWeather = this.weatherService.currentWeather;
 
   // View Display Toggles
-  readonly showNightTerminator = signal<boolean>(true);
-  readonly showTwilightBands = signal<boolean>(true);
   readonly showCityLabels = signal<boolean>(true);
   readonly showTimezoneGrid = signal<boolean>(false);
   readonly showCelestialGrid = signal<boolean>(true);
   readonly showSolarTrack = signal<boolean>(true);
   readonly showMoonZenith = signal<boolean>(true);
-  readonly showWindVectors = signal<boolean>(false);
   readonly showWorldWeather = signal<boolean>(false);
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
 
-  @ViewChild('windCanvas', { static: false }) windCanvasRef?: ElementRef<HTMLCanvasElement>;
-
-  private windParticles: { lat: number; lng: number; age: number; maxAge: number }[] = [];
-  private windAnimFrameId: number | null = null;
-
-  // Search & Inspection State
-  readonly searchQuery = signal<string>('');
-  readonly isSearchOpen = signal<boolean>(false);
-  readonly inspectedLocation = signal<GeoLocation | null>(null);
-  readonly probePoint = signal<MapProbePoint | null>(null);
-
-  readonly observatories = FAMOUS_OBSERVATORIES;
-
-  private map: MapLibreMap | null = null;
-  private observerMarker: Marker | null = null;
-  private subsolarMarker: Marker | null = null;
-  private sublunarMarker: Marker | null = null;
-  private probeMarker: Marker | null = null;
-  private worldWeatherSourceReady = false;
-  private cityMarkers = new Map<string, Marker>();
-  private countryLocations: GeoLocation[] = [];
   private lastLocationId = '';
 
   // Subsolar Point Calculation (Point where Sun is directly at Zenith Alt 90°)
@@ -411,7 +387,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   }
 
   private markerRenderState = new Map<string, string>();
-  private lastTerminatorDateMs = 0;
   private lastSolarTrackLat: number | null = null;
 
   // Calculates complete WorldHubStatus for a single location on demand
@@ -529,15 +504,12 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       effect(() => {
         const date = this.activeDate();
         const loc = this.selectedLocation();
-        const showNight = this.showNightTerminator();
-        const showTwilight = this.showTwilightBands();
         const showTz = this.showTimezoneGrid();
         const showCel = this.showCelestialGrid();
         const showTrack = this.showSolarTrack();
         const showWeather = this.showWorldWeather();
 
         if (this.map && this.isMapLoaded()) {
-          this.updateTerminatorLayers(date, showNight, showTwilight);
           this.updateTimezoneLayer(showTz);
           this.updateCelestialGridLayer(showCel);
           this.updateSolarTrackLayer(date, showTrack);
@@ -547,12 +519,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
           this.updateObserverMarker(loc);
           this.updateCityMarkerLabels();
 
-          if (loc.id !== this.lastLocationId) {
-            this.lastLocationId = loc.id;
-            if (this.showWindVectors()) {
-              this.weatherService.fetchWeatherForLocation(loc);
-            }
-          }
+          if (loc.id !== this.lastLocationId) this.lastLocationId = loc.id;
         }
       });
     }
@@ -562,9 +529,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       setTimeout(() => {
         this.initMapLibreMap();
-        if (this.showWindVectors()) {
-          this.startWindParticleLoop();
-        }
       }, 40);
     }
   }
@@ -605,9 +569,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       if (!this.map) return;
       this.isMapLoaded.set(true);
 
-      // Add Day/Night Terminator and Twilight Multi-band GeoJSON Source & Layers
-      this.initTerminatorSource();
-
       // Add Timezone Meridians Grid
       this.initTimezoneSource();
 
@@ -637,7 +598,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       });
 
       // Initial update
-      this.updateTerminatorLayers(this.activeDate(), this.showNightTerminator(), this.showTwilightBands());
       this.updateTimezoneLayer(this.showTimezoneGrid());
       this.updateCelestialGridLayer(this.showCelestialGrid());
       this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
@@ -668,12 +628,10 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       this.map.setStyle(MAP_THEMES[theme]);
       this.map.once('style.load', () => {
         this.isMapLoaded.set(true);
-        this.initTerminatorSource();
         this.initTimezoneSource();
         this.initCelestialGridSource();
         this.initSolarTrackSource();
         this.initWorldWeatherSource();
-        this.updateTerminatorLayers(this.activeDate(), this.showNightTerminator(), this.showTwilightBands());
         this.updateTimezoneLayer(this.showTimezoneGrid());
         this.updateCelestialGridLayer(this.showCelestialGrid());
         this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
@@ -681,271 +639,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Initializes Day/Night Terminator and Multi-stage Twilight Layers
-   */
-  private initTerminatorSource(): void {
-    if (!this.map) return;
-
-    const initialGeoJson = this.buildTerminatorGeoJson(this.activeDate());
-
-    if (!this.map.getSource('terminator-source')) {
-      this.map.addSource('terminator-source', {
-        type: 'geojson',
-        data: initialGeoJson as any
-      });
-    }
-
-    // Deep Night Fill Layer (Dark translucent shadow)
-    if (!this.map.getLayer('terminator-night-fill')) {
-      this.map.addLayer({
-        id: 'terminator-night-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'night'],
-        paint: {
-          'fill-color': '#020617',
-          'fill-opacity': 0.68
-        }
-      });
-    }
-
-    // Astronomical Twilight Layer (-18° to -12°)
-    if (!this.map.getLayer('twilight-astro-fill')) {
-      this.map.addLayer({
-        id: 'twilight-astro-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'twilight-astro'],
-        paint: {
-          'fill-color': '#030712',
-          'fill-opacity': 0.45
-        }
-      });
-    }
-
-    // Nautical Twilight Layer (-12° to -6°)
-    if (!this.map.getLayer('twilight-naut-fill')) {
-      this.map.addLayer({
-        id: 'twilight-naut-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'twilight-naut'],
-        paint: {
-          'fill-color': '#0f172a',
-          'fill-opacity': 0.35
-        }
-      });
-    }
-
-    // Civil Twilight Layer (-6° to 0°)
-    if (!this.map.getLayer('twilight-civil-fill')) {
-      this.map.addLayer({
-        id: 'twilight-civil-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'twilight-civil'],
-        paint: {
-          'fill-color': '#1e1b4b',
-          'fill-opacity': 0.25
-        }
-      });
-    }
-
-    // Atmospheric Glow Line
-    if (!this.map.getLayer('terminator-glow-line')) {
-      this.map.addLayer({
-        id: 'terminator-glow-line',
-        type: 'line',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'terminator-line'],
-        paint: {
-          'line-color': '#fbbf24',
-          'line-width': 7,
-          'line-opacity': 0.35,
-          'line-blur': 3.5
-        }
-      });
-    }
-
-    // Golden Solar Terminator Boundary Line (Day/Night dividing line)
-    if (!this.map.getLayer('terminator-boundary-line')) {
-      this.map.addLayer({
-        id: 'terminator-boundary-line',
-        type: 'line',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'terminator-line'],
-        paint: {
-          'line-color': '#f59e0b',
-          'line-width': 2.0,
-          'line-opacity': 0.95
-        }
-      });
-    }
-  }
-
-  /**
-   * Generates continuous spherical geometry for the Solar Terminator & Twilight Bands
-   * Uses analytical hour-angle transformation along longitude to guarantee zero self-intersections,
-   * zero antimeridian crossing glitches, and exact polar day/night handling.
-   */
-  private buildTerminatorGeoJson(date: Date): { type: 'FeatureCollection'; features: unknown[] } {
-    const subsolar = calculateSubsolarPoint(date);
-    const decDeg = subsolar.latitude;
-    const subLngDeg = subsolar.longitude;
-    const decRad = (decDeg * Math.PI) / 180;
-    const isNorthIlluminated = decDeg >= 0;
-
-    const clampLat = (lat: number): number => Math.max(-85.0511, Math.min(85.0511, lat));
-
-    // Computes continuous latitude array for longitude from -180 to +180 in 1° steps
-    const computeTerminatorCurve = (zenithAngleDeg: number): [number, number][] => {
-      const zRad = (zenithAngleDeg * Math.PI) / 180;
-      const R = Math.cos(zRad);
-      const sinDec = Math.sin(decRad);
-      const cosDec = Math.cos(decRad);
-
-      const points: [number, number][] = [];
-
-      for (let lng = -180; lng <= 180; lng += 1) {
-        // Local Hour Angle H = lng - subLngDeg in radians
-        let dLng = (lng - subLngDeg) % 360;
-        if (dLng > 180) dLng -= 360;
-        if (dLng < -180) dLng += 360;
-        const H = (dLng * Math.PI) / 180;
-
-        const A = sinDec;
-        const B = cosDec * Math.cos(H);
-        const C = Math.sqrt(A * A + B * B);
-
-        let lat: number;
-        if (C < 0.0001) {
-          lat = isNorthIlluminated ? -85.0511 : 85.0511;
-        } else if (R > C) {
-          lat = isNorthIlluminated ? -85.0511 : 85.0511;
-        } else if (R < -C) {
-          lat = isNorthIlluminated ? 85.0511 : -85.0511;
-        } else {
-          const gamma = Math.atan2(B, A);
-          const alpha = Math.asin(Math.max(-1, Math.min(1, R / C)));
-          const latRad = alpha - gamma;
-          lat = (latRad * 180) / Math.PI;
-
-          if (lat > 90) lat = 180 - lat;
-          if (lat < -90) lat = -180 - lat;
-        }
-
-        points.push([lng, clampLat(lat)]);
-      }
-
-      return points;
-    };
-
-    const makeNightPolygon = (curve: [number, number][]): [number, number][] => {
-      if (curve.length === 0) return [];
-      const poly: [number, number][] = [];
-
-      if (isNorthIlluminated) {
-        for (let i = curve.length - 1; i >= 0; i--) {
-          poly.push(curve[i]);
-        }
-        poly.push([-180, -85.0511]);
-        poly.push([180, -85.0511]);
-        poly.push(curve[curve.length - 1]);
-      } else {
-        for (const pt of curve) {
-          poly.push(pt);
-        }
-        poly.push([180, 85.0511]);
-        poly.push([-180, 85.0511]);
-        poly.push(curve[0]);
-      }
-
-      return poly;
-    };
-
-    const geometricCurve = computeTerminatorCurve(90.833);
-    const civilCurve = computeTerminatorCurve(96.0);
-    const nautCurve = computeTerminatorCurve(102.0);
-    const astroCurve = computeTerminatorCurve(108.0);
-
-    const nightPolygon = makeNightPolygon(geometricCurve);
-    const civilPolygon = makeNightPolygon(civilCurve);
-    const nautPolygon = makeNightPolygon(nautCurve);
-    const astroPolygon = makeNightPolygon(astroCurve);
-
-    return {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: { layerType: 'twilight-astro' },
-          geometry: { type: 'Polygon', coordinates: [astroPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'twilight-naut' },
-          geometry: { type: 'Polygon', coordinates: [nautPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'twilight-civil' },
-          geometry: { type: 'Polygon', coordinates: [civilPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'night' },
-          geometry: { type: 'Polygon', coordinates: [nightPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'terminator-line' },
-          geometry: { type: 'LineString', coordinates: geometricCurve }
-        }
-      ]
-    };
-  }
-
-  private updateTerminatorLayers(date: Date, showNight: boolean, showTwilight: boolean): void {
-    if (!this.map || !this.map.getSource('terminator-source')) return;
-
-    const dateMs = date.getTime();
-    if (Math.abs(dateMs - this.lastTerminatorDateMs) >= 2000) {
-      this.lastTerminatorDateMs = dateMs;
-      const source = this.map.getSource('terminator-source') as GeoJSONSource;
-      if (source) {
-        const data = this.buildTerminatorGeoJson(date);
-        source.setData(data as any);
-      }
-    }
-
-    const nightFill = showNight ? 0.68 : 0;
-    const boundaryLine = showNight ? 0.95 : 0;
-    const twilightOpacity = (showNight && showTwilight) ? 0.32 : 0;
-
-    if (this.map.getLayer('terminator-night-fill')) {
-      this.map.setPaintProperty('terminator-night-fill', 'fill-opacity', nightFill);
-    }
-    if (this.map.getLayer('terminator-boundary-line')) {
-      this.map.setPaintProperty('terminator-boundary-line', 'line-opacity', boundaryLine);
-    }
-    if (this.map.getLayer('terminator-glow-line')) {
-      this.map.setPaintProperty('terminator-glow-line', 'line-opacity', boundaryLine * 0.35);
-    }
-    if (this.map.getLayer('twilight-civil-fill')) {
-      this.map.setPaintProperty('twilight-civil-fill', 'fill-opacity', twilightOpacity * 0.8);
-    }
-    if (this.map.getLayer('twilight-naut-fill')) {
-      this.map.setPaintProperty('twilight-naut-fill', 'fill-opacity', twilightOpacity);
-    }
-    if (this.map.getLayer('twilight-astro-fill')) {
-      this.map.setPaintProperty('twilight-astro-fill', 'fill-opacity', twilightOpacity * 1.15);
-    }
-  }
-
-  /**
-   * Initializes the UTC Timezone Meridian Lines GeoJSON Source & Layer
-   */
   private initWorldWeatherSource(): void {
     if (!this.map) return;
     if (!this.map.getSource('world-weather-source')) {
@@ -1807,14 +1500,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleTerminator(): void {
-    this.showNightTerminator.update(v => !v);
-  }
-
-  toggleTwilight(): void {
-    this.showTwilightBands.update(v => !v);
-  }
-
   toggleCityLabels(): void {
     this.showCityLabels.update(v => !v);
     this.updateCityMarkerLabels();
@@ -1845,160 +1530,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     this.showWorldWeather.set(enabled);
     if (enabled) this.weatherService.fetchWorldWeather(this.allPresets);
     this.updateWorldWeatherLayer(enabled);
-  }
-
-  toggleWindVectors(): void {
-    const enabled = !this.showWindVectors();
-    this.showWindVectors.set(enabled);
-
-    if (enabled) {
-      // Weather is an opt-in analytical layer on the World Map.
-      this.weatherService.fetchWeatherForLocation(this.selectedLocation());
-      this.startWindParticleLoop();
-    } else {
-      this.stopWindParticleLoop();
-    }
-  }
-
-  private stopWindParticleLoop(): void {
-    if (this.windAnimFrameId !== null && this.isBrowser) {
-      cancelAnimationFrame(this.windAnimFrameId);
-      this.windAnimFrameId = null;
-    }
-    const canvas = this.windCanvasRef?.nativeElement;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  private startWindParticleLoop(): void {
-    if (this.windAnimFrameId !== null || !this.isBrowser) return;
-    const loop = () => {
-      if (!this.showWindVectors()) {
-        this.stopWindParticleLoop();
-        return;
-      }
-      this.renderWindFrame();
-      this.windAnimFrameId = requestAnimationFrame(loop);
-    };
-    this.windAnimFrameId = requestAnimationFrame(loop);
-  }
-
-  private initWindParticles(west: number, east: number, south: number, north: number): void {
-    this.windParticles = [];
-    const particleCount = 160;
-    for (let i = 0; i < particleCount; i++) {
-      this.windParticles.push({
-        lng: west + Math.random() * (east - west),
-        lat: south + Math.random() * (north - south),
-        age: Math.floor(Math.random() * 80),
-        maxAge: 50 + Math.floor(Math.random() * 60)
-      });
-    }
-  }
-
-  private renderWindFrame(): void {
-    const canvas = this.windCanvasRef?.nativeElement;
-    if (!canvas || !this.map || !this.showWindVectors() || !this.isMapLoaded()) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      const bounds = this.map.getBounds();
-      this.initWindParticles(bounds.getWest(), bounds.getEast(), bounds.getSouth(), bounds.getNorth());
-    }
-
-    // Fading background fill creates Windy.com motion trail streamlines
-    ctx.fillStyle = 'rgba(10, 22, 40, 0.2)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const bounds = this.map.getBounds();
-    const west = bounds.getWest();
-    const east = bounds.getEast();
-    const south = bounds.getSouth();
-    const north = bounds.getNorth();
-
-    if (this.windParticles.length === 0) {
-      this.initWindParticles(west, east, south, north);
-    }
-
-    const currentW = this.currentWeather();
-    const baseSpeed = currentW.windSpeedKmh || 18;
-    const baseDeg = currentW.windDirectionDeg || 210;
-    const zoom = this.map.getZoom();
-
-    for (const p of this.windParticles) {
-      p.age++;
-
-      if (p.age > p.maxAge || p.lng < west || p.lng > east || p.lat < south || p.lat > north) {
-        p.lng = west + Math.random() * (east - west);
-        p.lat = south + Math.random() * (north - south);
-        p.age = 0;
-        p.maxAge = 50 + Math.floor(Math.random() * 60);
-        continue;
-      }
-
-      // Convert Lat/Lng to Canvas pixel screen coordinates
-      const pxCurr = this.map.project([p.lng, p.lat]);
-
-      // Local regional wave modulation across lat/lng for realistic Windy.com fluid flow
-      const waveDeg = Math.sin(p.lat * 0.12 + p.lng * 0.08) * 20 + Math.cos(p.lat * 0.05) * 15;
-      const localDeg = (baseDeg + waveDeg + 360) % 360;
-      const localSpeed = Math.max(6, baseSpeed + Math.sin(p.lng * 0.1) * 8);
-
-      // Meteorology wind direction is "coming FROM". Flow is towards (deg + 180)
-      const flowRad = ((localDeg + 180) % 360) * (Math.PI / 180);
-
-      // Scale geographic step for map zoom level
-      const stepScale = 0.012 / Math.pow(1.4, Math.max(0, zoom - 2));
-      const dLng = localSpeed * Math.sin(flowRad) * stepScale;
-      const dLat = localSpeed * Math.cos(flowRad) * stepScale;
-
-      p.lng += dLng;
-      p.lat += dLat;
-
-      const pxNext = this.map.project([p.lng, p.lat]);
-
-      // Render vector streamline
-      ctx.beginPath();
-      ctx.moveTo(pxCurr.x, pxCurr.y);
-      ctx.lineTo(pxNext.x, pxNext.y);
-
-      // Windy.com Color Palette according to velocity
-      if (localSpeed >= 70) {
-        ctx.strokeStyle = 'rgba(225, 29, 72, 0.9)'; // Crimson (> 70 km/h)
-        ctx.lineWidth = 2.4;
-      } else if (localSpeed >= 50) {
-        ctx.strokeStyle = 'rgba(249, 115, 22, 0.85)'; // Orange (50 - 70 km/h)
-        ctx.lineWidth = 2.0;
-      } else if (localSpeed >= 30) {
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)'; // Amber (30 - 50 km/h)
-        ctx.lineWidth = 1.6;
-      } else if (localSpeed >= 15) {
-        ctx.strokeStyle = 'rgba(16, 185, 129, 0.75)'; // Emerald (15 - 30 km/h)
-        ctx.lineWidth = 1.4;
-      } else {
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'; // Sky Blue (< 15 km/h)
-        ctx.lineWidth = 1.2;
-      }
-
-      ctx.stroke();
-
-      // Vector head dot
-      if (p.age % 10 === 0) {
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.beginPath();
-        ctx.arc(pxNext.x, pxNext.y, ctx.lineWidth * 0.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
   }
 
   private formatTimeOnly(date: Date, timezone: string): string {
