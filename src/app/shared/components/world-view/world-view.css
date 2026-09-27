@@ -170,3 +170,81 @@
 .observatory-strip{display:flex;align-items:center;gap:5px;overflow-x:auto;padding:0 1px 2px;scrollbar-width:none}.observatory-strip::-webkit-scrollbar{display:none}
 .observatory-label{display:flex;align-items:center;gap:5px;padding:0 5px;color:#77777f;font:600 9px system-ui,sans-serif;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em}.observatory-label mat-icon{width:14px;height:14px;font-size:14px;color:#a1a1aa}
 .observatory-chip{display:inline-flex;align-items:center;gap:5px;height:27px;padding:0 8px;border:1px solid rgba(255,255,255,.07);border-radius:7px;background:#0e0e10;color:#9999a1;font:500 9px system-ui,sans-serif;white-space:nowrap;cursor:pointer}.observatory-chip:hover{background:#171719;color:#fff;border-color:rgba(255,255,255,.14)}.observatory-chip mat-icon{width:13px;height:13px;font-size:13px;color:#f59e0b}
+
+
+/* Final 2piClock instrument chrome: the map controls use the same amber language as the Sky controls. */
+:host {
+  --sky-amber-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 52%, #b45309 100%);
+  --map-glass-bg: rgba(7, 17, 31, .38);
+  --map-glass-border: rgba(251, 191, 36, .16);
+}
+
+.world-map-toolbar {
+  background: var(--map-glass-bg) !important;
+  border-color: var(--map-glass-border) !important;
+  backdrop-filter: blur(18px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(125%) !important;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, .24), inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+
+.world-tool {
+  border-color: transparent;
+  background: transparent;
+}
+
+.world-tool:hover {
+  background: rgba(251, 191, 36, .10);
+  color: #fff;
+  border-color: rgba(251, 191, 36, .22);
+}
+
+.world-tool.active {
+  background: var(--sky-amber-gradient) !important;
+  color: #111827 !important;
+  border-color: rgba(255,255,255,.18) !important;
+  box-shadow: 0 5px 16px rgba(245,158,11,.24), inset 0 1px 0 rgba(255,255,255,.20);
+}
+
+.world-tool.active mat-icon,
+.world-tool.active .sun-tool,
+.world-tool.active .moon-tool {
+  color: #111827 !important;
+}
+
+.world-search,
+.world-search-results,
+.world-search-result,
+.observatory-chip {
+  background: rgba(7, 17, 31, .38) !important;
+  border-color: rgba(251, 191, 36, .14) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+}
+
+.world-search-result:hover,
+.observatory-chip:hover {
+  background: rgba(245, 158, 11, .12) !important;
+  border-color: rgba(251, 191, 36, .30) !important;
+}
+
+.world-tool[title="Observer location"],
+.world-tool[title="Center on subsolar point"],
+.world-tool[title="Center on sublunar point"] {
+  background: var(--sky-amber-gradient);
+  color: #111827;
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 5px 16px rgba(245,158,11,.20);
+}
+
+.world-tool[title="Observer location"] mat-icon,
+.world-tool[title="Center on subsolar point"] mat-icon,
+.world-tool[title="Center on sublunar point"] mat-icon {
+  color: #111827 !important;
+}
+
+.location-search-status {
+  display: block;
+  padding: 7px 9px;
+  color: rgba(255,255,255,.68);
+  font: 500 9px/1.3 system-ui, sans-serif;
+}
