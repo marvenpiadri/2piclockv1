@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CelestialService } from '../../core/services/celestial.service';
@@ -8,6 +8,8 @@ import { WeatherService } from '../../core/services/weather.service';
 import { AstronomicalCalculatorService } from '../../core/services/astronomical-calculator.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
+import { GeocodingService } from '../../core/services/geocoding.service';
+import { Subscription } from 'rxjs';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent, ReactiveSkyComponent, CelestialAstrolabeComponent } from '../../shared/components';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
@@ -38,12 +40,13 @@ import * as Astronomy from 'astronomy-engine';
   templateUrl: './sky-home.html',
   styleUrl: './sky-home.css'
 })
-export class SkyHomeComponent {
+export class SkyHomeComponent implements OnDestroy {
   // Angular templates resolve identifiers against the component instance.
   readonly Math = Math;
   private celestialService = inject(CelestialService);
   private timeControlService = inject(TimeControlService);
   private locationService = inject(LocationService);
+  private readonly geocodingService = inject(GeocodingService);
   readonly weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
   private astronomicalCalculator = inject(AstronomicalCalculatorService);
@@ -665,16 +668,51 @@ export class SkyHomeComponent {
     this.zoomLevel.set(100);
   }
 
-  // Drawer location search filter
+  // Drawer location search is backed by the complete internal city database.
+  // Presets remain only for the default state; they never constrain search.
   readonly drawerSearchQuery = signal<string>('');
+  readonly drawerLocationResults = signal<GeoLocation[]>([]);
+  readonly drawerLocationSearching = signal(false);
+  private drawerSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private drawerSearchSubscription: Subscription | null = null;
 
   readonly filteredDrawerLocations = computed(() => {
-    const q = this.drawerSearchQuery().toLowerCase().trim();
+    const q = this.drawerSearchQuery().trim();
     if (!q) return this.allPresets;
-    return this.allPresets.filter(
-      l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
-    );
+    return this.drawerLocationResults();
   });
+
+  onDrawerSearch(value: string): void {
+    this.drawerSearchQuery.set(value);
+    if (this.drawerSearchTimer) clearTimeout(this.drawerSearchTimer);
+    this.drawerSearchSubscription?.unsubscribe();
+
+    const q = value.trim();
+    if (q.length < 2) {
+      this.drawerLocationResults.set([]);
+      this.drawerLocationSearching.set(false);
+      return;
+    }
+
+    this.drawerLocationSearching.set(true);
+    this.drawerSearchTimer = setTimeout(() => {
+      this.drawerSearchSubscription = this.geocodingService.search(q, 20).subscribe({
+        next: results => {
+          this.drawerLocationResults.set(results);
+          this.drawerLocationSearching.set(false);
+        },
+        error: () => {
+          this.drawerLocationResults.set([]);
+          this.drawerLocationSearching.set(false);
+        }
+      });
+    }, 180);
+  }
+
+  ngOnDestroy(): void {
+    if (this.drawerSearchTimer) clearTimeout(this.drawerSearchTimer);
+    this.drawerSearchSubscription?.unsubscribe();
+  }
 
   setView(view: ObservatoryView): void {
     this.observatoryViewService.setView(view);
