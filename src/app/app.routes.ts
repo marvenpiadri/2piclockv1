@@ -32,27 +32,6 @@ const resolveRootLocation: CanActivateFn = async () => {
   return router.createUrlTree(['/', ...locationService.getLocationSlug(location).split('/')]);
 };
 
-const validLocationGuard: CanActivateFn = async (route) => {
-  const locationService = inject(LocationService);
-  const router = inject(Router);
-  const slug = route.paramMap.get('location');
-  if (!slug) return router.createUrlTree(['/']);
-  const location = await locationService.getLocation(slug);
-
-  if (location) {
-    if (locationService.selectedLocation().id !== location.id) {
-      locationService.selectLocation(location);
-    }
-    const canonical = locationService.getLocationSlug(location);
-    return slug === canonical
-      ? true
-      : router.createUrlTree(['/', ...canonical.split('/')]);
-  }
-
-  const validCurrent = slug === locationService.selectedLocation().id;
-  return validCurrent ? true : router.createUrlTree(['/']);
-};
-
 const validSeoLocationGuard: CanActivateFn = async (route) => {
   const locationService = inject(LocationService);
   const router = inject(Router);
@@ -133,18 +112,6 @@ export const routes: Routes = [
   { path: ':country/:city/satellites', component: SatelliteTrackerComponent, canActivate: [validSeoLocationGuard] },
   { path: ':country/:city', component: SkyHomeComponent, canActivate: [validSeoLocationGuard], data: { skyPage: 'time' } },
 
-  // Location-first living experience
-  { path: ':location/weather', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'weather' } },
-  { path: ':location/time', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
-  { path: ':location/tonight', component: TonightComponent, canActivate: [validLocationGuard] },
-  { path: ':location/sun', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'daylight' } },
-  { path: ':location/moon', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'moon' } },
-  { path: ':location/astronomy', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'overview' } },
-  { path: ':location/events', component: WorldEventsComponent, canActivate: [validLocationGuard] },
-  { path: ':location/alerts', component: AlertsComponent, canActivate: [validLocationGuard] },
-  { path: ':location/stargazing', component: StargazingPlannerComponent, canActivate: [validLocationGuard] },
-  { path: ':location/eclipses', component: EclipsePredictorComponent, canActivate: [validLocationGuard] },
-  { path: ':location/satellites', component: SatelliteTrackerComponent, canActivate: [validLocationGuard] },
-  { path: ':location', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
+  // Canonical location URLs are universally country/city based.
   { path: '**', redirectTo: '' }
 ];
