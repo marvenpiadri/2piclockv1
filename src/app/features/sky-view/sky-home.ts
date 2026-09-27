@@ -52,7 +52,8 @@ export class SkyHomeComponent implements OnDestroy {
   private astronomicalCalculator = inject(AstronomicalCalculatorService);
   private title = inject(Title);
   private meta = inject(Meta);
-  private route = inject(ActivatedRoute);\n  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   readonly tonightViewMode = signal<'celestial' | 'analog'>('celestial');
 
