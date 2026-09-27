@@ -206,7 +206,7 @@ body[data-theme="light"],
   --color-status-sent-border: #bfdbfe;
   --color-status-paid: var(--color-accent);
   --color-status-paid-bg: var(--color-accent-soft);
-  --color-status-paid-border: #fed7aa;
+  --color-status-paid-border: var(--color-accent-border);
   --color-status-overdue: #dc2626;
   --color-status-overdue-bg: #fef2f2;
   --color-status-overdue-border: #fecaca;
