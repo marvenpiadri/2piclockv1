@@ -174,7 +174,7 @@
 
 .brand-sub {
   font-size: 9px;
-  color: var(--color-math-orange-dark);
+  color: var(--color-accent-deep);
   font-family: var(--font-mono);
   line-height: 1;
   letter-spacing: 0.08em;
@@ -704,7 +704,7 @@
 .sky-background-active .location-pill-btn,
 .sky-background-active .btn-gps-action {
   background: rgba(249, 115, 22, 0.96);
-  border-color: var(--color-math-orange);
+  border-color: var(--color-accent);
   color: #1c1917;
 }
 
@@ -741,8 +741,8 @@
 .app-layout.sky-background-active .btn-observatories,
 .app-layout.sky-background-active .location-pill-btn,
 .app-layout.sky-background-active .btn-gps-action {
-  background: var(--color-math-orange);
-  border-color: var(--color-math-orange);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #1c1917;
 }
 
@@ -751,8 +751,8 @@
 .app-layout.sky-background-active .btn-gps-action:hover,
 .app-layout.sky-background-active .btn-observatories.menu-open,
 .app-layout.sky-background-active .location-pill-btn.menu-open {
-  background: var(--color-math-orange-dark);
-  border-color: var(--color-math-orange-dark);
+  background: var(--color-accent-deep);
+  border-color: var(--color-accent-deep);
 }
 
 
