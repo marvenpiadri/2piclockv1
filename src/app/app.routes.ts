@@ -44,11 +44,28 @@ const validLocationGuard: CanActivateFn = async (route) => {
     if (locationService.selectedLocation().id !== location.id) {
       locationService.selectLocation(location);
     }
-    return true;
+    const canonical = locationService.getLocationSlug(location);
+    return slug === canonical
+      ? true
+      : router.createUrlTree(['/', ...canonical.split('/')]);
   }
 
   const validCurrent = slug === locationService.selectedLocation().id;
   return validCurrent ? true : router.createUrlTree(['/']);
+};
+
+const validSeoLocationGuard: CanActivateFn = async (route) => {
+  const locationService = inject(LocationService);
+  const router = inject(Router);
+  const country = route.paramMap.get('country');
+  const city = route.paramMap.get('city');
+  if (!country || !city) return router.createUrlTree(['/']);
+  const location = await locationService.getLocation(country + '/' + city);
+  if (!location) return router.createUrlTree(['/']);
+  if (locationService.selectedLocation().id !== location.id) {
+    locationService.selectLocation(location);
+  }
+  return true;
 };
 
 export const routes: Routes = [
@@ -102,6 +119,20 @@ export const routes: Routes = [
   { path: 'alerts', component: AlertsComponent },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
+
+  // Canonical SEO location URLs
+  { path: ':country/:city/weather', component: SkyHomeComponent, canActivate: [validSeoLocationGuard], data: { skyPage: 'weather' } },
+  { path: ':country/:city/time', component: SkyHomeComponent, canActivate: [validSeoLocationGuard], data: { skyPage: 'time' } },
+  { path: ':country/:city/tonight', component: TonightComponent, canActivate: [validSeoLocationGuard] },
+  { path: ':country/:city/sun', component: AstronomySuiteComponent, canActivate: [validSeoLocationGuard], data: { tab: 'daylight' } },
+  { path: ':country/:city/moon', component: AstronomySuiteComponent, canActivate: [validSeoLocationGuard], data: { tab: 'moon' } },
+  { path: ':country/:city/astronomy', component: AstronomySuiteComponent, canActivate: [validSeoLocationGuard], data: { tab: 'overview' } },
+  { path: ':country/:city/events', component: WorldEventsComponent, canActivate: [validSeoLocationGuard] },
+  { path: ':country/:city/alerts', component: AlertsComponent, canActivate: [validSeoLocationGuard] },
+  { path: ':country/:city/stargazing', component: StargazingPlannerComponent, canActivate: [validSeoLocationGuard] },
+  { path: ':country/:city/eclipses', component: EclipsePredictorComponent, canActivate: [validSeoLocationGuard] },
+  { path: ':country/:city/satellites', component: SatelliteTrackerComponent, canActivate: [validSeoLocationGuard] },
+  { path: ':country/:city', component: SkyHomeComponent, canActivate: [validSeoLocationGuard], data: { skyPage: 'time' } },
 
   // Location-first living experience
   { path: ':location/weather', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'weather' } },
