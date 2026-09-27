@@ -487,6 +487,6 @@ export class App {
   async detectGPS(): Promise<void> {
     const loc = await this.locationService.detectUserLocation();
     this.closeMenus();
-    if (loc) this.router.navigate(['/', loc.id]);
+    if (loc) this.router.navigate(this.locationService.getLocationPath(loc));
   }
 }
