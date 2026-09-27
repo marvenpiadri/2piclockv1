@@ -6,7 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
-import { PRESET_LOCATIONS, GeoLocation } from './app/core/models/location.model';
+import { GeoLocation } from './app/core/models/location.model';
 import { getCountries, getAllCitiesInWorld } from '@countrystatecity/countries';
 import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
@@ -44,20 +44,7 @@ const staticSitemapUrls = [
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const buildSitemap = () => {
-  const placeUrls = PRESET_LOCATIONS.flatMap(location => [
-    '/' + location.id,
-    '/' + location.id + '/time',
-    '/' + location.id + '/weather',
-    '/' + location.id + '/sun',
-    '/' + location.id + '/moon',
-    '/' + location.id + '/tonight',
-    '/' + location.id + '/astronomy',
-    '/' + location.id + '/events',
-    '/' + location.id + '/stargazing',
-    '/' + location.id + '/eclipses',
-    '/' + location.id + '/satellites',
-  ]);
-  const urls = [...staticSitemapUrls, ...placeUrls];
+  const urls = [...staticSitemapUrls];
   const uniqueUrls = [...new Set(urls)];
   const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n');
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>';
@@ -116,8 +103,7 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
     ])
   );
 
-  const locations: GeoLocation[] = [...PRESET_LOCATIONS];
-  const seen = new Set(locations.map(location => location.id));
+  const locations: GeoLocation[] = [];
 
   for (const city of cities as CityRecord[]) {
     const name = String(city.name ?? '').trim();
@@ -135,8 +121,8 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
     }
 
     const country = countryByCode.get(countryCode);
-    const id = `${countryCode.toLowerCase()}-${slugifyLocation(name)}`;
-    if (seen.has(id)) continue;
+    const cityId = city.id != null ? String(city.id) : `${slugifyLocation(name)}-${latitude}-${longitude}`;
+    const id = `${countryCode.toLowerCase()}-${cityId}`;
 
     locations.push({
       id,
@@ -149,7 +135,6 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
       timezone: String(city.timezone || 'UTC'),
       tier: 3
     });
-    seen.add(id);
   }
 
   return locations;
@@ -168,8 +153,6 @@ const getLocationIndex = (): Promise<GeoLocation[]> => {
 const resolveLocation = async (value: unknown): Promise<GeoLocation | undefined> => {
   if (typeof value !== 'string') return undefined;
   const id = value.trim().toLowerCase();
-  const preset = PRESET_LOCATIONS.find(item => item.id === id);
-  if (preset) return preset;
   const locations = await getLocationIndex();
   return locations.find(item => item.id === id);
 };
@@ -294,8 +277,8 @@ app.get('/api/v1/locations/search', async (req, res) => {
         const bExact = [bId, bName, bCode].includes(query);
         const aPrefix = aName.startsWith(query);
         const bPrefix = bName.startsWith(query);
-        const aWordPrefix = aName.split(/\\s+/).some(word => word.startsWith(query));
-        const bWordPrefix = bName.split(/\\s+/).some(word => word.startsWith(query));
+        const aWordPrefix = aName.split(/\s+/).some(word => word.startsWith(query));
+        const bWordPrefix = bName.split(/\s+/).some(word => word.startsWith(query));
         const aCountryPrefix = aCountry.startsWith(query);
         const bCountryPrefix = bCountry.startsWith(query);
 
