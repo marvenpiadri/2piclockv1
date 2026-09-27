@@ -1417,3 +1417,93 @@
 }
 
 .time-machine-compare{display:flex;align-items:center;gap:8px;min-width:0;margin-top:7px}.time-machine-compare>label{display:flex;align-items:center;gap:7px;color:#71717a;font:700 7px monospace;letter-spacing:.08em}.time-machine-compare input{height:26px;padding:0 7px;border:1px solid rgba(255,255,255,.08);border-radius:7px;background:rgba(10,10,12,.72);color:#e4e4e7;font:9px monospace;outline:none}.time-machine-compare input:focus{border-color:rgba(245,158,11,.38)}.comparison-readout{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;white-space:nowrap;padding:4px 7px;border:1px solid rgba(245,158,11,.16);border-radius:7px;background:rgba(245,158,11,.045);color:#a1a1aa;font:8px monospace}.comparison-readout span{color:#fbbf24}.comparison-readout b{font-weight:700;color:#d4d4d8}.comparison-readout button{display:grid;place-items:center;border:0;background:transparent;color:#71717a;cursor:pointer;padding:0}.comparison-readout button:hover{color:#fff}.comparison-readout mat-icon{width:13px;height:13px;font-size:13px}@media(max-width:700px){.time-machine-compare{align-items:flex-start;flex-direction:column}.comparison-readout{max-width:100%;width:100%;box-sizing:border-box}}
+
+
+/* Final 2pi glass language: consistent translucent midnight surfaces over the living sky. */
+:root {
+  --sky-glass-bg: rgba(7, 17, 31, .36);
+  --sky-glass-bg-strong: rgba(7, 17, 31, .40);
+  --sky-glass-border: rgba(251, 191, 36, .16);
+  --sky-glass-highlight: rgba(255, 255, 255, .08);
+  --sky-amber-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 52%, #b45309 100%);
+}
+.sky-page,.sky-report,.sky-navigation,.sky-header{background:transparent}
+
+.sky-header,
+.sky-navigation,
+.collapsed-deck-dock .expand-deck-btn,
+.deck-nav-tabs,
+.deck-header-actions button,
+.deck-weather-hero,
+.deck-metric-card,
+.deck-banner-card,
+.deck-hour-item,
+.deck-week-row,
+.deck-astro-card,
+.deck-insight-card,
+.deck-d3-wrapper,
+.deck-search-box,
+.location-results,
+.add-clock-hint,
+.weather-current,
+.weather-stats > div,
+.hour-item,
+.week-day,
+.astro-grid > div,
+.world-events-hero,
+.world-event-card,
+.tonight-overview-card,
+.tonight-planet,
+.tonight-twilight > *,
+.time-machine-date > button,
+.tonight-events article,
+.sky-drawer,
+.drawer-tabs,
+.location-list input,
+.drawer-report {
+  background:var(--sky-glass-bg);
+  border-color:var(--sky-glass-border);
+  backdrop-filter:blur(18px) saturate(125%);
+  -webkit-backdrop-filter:blur(18px) saturate(125%);
+  box-shadow:0 10px 28px rgba(2,6,23,.12),inset 0 1px 0 var(--sky-glass-highlight);
+}
+.environmental-deck{
+  background:var(--sky-glass-bg-strong);
+  border-color:rgba(251,191,36,.20);
+  box-shadow:0 18px 48px rgba(2,6,23,.20),inset 0 1px 0 var(--sky-glass-highlight);
+}
+.world-page .section-heading-row h2,.world-page .world-city{color:var(--color-text-main)}
+.world-page .section-heading-row>span,.world-clock small,.world-clock>span{color:var(--color-text-secondary)}
+.world-page .secondary-report-button{
+  background:var(--sky-glass-bg);color:var(--color-text-main);
+  border-color:var(--sky-glass-border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
+}
+.world-page .secondary-report-button:hover{background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.34)}
+
+.deck-nav-tabs{grid-template-columns:repeat(2,minmax(0,1fr));background:var(--sky-glass-bg)}
+.deck-nav-tabs button{color:var(--color-text-secondary)}
+.deck-nav-tabs button:hover{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.18);color:var(--color-text-main)}
+.deck-nav-tabs button.active{background:var(--sky-amber-gradient);border-color:rgba(251,191,36,.45);color:#07111f}
+
+.sky-navigation{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,max-content));
+  justify-content:center;align-items:center;gap:5px
+}
+.sky-navigation a{background:transparent;border-color:transparent}
+.sky-navigation a:hover{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.18)}
+.sky-navigation a.active{
+  background:var(--sky-amber-gradient);color:#07111f;border-color:rgba(251,191,36,.42);
+  box-shadow:0 5px 18px rgba(245,158,11,.18)
+}
+
+.sky-report input,.sky-report select,.sky-report textarea,.home-info-panel input,.home-info-panel select{
+  background:var(--sky-glass-bg);border-color:var(--sky-glass-border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
+}
+.sky-report input:focus,.sky-report select:focus,.sky-report textarea:focus,
+.home-info-panel input:focus,.home-info-panel select:focus{
+  border-color:rgba(251,191,36,.38);box-shadow:0 0 0 2px rgba(251,191,36,.09)
+}
+@media(max-width:700px){
+  .sky-navigation{grid-template-columns:repeat(auto-fit,minmax(82px,1fr));justify-content:stretch}
+}
