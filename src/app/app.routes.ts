@@ -9,6 +9,7 @@ import { CelestialEphemerisComponent } from './features/celestial-ephemeris/cele
 import { WeatherAtmosphereComponent } from './features/weather-atmosphere/weather-atmosphere';
 import { MeetingPlannerComponent } from './features/meeting-planner/meeting-planner';
 import { SpaceViewComponent } from './shared/components/space-view/space-view';
+import { TonightComponent } from './features/tonight/tonight';
 import { TimeSuiteComponent } from './features/time-suite/time-suite';
 import { AstronomySuiteComponent } from './features/astronomy-suite/astronomy-suite';
 import { WorldRadioComponent } from './features/world-radio/world-radio';
@@ -60,7 +61,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', canActivate: [resolveRootLocation], component: SkyHomeComponent, data: { skyPage: 'time' } },
   { path: 'weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: 'astronomy', component: AstronomySuiteComponent },
-  { path: 'tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
+  { path: 'tonight', component: TonightComponent },
   { path: 'events', component: WorldEventsComponent },
   { path: 'api', component: ApiDocsComponent },
 
@@ -109,7 +110,7 @@ export const routes: Routes = [
   // Location-first living experience
   { path: ':location/weather', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'weather' } },
   { path: ':location/time', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
-  { path: ':location/tonight', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'tonight' } },
+  { path: ':location/tonight', component: TonightComponent, canActivate: [validLocationGuard] },
   { path: ':location/sun', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'daylight' } },
   { path: ':location/moon', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'moon' } },
   { path: ':location/astronomy', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'overview' } },

@@ -70,6 +70,7 @@ export class App {
   readonly showDeepSpace = computed(() => {
     const url = this.currentRoute().toLowerCase();
     return (
+      url.includes('tonight') ||
       url.includes('astronomy') ||
       url.includes('stargazing') ||
       url.includes('eclipses') ||
@@ -88,8 +89,7 @@ export class App {
       url === '/' ||
       url === '/now' ||
       url === '/weather' ||
-      url === '/tonight' ||
-      /^\/[a-z0-9-]+(?:\/(?:weather|time|tonight|sun|moon))?(?:\?.*)?$/.test(url) ||
+      /^\/[a-z0-9-]+(?:\/(?:weather|time|sun|moon))?(?:\?.*)?$/.test(url) ||
       url.startsWith('/sky')
     );
   });

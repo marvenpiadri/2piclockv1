@@ -15,11 +15,11 @@
   z-index: 50;
   width: 100%;
   height: 56px;
-  background: rgba(0, 0, 0, 0.9);
+  background: var(--color-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -46,8 +46,8 @@
 .brand-badge {
   width: 38px;
   height: 38px;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 34px;
+  min-height: 34px;
   aspect-ratio: 1;
   border-radius: 50%;
   position: relative;
@@ -57,7 +57,7 @@
   overflow: hidden;
   user-select: none;
   isolation: isolate;
-  transition: background-color .9s ease, transform .45s cubic-bezier(.22,.61,.36,1);
+  transition: transform .45s cubic-bezier(.22,.61,.36,1), box-shadow .6s ease;
 }
 
 .brand-badge .celestial-disc {
@@ -65,41 +65,82 @@
   inset: 0;
   z-index: 0;
   border-radius: 50%;
-  background: var(--color-math-orange);
-  transition: background-color 1.2s cubic-bezier(.22,.61,.36,1);
+  transition: background 1.2s cubic-bezier(.22,.61,.36,1), box-shadow 1.2s ease, border-color 1.2s ease;
 }
 
 .brand-badge .brand-symbol {
   position: relative;
   z-index: 1;
-  color: var(--color-math-orange);
   font-family: "Dekatron", var(--font-mono, monospace);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -.12em;
   transform: translateY(-.4px);
-  transition: color 1.2s ease, transform .5s ease;
+  transition: color 1.2s ease, text-shadow 1.2s ease, transform .5s ease;
 }
 
+/* Morning / Daytime: Radiant Sun with solar corona */
 .brand-badge-sun .celestial-disc {
-  background: var(--color-math-orange);
+  background: radial-gradient(circle at 35% 30%, #fffdf0 0%, #fef08a 22%, #f59e0b 58%, #ea580c 88%, #c2410c 100%);
+  border: 1px solid rgba(254, 240, 138, 0.8);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.65), 0 0 32px rgba(251, 191, 36, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 5px rgba(194, 65, 12, 0.55);
+}
+
+.brand-badge-sun .celestial-disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.85) 0%, rgba(254, 240, 138, 0.4) 30%, transparent 65%);
+  pointer-events: none;
 }
 
 .brand-badge-sun .brand-symbol {
   color: #431407;
+  text-shadow: 0 1px 1px rgba(254, 240, 138, 0.75);
 }
 
+/* Lunar Night: Silver Shining Moon with luminous specular luster */
 .brand-badge-moon .celestial-disc {
-  background: var(--color-text-secondary);
+  background: radial-gradient(circle at 30% 26%, #ffffff 0%, #f8fafc 18%, #e2e8f0 42%, #cbd5e1 70%, #94a3b8 92%, #64748b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.8), 0 0 32px rgba(226, 232, 240, 0.55), 0 0 48px rgba(148, 163, 184, 0.3), inset 0 1.5px 3px rgba(255, 255, 255, 0.95), inset 0 -2px 5px rgba(51, 65, 85, 0.5);
+}
+
+.brand-badge-moon .celestial-disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 26% 24%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 28%, transparent 65%);
+  pointer-events: none;
+}
+
+.brand-badge-moon .celestial-disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.95), inset -3px -3px 6px rgba(15, 23, 42, 0.4);
+  pointer-events: none;
 }
 
 .brand-badge-moon .brand-symbol {
-  color: var(--color-text-muted);
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95), 0 0 5px rgba(255, 255, 255, 0.6);
 }
 
 .brand-link:hover .brand-badge {
-  transform: scale(1.04);
+  transform: scale(1.05);
+}
+
+.brand-link:hover .brand-badge-sun .celestial-disc {
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.85), 0 0 40px rgba(251, 191, 36, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.95), inset 0 -2px 6px rgba(194, 65, 12, 0.65);
+}
+
+.brand-link:hover .brand-badge-moon .celestial-disc {
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.95), 0 0 42px rgba(226, 232, 240, 0.75), 0 0 60px rgba(203, 213, 225, 0.45), inset 0 1.5px 4px rgba(255, 255, 255, 1), inset 0 -2px 6px rgba(51, 65, 85, 0.6);
 }
 
 .brand-link:hover .brand-symbol {
