@@ -42,7 +42,6 @@
     "@angular/build": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
-    "@angular/core": "^22.0.0",
     "@types/d3": "^7.4.3",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
