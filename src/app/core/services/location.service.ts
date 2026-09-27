@@ -35,10 +35,39 @@ export class LocationService {
     return this.locationLoadPromise;
   }
 
-  async getLocation(id: string): Promise<GeoLocation | null> {
-    const normalizedId = id.trim(); if (!normalizedId) return null;
-    const local = this.locations().find(location => location.id === normalizedId); if (local) return local;
-    try { const response = await fetch(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalizedId))); if (!response.ok) return null; const data = await response.json() as { location?: GeoLocation }; return data.location ?? null; } catch { return null; }
+  async getLocation(identifier: string): Promise<GeoLocation | null> {
+    const normalized = identifier.trim();
+    if (!normalized) return null;
+    const local = this.locations().find(location =>
+      location.id === normalized || this.getLocationSlug(location) === normalized
+    );
+    if (local) return local;
+    try {
+      const response = await fetch(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalized)));
+      if (!response.ok) return null;
+      const data = await response.json() as { location?: GeoLocation };
+      return data.location ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  getLocationSlug(location: GeoLocation): string {
+    return this.slugify(location.country) + '/' + this.slugify(location.name);
+  }
+
+  getLocationPath(location: GeoLocation, section?: string): string[] {
+    const path = this.getLocationSlug(location).split('/');
+    return section ? [...path, section] : path;
+  }
+
+  private slugify(value: string): string {
+    return value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
   async ensureInitialLocation(): Promise<GeoLocation> {
