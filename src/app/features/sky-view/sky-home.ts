@@ -15,7 +15,7 @@ import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPa
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import * as Astronomy from 'astronomy-engine';
 
@@ -52,7 +52,7 @@ export class SkyHomeComponent implements OnDestroy {
   private astronomicalCalculator = inject(AstronomicalCalculatorService);
   private title = inject(Title);
   private meta = inject(Meta);
-  private route = inject(ActivatedRoute);
+  private route = inject(ActivatedRoute);\n  private router = inject(Router);
 
   readonly tonightViewMode = signal<'celestial' | 'analog'>('celestial');
 
