@@ -86,7 +86,6 @@ export class App {
     if (this.showDeepSpace()) return false;
     const url = this.currentRoute();
     return (
-      url === '/' ||
       url === '/now' ||
       url === '/weather' ||
       /^\/[a-z0-9-]+(?:\/(?:weather|time|sun|moon))?(?:\?.*)?$/.test(url) ||
