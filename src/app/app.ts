@@ -59,7 +59,7 @@ export class App {
 
   readonly activeView = this.observatoryViewService.activeView;
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allLocations = this.locationService.allPresets;
+  readonly randomLocations = this.locationService.randomLocations;
   readonly isLocating = this.locationService.isLocating;
   readonly locationError = this.locationService.locationError;
 
@@ -399,8 +399,8 @@ export class App {
 
   readonly filteredLocations = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.allLocations;
-    return this.allLocations.filter(
+    if (!q) return this.randomLocations();
+    return this.randomLocations().filter(
       l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
     );
   });
