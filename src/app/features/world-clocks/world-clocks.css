@@ -519,3 +519,85 @@
   .clock-search,
   .remove-clock { transition: none; }
 }
+
+/* World Clocks: transparent chrome around the existing clock + analog cards.
+   The clock surfaces themselves are intentionally untouched. */
+.world-clocks-page,
+.world-clocks-header,
+.location-zone { background: transparent; }
+
+.world-clocks-header h1 {
+  color: var(--color-text-main);
+  text-shadow: none;
+}
+
+.world-clocks-header p,
+.location-zone-copy,
+.clock-count { color: var(--color-text-secondary); }
+
+.world-clocks-header .eyebrow,
+.location-zone .eyebrow { color: var(--color-accent); }
+
+.clock-style {
+  padding: 3px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-midnight-500) 60%, transparent);
+  border-radius: var(--radius-full);
+}
+
+.clock-style button {
+  min-width: 72px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.clock-style button:hover {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  color: var(--color-text-main);
+}
+
+.clock-style button.active {
+  background: var(--color-amber-gradient);
+  color: var(--color-text-on-accent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+.clock-search {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-midnight-500) 58%, transparent);
+  border-radius: var(--radius-full);
+}
+
+.clock-search:focus-within {
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  border-color: var(--color-accent-border);
+}
+
+.location-results {
+  background: color-mix(in srgb, var(--color-midnight-900) 22%, transparent);
+  border-color: color-mix(in srgb, var(--color-midnight-500) 45%, transparent);
+}
+
+.location-result {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-midnight-500) 38%, transparent);
+}
+
+.pin-action {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-midnight-500) 45%, transparent);
+}
+
+.pin-action:hover,
+.pin-action.pinned {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent-strong);
+}
+
+.add-clock-hint {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-midnight-500) 42%, transparent);
+}
