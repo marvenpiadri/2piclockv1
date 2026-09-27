@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import {join} from 'node:path';
 import { PRESET_LOCATIONS, GeoLocation } from './app/core/models/location.model';
-import { getAllCountries, getCitiesOfCountry } from '@countrystatecity/countries';
+import { getCountries, getStatesOfCountry, getCitiesOfState } from '@countrystatecity/countries';
 import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -97,7 +97,7 @@ const slugifyLocation = (value: string) =>
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 const buildLocationIndex = async (): Promise<GeoLocation[]> => {
-  const countries = await getAllCountries();
+  const countries = await getCountries();
   const locations: GeoLocation[] = [...PRESET_LOCATIONS];
   const seen = new Set(locations.map(location => location.id));
 
@@ -105,10 +105,11 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
     const countryCode = String(country.iso2 ?? '').toUpperCase();
     if (!countryCode) continue;
 
-    const countryCities = await getCitiesOfCountry(countryCode);
-    const countryTimezone = country.timezones?.[0]?.zoneName ?? 'UTC';
+    const states = await getStatesOfCountry(countryCode);
 
-    for (const city of countryCities as CityRecord[]) {
+    for (const state of states) {
+      const countryCities = await getCitiesOfState(countryCode, state.iso2);
+      for (const city of countryCities as CityRecord[]) {
       const name = String(city.name ?? '').trim();
       const latitude = Number(city.latitude);
       const longitude = Number(city.longitude);
@@ -130,6 +131,7 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
         tier: 3
       });
       seen.add(id);
+      }
     }
   }
 
@@ -322,7 +324,7 @@ app.get('/api/v1/solar', async (req, res) => {
 
 app.get('/api/v1/lunar', async (req, res) => {
   apiHeaders(res);
-  const location = resolveApiLocation(req.query['location']);
+  const location = await resolveApiLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
   const date = resolveApiDate(req.query['at']);
   if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
