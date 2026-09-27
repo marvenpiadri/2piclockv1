@@ -323,7 +323,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private readonly mapBackbone = inject(MapBackboneService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets = this.locationService.allPresets;
+  readonly allPresets: GeoLocation[] = [];
   readonly activeDate = this.timeControlService.currentActiveDate;
   readonly celestial = this.celestialService.celestialState;
   readonly localTime = this.celestialService.formattedLocalTime;
@@ -600,7 +600,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       this.initObserverMarker();
 
       // Render curated labels plus the complete internal city catalogue.
-      this.initCityMarkers();
       this.initGlobalCityCatalogue();
 
       // Update on zoom change for level-of-detail rendering
@@ -613,7 +612,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       this.updateCelestialGridLayer(this.showCelestialGrid());
       this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
       this.updateWorldWeatherLayer(this.showWorldWeather());
-      this.weatherService.fetchWorldWeather(this.allPresets);
+      this.weatherService.fetchWorldWeather(this.allMapLocations);
 
       // Fetch weather for initial location
       this.weatherService.fetchWeatherForLocation(loc);
@@ -693,7 +692,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private refreshWorldWeatherSource(): void {
     if (!this.map || !this.worldWeatherSourceReady) return;
     const weather = this.weatherService.worldWeather();
-    const features = this.allPresets
+    const features = this.allMapLocations
       .filter(loc => weather[loc.id])
       .map(loc => ({
         type: 'Feature',
@@ -1222,7 +1221,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private initCityMarkers(): void {
     if (!this.map) return;
 
-    this.allPresets.forEach(loc => {
+    this.allMapLocations.forEach(loc => {
       const el = document.createElement('div');
       el.className = 'city-marker-anchor';
       el.dataset['cityId'] = loc.id;
@@ -1257,7 +1256,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     const currentZoom = this.map ? this.map.getZoom() : 2;
     const minuteBucket = Math.floor(date.getTime() / 60000);
 
-    for (const loc of this.allPresets) {
+    for (const loc of this.allMapLocations) {
       const marker = this.cityMarkers.get(loc.id);
       if (!marker) continue;
 
@@ -1617,7 +1616,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   toggleWorldWeather(): void {
     const enabled = !this.showWorldWeather();
     this.showWorldWeather.set(enabled);
-    if (enabled) this.weatherService.fetchWorldWeather(this.allPresets);
+    if (enabled) this.weatherService.fetchWorldWeather(this.allMapLocations);
     this.updateWorldWeatherLayer(enabled);
   }
 
