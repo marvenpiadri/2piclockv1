@@ -413,7 +413,7 @@
       <div class="drawer-content">
         <div class="drawer-tabs"><button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Location</button><button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button></div>
         @if (activeDrawerTab() === 'locations') {
-          <div class="location-list"><input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />@for (loc of filteredDrawerLocations(); track loc.name + loc.country) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}</div>
+          <div class="location-list"><input type="search" placeholder="Search any city or country..." [value]="drawerSearchQuery()" (input)="onDrawerSearch($any($event.target).value)" />@if (drawerLocationSearching()) {<span class="location-search-status">Searching all cities…</span>}@for (loc of filteredDrawerLocations(); track loc.id) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}@if (!drawerLocationSearching() && drawerSearchQuery().trim().length >= 2 && filteredDrawerLocations().length === 0) {<span class="location-search-status">No locations found.</span>}</div>
         } @else {
           <div class="drawer-report">
             <span class="section-eyebrow">CURRENT WEATHER</span>
