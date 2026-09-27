@@ -193,10 +193,15 @@ export class LocationService {
       const response = await fetch(this.catalogueUrl);
       if (!response.ok) throw new Error('Location catalogue unavailable');
       const data = await response.json() as { locations?: GeoLocation[] };
-      this.catalogue = data.locations ?? [];
+      const locations = data.locations ?? [];
+      if (locations.length === 0) throw new Error('Location catalogue is empty');
+      this.catalogue = locations;
       this.locations.set(this.catalogue);
+      this.locationError.set(null);
     } catch {
       this.catalogue = [];
+      this.locations.set([]);
+      this.locationError.set('The global city catalogue could not be loaded.');
     }
     return this.catalogue;
   }
