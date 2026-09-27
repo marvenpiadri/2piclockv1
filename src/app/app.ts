@@ -425,6 +425,10 @@ export class App {
     this.isSearchFocused.set(false);
   }
 
+  locationPath(section?: string): string[] {
+    return this.locationService.getLocationPath(this.selectedLocation(), section);
+  }
+
   navigateMenu(item: { path?: string; view?: ObservatoryView }): void {
     if (item.view) {
       this.observatoryViewService.setView(item.view);
