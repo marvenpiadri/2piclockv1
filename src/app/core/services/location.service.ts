@@ -15,6 +15,7 @@ export class LocationService {
   private readonly randomLocationsStorageKey = '2piclock_random_locations_v1';
   private catalogue?: GeoLocation[];
   readonly randomLocations = signal<GeoLocation[]>([]);
+  readonly locations = signal<GeoLocation[]>([]);
   readonly selectedLocation = signal<GeoLocation>(this.createNeutralLocation());
   readonly watchlist = signal<GeoLocation[]>([]);
 
@@ -193,6 +194,7 @@ export class LocationService {
       if (!response.ok) throw new Error('Location catalogue unavailable');
       const data = await response.json() as { locations?: GeoLocation[] };
       this.catalogue = data.locations ?? [];
+      this.locations.set(this.catalogue);
     } catch {
       this.catalogue = [];
     }
