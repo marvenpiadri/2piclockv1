@@ -90,6 +90,95 @@ export class ShareExportModalComponent implements AfterViewInit {
     });
   }
 
+  private drawWeatherIcon(ctx: CanvasRenderingContext2D, condition: string, isDay: boolean, x: number, y: number, size: number): void {
+    const key = condition.toLowerCase();
+    const night = !isDay;
+    const accent = isDay ? '#fbbf24' : '#cbd5e1';
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.lineWidth = Math.max(3, size * 0.055);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const cloudy = key.includes('cloud') || key.includes('overcast') || key.includes('fog');
+    const rainy = key.includes('rain') || key.includes('drizzle') || key.includes('shower');
+    const snowy = key.includes('snow') || key.includes('sleet');
+    const storm = key.includes('thunder') || key.includes('storm');
+
+    if (night && !cloudy && !rainy && !snowy && !storm) {
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.arc(size * .52, size * .46, size * .25, Math.PI * .25, Math.PI * 1.75);
+      ctx.fill();
+      ctx.fillStyle = '#07111f';
+      ctx.beginPath();
+      ctx.arc(size * .65, size * .37, size * .23, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      if (!night && !cloudy) {
+        ctx.strokeStyle = accent;
+        ctx.beginPath();
+        ctx.arc(size * .34, size * .36, size * .18, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let i = 0; i < 8; i++) {
+          const a = i * Math.PI / 4;
+          const x1 = size * .34 + Math.cos(a) * size * .27;
+          const y1 = size * .36 + Math.sin(a) * size * .27;
+          const x2 = size * .34 + Math.cos(a) * size * .34;
+          const y2 = size * .36 + Math.sin(a) * size * .34;
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+      } else if (night && !cloudy) {
+        ctx.fillStyle = accent;
+        ctx.beginPath();
+        ctx.arc(size * .34, size * .35, size * .18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      if (cloudy || rainy || snowy || storm) {
+        ctx.fillStyle = '#dbe7f5';
+        ctx.beginPath();
+        ctx.arc(size * .47, size * .58, size * .18, Math.PI, 0);
+        ctx.arc(size * .63, size * .56, size * .24, Math.PI, 0);
+        ctx.arc(size * .77, size * .62, size * .16, Math.PI, 0);
+        ctx.lineTo(size * .86, size * .76);
+        ctx.lineTo(size * .34, size * .76);
+        ctx.closePath();
+        ctx.fill();
+
+        if (storm) {
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.moveTo(size * .58, size * .77);
+          ctx.lineTo(size * .49, size * .98);
+          ctx.lineTo(size * .63, size * .84);
+          ctx.lineTo(size * .55, size * .84);
+          ctx.closePath();
+          ctx.fill();
+        } else if (snowy) {
+          ctx.strokeStyle = '#93c5fd';
+          for (const sx of [0.48, 0.62, 0.76]) {
+            ctx.beginPath();
+            ctx.moveTo(size * sx, size * .82);
+            ctx.lineTo(size * sx, size * .98);
+            ctx.moveTo(size * sx - size * .06, size * .9);
+            ctx.lineTo(size * sx + size * .06, size * .9);
+            ctx.stroke();
+          }
+        } else if (rainy) {
+          ctx.strokeStyle = '#60a5fa';
+          for (const rx of [0.48, 0.62, 0.76]) {
+            ctx.beginPath();
+            ctx.moveTo(size * rx, size * .82);
+            ctx.lineTo(size * (rx - .05), size * .98);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    ctx.restore();
+  }
+
   private drawMetric(ctx: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number): void {
     ctx.fillStyle = 'rgba(148,163,184,.72)';
     ctx.font = '700 12px ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -123,8 +212,12 @@ export class ShareExportModalComponent implements AfterViewInit {
     const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
     const moon = celestial.moon;
 
-    // Full-bleed dark business card: no outer border, inset frame, or transparent padding.
-    ctx.fillStyle = '#0d1117';
+    // Theme-native export: midnight-blue canvas with an amber atmospheric glow.
+    const bg = ctx.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, '#07111f');
+    bg.addColorStop(0.52, '#0b1729');
+    bg.addColorStop(1, '#020617');
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
     const glow = ctx.createRadialGradient(1010, 80, 10, 1010, 80, 360);
@@ -173,6 +266,14 @@ export class ShareExportModalComponent implements AfterViewInit {
       215,
       264
     );
+
+    this.drawWeatherIcon(ctx, weather.condition, weather.isDay, 1035, 180, 120);
+    ctx.fillStyle = 'rgba(251,191,36,.12)';
+    ctx.beginPath();
+    ctx.arc(1095, 226, 82, 0, Math.PI * 2);
+    ctx.fill();
+
+
 
     const weatherY = 310;
     const colW = 245;
