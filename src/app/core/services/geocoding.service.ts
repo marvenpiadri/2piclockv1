@@ -8,7 +8,7 @@ interface InternalLocationSearchResponse {
 }
 
 /**
- * Internal-first location catalogue.
+ * Internal-first global location catalogue.
  *
  * The application owns its canonical location index and exposes it through
  * the versioned server API. This keeps normal location search independent of
@@ -24,9 +24,7 @@ export class GeocodingService {
 
   getCountries(): Observable<GeoLocation[]> {
     if (!this.countries$) {
-      this.countries$ = this.http.get<InternalLocationSearchResponse>(this.endpoint, {
-        params: new HttpParams().set('q', '')
-      }).pipe(
+      this.countries$ = this.http.get<{ locations?: GeoLocation[] }>('/api/v1/locations').pipe(
         map(response => response.locations ?? []),
         shareReplay({ bufferSize: 1, refCount: true }),
         catchError(() => of([]))
