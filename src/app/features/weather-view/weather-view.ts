@@ -118,7 +118,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   readonly weatherService = inject(WeatherService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets = this.locationService.allPresets;
+  readonly allLocations = this.locationService.locations;
   readonly activeDate = this.timeControl.currentActiveDate;
   readonly liveWeather = this.weatherService.currentWeather;
   readonly locationSearchQuery = signal('');
