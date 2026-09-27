@@ -68,10 +68,10 @@ export class GeocodingService {
   }
 
   private filterCatalogue(locations: GeoLocation[], query: string, count: number): GeoLocation[] {
-    const normalized = query.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase();
+    const normalized = query.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
     return locations
       .filter(location => [location.name, location.country, location.countryCode, location.timezone]
-        .some(value => String(value).normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase().includes(normalized)))
+        .some(value => String(value).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().includes(normalized)))
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, count);
   }
