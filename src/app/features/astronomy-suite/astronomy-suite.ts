@@ -37,7 +37,7 @@ export type AstronomyTab = 'overview' | 'solar' | 'daylight' | 'moon' | 'events'
 export class AstronomySuiteComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private locationService = inject(LocationService);
+  readonly locationService = inject(LocationService);
   private astroCalc = inject(AstronomicalCalculatorService);
   private title = inject(Title);
   private meta = inject(Meta);
