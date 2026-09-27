@@ -703,7 +703,7 @@
 .sky-background-active .btn-observatories,
 .sky-background-active .location-pill-btn,
 .sky-background-active .btn-gps-action {
-  background: rgba(249, 115, 22, 0.96);
+  background: var(--color-accent);
   border-color: var(--color-accent);
   color: #1c1917;
 }
