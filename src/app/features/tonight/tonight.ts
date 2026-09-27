@@ -135,7 +135,7 @@ export class TonightComponent {
 
   // Authoritative Location state
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets = this.locationService.allPresets;
+  readonly allLocations = this.locationService.locations;
   readonly showLocationPicker = signal<boolean>(false);
   readonly locationSearch = signal<string>('');
   readonly showShareModal = signal<boolean>(false);
@@ -143,8 +143,8 @@ export class TonightComponent {
   // Filtered preset locations for quick switcher
   readonly filteredLocations = computed(() => {
     const q = this.locationSearch().toLowerCase().trim();
-    if (!q) return this.allPresets.slice(0, 14);
-    return this.allPresets.filter(l =>
+    if (!q) return this.allLocations().slice(0, 14);
+    return this.allLocations().filter(l =>
       l.name.toLowerCase().includes(q) ||
       l.country.toLowerCase().includes(q) ||
       l.countryCode.toLowerCase().includes(q)
