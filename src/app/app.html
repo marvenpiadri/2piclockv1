@@ -89,13 +89,13 @@
 
       <!-- Subtle Basic Navigation Links on the Left -->
       <nav class="hidden lg:flex items-center gap-0.5 text-xs" aria-label="Primary">
-        <a routerLink="/" routerLinkActive="nav-main-active" [routerLinkActiveOptions]="{exact:true}" class="nav-main-link"><span>Sky</span></a>
+        <a [routerLink]="locationPath()" routerLinkActive="nav-main-active" [routerLinkActiveOptions]="{exact:true}" class="nav-main-link"><span>Sky</span></a>
         <a routerLink="/time" routerLinkActive="nav-main-active" class="nav-main-link"><span>Time</span></a>
         <a routerLink="/world" routerLinkActive="nav-main-active" class="nav-main-link"><span>World</span></a>
         <a routerLink="/world-clocks" routerLinkActive="nav-main-active" class="nav-main-link"><span>Clocks</span></a>
-        <a routerLink="/astronomy" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
+        <a [routerLink]="locationPath('astronomy')" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
         <a routerLink="/radio" routerLinkActive="nav-main-active" class="nav-main-link"><span>Radio</span></a>
-        <a routerLink="/events" routerLinkActive="nav-main-active" class="nav-main-link"><span>Events</span></a>
+        <a [routerLink]="locationPath('events')" routerLinkActive="nav-main-active" class="nav-main-link"><span>Events</span></a>
       </nav>
 
     </div>
