@@ -1090,11 +1090,11 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private initGlobalCityCatalogue(): void {
     if (!this.map) return;
 
-    this.geocodingService.getAllLocations().subscribe(locations => {
+    this.geocodingService.getMapLocations().subscribe(locations => {
       if (!this.map || !locations.length) return;
 
       this.allMapLocations = locations;
-      this.weatherService.fetchWorldWeather(locations);
+      if (this.showWorldWeather()) this.weatherService.fetchWorldWeather(locations);
       this.mapLocationById.clear();
       for (const location of locations) this.mapLocationById.set(location.id, location);
 
