@@ -158,6 +158,69 @@ const resolveLocation = async (value: unknown): Promise<GeoLocation | undefined>
 
 app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));
 
+const weatherProxyCache = new Map<string, { expiresAt: number; data: unknown }>();
+const WEATHER_CACHE_MS = 10 * 60 * 1000;
+
+app.get('/api/v1/weather', async (req, res) => {
+  apiHeaders(res);
+
+  try {
+    let latitude = typeof req.query['latitude'] === 'string' ? req.query['latitude'] : '';
+    let longitude = typeof req.query['longitude'] === 'string' ? req.query['longitude'] : '';
+
+    if (typeof req.query['location'] === 'string') {
+      const location = await resolveApiLocation(req.query['location']);
+      if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid location id.');
+      latitude = String(location.latitude);
+      longitude = String(location.longitude);
+    }
+
+    if (!latitude || !longitude) {
+      return apiError(res, 400, 'MISSING_COORDINATES', 'Provide latitude and longitude, or a location id.');
+    }
+
+    const allowed = ['current', 'hourly', 'forecast_days', 'timezone'];
+    const search = new URLSearchParams();
+    search.set('latitude', latitude);
+    search.set('longitude', longitude);
+
+    for (const key of allowed) {
+      const value = req.query[key];
+      if (typeof value === 'string' && value) search.set(key, value);
+    }
+
+    const cacheKey = search.toString();
+    const cached = weatherProxyCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.setHeader('X-2piClock-Cache', 'HIT');
+      return res.json(cached.data);
+    }
+
+    const upstream = await fetch(`https://api.open-meteo.com/v1/forecast?${search.toString()}`, {
+      headers: { Accept: 'application/json' }
+    });
+
+    if (!upstream.ok) {
+      return apiError(res, 502, 'WEATHER_UPSTREAM_ERROR', `Weather provider returned HTTP ${upstream.status}.`);
+    }
+
+    const data = await upstream.json();
+    weatherProxyCache.set(cacheKey, { expiresAt: Date.now() + WEATHER_CACHE_MS, data });
+
+    if (weatherProxyCache.size > 200) {
+      const oldest = weatherProxyCache.keys().next().value;
+      if (oldest) weatherProxyCache.delete(oldest);
+    }
+
+    res.setHeader('X-2piClock-Cache', 'MISS');
+    res.json(data);
+  } catch {
+    apiError(res, 502, 'WEATHER_UNAVAILABLE', 'Weather data is temporarily unavailable.');
+  }
+});
+
+
+
 app.get('/api/v1', (_req, res) => {
   apiHeaders(res);
   res.json({
@@ -168,6 +231,7 @@ app.get('/api/v1', (_req, res) => {
       '/api/v1/locations',
       '/api/v1/locations/search?q=casablanca',
       '/api/v1/locations/search?q=paris',
+      '/api/v1/weather?location=paris&current=temperature_2m,weather_code&hourly=temperature_2m&forecast_days=7&timezone=UTC',
       '/api/v1/solar?location=paris&at=2026-09-26T12:00:00Z',
       '/api/v1/lunar?location=paris&at=2026-09-26T12:00:00Z',
       '/api/v1/celestial?location=paris&at=2026-09-26T12:00:00Z',
