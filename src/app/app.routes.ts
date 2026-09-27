@@ -1,4 +1,3 @@
-import { GeoLocation } from './core/models/location.model';
 import { isPlatformBrowser } from '@angular/common';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { Routes, CanActivateFn, Router } from '@angular/router';
