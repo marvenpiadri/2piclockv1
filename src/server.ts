@@ -482,10 +482,7 @@ app.get(/^\/([a-z]{2}-\d+)\/([a-z0-9-]+)$/, async (req, res, next) => {
 });
 
 app.get('/robots.txt', (_req, res) => {
-  res.type('text/plain').send('User-agent: *
-Allow: /
-Sitemap: https://2piclock.com/sitemap.xml
-');
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n`);
 });
 
 app.get('/sitemap.xml', (_req, res) => {
