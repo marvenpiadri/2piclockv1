@@ -83,7 +83,7 @@
             <div class="form-group">
               <label>Origin Location / Timezone</label>
               <select [ngModel]="converterSourceLoc().id" (ngModelChange)="setConverterSourceById($event)">
-                @for (loc of allPresets; track loc.id) {
+                @for (loc of allLocations; track loc.id) {
                   <option [value]="loc.id">{{ loc.name }} ({{ loc.country }}) · {{ loc.timezone }}</option>
                 }
               </select>
@@ -111,7 +111,7 @@
             <div class="add-target-block">
               <label>Add Target City for Comparison</label>
               <div class="target-pills-wrap">
-                @for (preset of allPresets; track preset.id) {
+                @for (preset of allLocations; track preset.id) {
                   <button type="button" class="btn-pill" (click)="addTargetCity(preset)">
                     <span>+ {{ preset.name }}</span>
                   </button>
@@ -178,7 +178,7 @@
             <div class="diff-loc-picker">
               <label>Location A</label>
               <select [ngModel]="diffLocA().id" (ngModelChange)="setDiffLocAById($event)">
-                @for (loc of allPresets; track loc.id) {
+                @for (loc of allLocations; track loc.id) {
                   <option [value]="loc.id">{{ loc.name }} ({{ loc.country }})</option>
                 }
               </select>
@@ -191,7 +191,7 @@
             <div class="diff-loc-picker">
               <label>Location B</label>
               <select [ngModel]="diffLocB().id" (ngModelChange)="setDiffLocBById($event)">
-                @for (loc of allPresets; track loc.id) {
+                @for (loc of allLocations; track loc.id) {
                   <option [value]="loc.id">{{ loc.name }} ({{ loc.country }})</option>
                 }
               </select>
@@ -542,7 +542,7 @@
             <div class="matrix-ref-picker">
               <label>Reference City:</label>
               <select [ngModel]="matrixReferenceCity().id" (ngModelChange)="setMatrixReferenceCityById($event)">
-                @for (loc of allPresets; track loc.id) {
+                @for (loc of allLocations; track loc.id) {
                   <option [value]="loc.id">{{ loc.name }} ({{ loc.country }})</option>
                 }
               </select>
