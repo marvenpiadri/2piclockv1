@@ -264,7 +264,7 @@ app.get('/api/v1/locations/search', async (req, res) => {
   const rawQuery = typeof req.query['q'] === 'string' ? req.query['q'].trim() : '';
   const query = normalizeLocationText(rawQuery);
   const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 12) || 12));
-  if (query.length < 2) return res.json({ version: '1', query, count: 0, locations: [] });
+  if (query.length < 2) { res.json({ version: '1', query, count: 0, locations: [] }); return; }
   try {
     let matches = locationSearchCache.get(query);
     if (!matches) {
