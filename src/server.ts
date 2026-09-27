@@ -522,7 +522,7 @@ app.get('/sitemap-pages.xml', (_req, res) => {
 
 app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
   const chunkParam = String(req.params['chunk'] ?? '');
-  if (!/^\\d+$/.test(chunkParam)) {
+  if (!/^\d+$/.test(chunkParam)) {
     res.status(404).type('text/plain').send('Sitemap not found.');
     return;
   }
