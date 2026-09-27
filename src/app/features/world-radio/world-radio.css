@@ -760,3 +760,85 @@
   background: #0a1628;
 }
 .radio-map-canvas .maplibregl-canvas { outline: none; }
+
+
+/* --------------------------------------------------------------------------
+   2pi visual language: radio lives on the same transparent midnight canvas.
+   -------------------------------------------------------------------------- */
+.radio-suite-container {
+  background: transparent;
+  color: var(--color-text-main);
+}
+
+.radio-suite-container .radio-title-group h1,
+.radio-suite-container .station-hero-title,
+.radio-suite-container .section-title,
+.radio-suite-container .map-title,
+.radio-suite-container .intel-title {
+  color: var(--color-text-main);
+}
+
+.radio-suite-container .radio-title-group p,
+.radio-suite-container .station-hero-loc,
+.radio-suite-container .radio-kicker {
+  color: var(--color-text-secondary);
+}
+
+.radio-suite-container .radio-tabs {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-midnight-500) 58%, transparent);
+}
+
+.radio-suite-container .tab-btn {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.radio-suite-container .tab-btn:hover {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  color: var(--color-text-main);
+}
+
+.radio-suite-container .tab-btn.active,
+.radio-suite-container .hero-play-btn {
+  background: var(--color-amber-gradient);
+  color: var(--color-text-on-accent);
+}
+
+.radio-suite-container .hero-player-surface,
+.radio-suite-container .intel-card,
+.radio-suite-container .station-card,
+.radio-suite-container .empty-state-card,
+.radio-suite-container .map-hover-card {
+  background: color-mix(in srgb, var(--color-midnight-900) 34%, transparent);
+  border-color: color-mix(in srgb, var(--color-midnight-500) 52%, transparent);
+  box-shadow: none;
+}
+
+.radio-suite-container .hero-player-surface {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.radio-suite-container .station-card.is-playing {
+  background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+  border-color: var(--color-accent-border);
+}
+
+.radio-suite-container .map-container-header {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-midnight-500) 52%, transparent);
+}
+
+.radio-suite-container input,
+.radio-suite-container select {
+  background: color-mix(in srgb, var(--color-midnight-950) 44%, transparent);
+  border-color: color-mix(in srgb, var(--color-midnight-500) 58%, transparent);
+  color: var(--color-text-main);
+}
+
+.radio-suite-container input:focus,
+.radio-suite-container select:focus {
+  border-color: var(--color-accent-border);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
