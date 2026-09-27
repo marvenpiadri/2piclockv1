@@ -169,7 +169,7 @@ app.get('/api/v1/weather', async (req, res) => {
     let longitude = typeof req.query['longitude'] === 'string' ? req.query['longitude'] : '';
 
     if (typeof req.query['location'] === 'string') {
-      const location = await resolveApiLocation(req.query['location']);
+      const location = await resolveLocation(req.query['location']);
       if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid location id.');
       latitude = String(location.latitude);
       longitude = String(location.longitude);
@@ -312,7 +312,7 @@ app.get('/api/v1/locations', async (_req, res) => {
 
 app.get('/api/v1/solar', async (req, res) => {
   apiHeaders(res);
-  const location = await resolveApiLocation(req.query['location']);
+  const location = await resolveLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
   const date = resolveApiDate(req.query['at']);
   if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
@@ -322,7 +322,7 @@ app.get('/api/v1/solar', async (req, res) => {
 
 app.get('/api/v1/lunar', async (req, res) => {
   apiHeaders(res);
-  const location = await resolveApiLocation(req.query['location']);
+  const location = await resolveLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
   const date = resolveApiDate(req.query['at']);
   if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
@@ -333,7 +333,7 @@ app.get('/api/v1/lunar', async (req, res) => {
 
 app.get('/api/v1/celestial', async (req, res) => {
   apiHeaders(res);
-  const location = await resolveApiLocation(req.query['location']);
+  const location = await resolveLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
   const date = resolveApiDate(req.query['at']);
   if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
@@ -343,7 +343,7 @@ app.get('/api/v1/celestial', async (req, res) => {
 
 app.get('/api/v1/events', async (req, res) => {
   apiHeaders(res);
-  const location = await resolveApiLocation(req.query['location']);
+  const location = await resolveLocation(req.query['location']);
   if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
   const rawDate = typeof req.query['date'] === 'string' ? req.query['date'] : '';
   const date = rawDate ? new Date(rawDate + 'T12:00:00Z') : new Date();
