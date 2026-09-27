@@ -1,3 +1,4 @@
+import { GeoLocation } from './core/models/location.model';
 import { inject } from '@angular/core';
 import { Routes, CanActivateFn, Router } from '@angular/router';
 import { LocationService } from './core/services/location.service';
