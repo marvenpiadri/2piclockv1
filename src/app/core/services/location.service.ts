@@ -39,14 +39,21 @@ export class LocationService {
 
         const savedLocId = localStorage.getItem('2piclock_selected_location');
         if (savedLocId) {
-          void this.loadCatalogue().then(() => {
-            const found = this.catalogue?.find(l => l.id === savedLocId);
-            if (found) this.selectedLocation.set(found);
-          }); else {
-            const custom = JSON.parse(savedLocId);
-            if (custom && Number.isFinite(Number(custom.latitude)) && Number.isFinite(Number(custom.longitude))) {
+          try {
+            const custom = JSON.parse(savedLocId) as GeoLocation;
+            if (custom && Number.isFinite(Number(custom.latitude)) && Number.isFinite(Number(custom.longitude)) && custom.isCustom) {
               this.selectedLocation.set(custom);
+            } else {
+              void this.loadCatalogue().then(() => {
+                const found = this.catalogue?.find(l => l.id === savedLocId);
+                if (found) this.selectedLocation.set(found);
+              });
             }
+          } catch {
+            void this.loadCatalogue().then(() => {
+              const found = this.catalogue?.find(l => l.id === savedLocId);
+              if (found) this.selectedLocation.set(found);
+            });
           }
         }
       } catch {
@@ -133,7 +140,7 @@ export class LocationService {
 
   /**
    * Resolve a usable location for the root experience. A saved choice wins;
-   * otherwise try browser GPS, then use a deterministic preset fallback.
+   * otherwise try browser GPS, then use the library catalogue.
    */
   async ensureInitialLocation(): Promise<GeoLocation> {
     const current = this.selectedLocation();
@@ -149,8 +156,7 @@ export class LocationService {
       if (detected) return detected;
     }
 
-    // Keep the no-GPS fallback deterministic. The app must never change cities
-    // randomly between visits or renders.
+    // Keep the no-GPS fallback deterministic by selecting a city from the library catalogue.
     const catalogue = await this.loadCatalogue();
     const timezone = this.isBrowser ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
     const fallback = catalogue.find(loc => loc.timezone === timezone) ?? catalogue[0] ?? current;
