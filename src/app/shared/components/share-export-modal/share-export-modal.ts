@@ -315,7 +315,8 @@ export class ShareExportModalComponent implements AfterViewInit {
     const instant = this.timeControlService.currentActiveDate().toISOString();
     const pathname = window.location.pathname;
     const experience = pathname === '/weather' ? 'weather' : pathname === '/tonight' ? 'tonight' : 'time';
-    const locationPath = this.locationService.getLocationSlug(location);\n    const path = pathname.startsWith('/' + locationPath) ? pathname : '/' + locationPath + '/' + experience;
+    const locationPath = this.locationService.getLocationSlug(location);
+    const path = pathname.startsWith('/' + locationPath) ? pathname : '/' + locationPath + '/' + experience;
     const url = window.location.origin + path + '?at=' + encodeURIComponent(instant);
 
     try {
