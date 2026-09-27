@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import {join} from 'node:path';
 import { PRESET_LOCATIONS, GeoLocation } from './app/core/models/location.model';
-import { getCountries, getStatesOfCountry, getCitiesOfState } from '@countrystatecity/countries';
+import { getCountries, getAllCitiesInWorld } from '@countrystatecity/countries';
 import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -90,47 +90,66 @@ interface CityRecord {
 
 let locationIndexPromise: Promise<GeoLocation[]> | undefined;
 
+const normalizeLocationText = (value: string) =>
+  value
+    .normalize('NFKD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .toLocaleLowerCase()
+    .trim();
+
 const slugifyLocation = (value: string) =>
-  value.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  normalizeLocationText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 const buildLocationIndex = async (): Promise<GeoLocation[]> => {
-  const countries = await getCountries();
+  const [countries, cities] = await Promise.all([
+    getCountries(),
+    getAllCitiesInWorld()
+  ]);
+
+  const countryByCode = new Map(
+    countries.map(country => [
+      String(country.iso2 ?? '').toUpperCase(),
+      {
+        name: String(country.name ?? ''),
+        flag: String(country.emoji ?? '')
+      }
+    ])
+  );
+
   const locations: GeoLocation[] = [...PRESET_LOCATIONS];
   const seen = new Set(locations.map(location => location.id));
 
-  for (const country of countries) {
-    const countryCode = String(country.iso2 ?? '').toUpperCase();
-    if (!countryCode) continue;
+  for (const city of cities as CityRecord[]) {
+    const name = String(city.name ?? '').trim();
+    const countryCode = String(city.countryCode ?? '').toUpperCase();
+    const latitude = Number(city.latitude);
+    const longitude = Number(city.longitude);
 
-    const states = await getStatesOfCountry(countryCode);
-
-    for (const state of states) {
-      const countryCities = await getCitiesOfState(countryCode, state.iso2);
-      for (const city of countryCities as CityRecord[]) {
-      const name = String(city.name ?? '').trim();
-      const latitude = Number(city.latitude);
-      const longitude = Number(city.longitude);
-      if (!name || !Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
-
-      const id = `${countryCode.toLowerCase()}-${slugifyLocation(name)}`;
-      if (seen.has(id)) continue;
-
-      const timezone = city.timezone || 'UTC';
-      locations.push({
-        id,
-        name,
-        country: String(country.name ?? countryCode),
-        countryCode,
-        flag: String(country.emoji ?? ''),
-        latitude,
-        longitude,
-        timezone,
-        tier: 3
-      });
-      seen.add(id);
-      }
+    if (
+      !name ||
+      !countryCode ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      continue;
     }
+
+    const country = countryByCode.get(countryCode);
+    const id = `${countryCode.toLowerCase()}-${slugifyLocation(name)}`;
+    if (seen.has(id)) continue;
+
+    locations.push({
+      id,
+      name,
+      country: country?.name || countryCode,
+      countryCode,
+      flag: country?.flag || '',
+      latitude,
+      longitude,
+      timezone: String(city.timezone || 'UTC'),
+      tier: 3
+    });
+    seen.add(id);
   }
 
   return locations;
@@ -242,7 +261,8 @@ app.get('/api/v1', (_req, res) => {
 
 app.get('/api/v1/locations/search', async (req, res) => {
   apiHeaders(res);
-  const query = typeof req.query['q'] === 'string' ? req.query['q'].trim().toLocaleLowerCase() : '';
+  const rawQuery = typeof req.query['q'] === 'string' ? req.query['q'].trim() : '';
+  const query = normalizeLocationText(rawQuery);
   const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 12) || 12));
 
   try {
@@ -256,18 +276,33 @@ app.get('/api/v1/locations/search', async (req, res) => {
           location.countryCode,
           location.id,
           location.timezone
-        ].some(value => value.toLocaleLowerCase().includes(query));
+        ].some(value => normalizeLocationText(String(value)).includes(query));
       })
       .sort((a, b) => {
         if (!query) return (a.tier ?? 3) - (b.tier ?? 3);
-        const aName = a.name.toLocaleLowerCase();
-        const bName = b.name.toLocaleLowerCase();
-        const aExact = [a.id, aName, a.countryCode.toLocaleLowerCase()].includes(query);
-        const bExact = [b.id, bName, b.countryCode.toLocaleLowerCase()].includes(query);
+
+        const aName = normalizeLocationText(a.name);
+        const bName = normalizeLocationText(b.name);
+        const aCountry = normalizeLocationText(a.country);
+        const bCountry = normalizeLocationText(b.country);
+        const aId = normalizeLocationText(a.id);
+        const bId = normalizeLocationText(b.id);
+        const aCode = normalizeLocationText(a.countryCode);
+        const bCode = normalizeLocationText(b.countryCode);
+
+        const aExact = [aId, aName, aCode].includes(query);
+        const bExact = [bId, bName, bCode].includes(query);
         const aPrefix = aName.startsWith(query);
         const bPrefix = bName.startsWith(query);
+        const aWordPrefix = aName.split(/\\s+/).some(word => word.startsWith(query));
+        const bWordPrefix = bName.split(/\\s+/).some(word => word.startsWith(query));
+        const aCountryPrefix = aCountry.startsWith(query);
+        const bCountryPrefix = bCountry.startsWith(query);
+
         return Number(bExact) - Number(aExact)
           || Number(bPrefix) - Number(aPrefix)
+          || Number(bWordPrefix) - Number(aWordPrefix)
+          || Number(bCountryPrefix) - Number(aCountryPrefix)
           || (a.tier ?? 3) - (b.tier ?? 3)
           || a.name.localeCompare(b.name);
       })
