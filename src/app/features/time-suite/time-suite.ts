@@ -31,7 +31,7 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   private title = inject(Title);
   private meta = inject(Meta);
 
-  readonly allLocations = this.locationService.locations;
+  readonly allLocations = computed(() => this.locationService.locations());
   readonly activeTab = signal<TimeToolTab>('converter');
   readonly copyNotification = signal<string | null>(null);
 
