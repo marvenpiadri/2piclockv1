@@ -18,16 +18,16 @@
 
 :root {
   /* 2piClock aliases: all shared UI tokens resolve through the DooMath token system. */
-  --2pi-amber: var(--color-math-orange);
-  --2pi-amber-bright: var(--color-math-orange);
-  --2pi-amber-soft: var(--color-math-orange-light);
-  --2pi-amber-glow: var(--color-math-orange-medium);
-  --2pi-cyan: #06b6d4;
-  --2pi-cyan-soft: rgba(6, 182, 212, 0.12);
-  --2pi-emerald: #10b981;
-  --2pi-emerald-soft: rgba(16, 185, 129, 0.12);
-  --2pi-sky: #38bdf8;
-  --2pi-indigo: #6366f1;
+  --2pi-amber: var(--color-accent);
+  --2pi-amber-bright: var(--color-accent);
+  --2pi-amber-soft: var(--color-accent-soft);
+  --2pi-amber-glow: var(--color-accent-border);
+  --2pi-cyan: var(--color-accent);
+  --2pi-cyan-soft: var(--color-accent-soft);
+  --2pi-emerald: var(--color-positive);
+  --2pi-emerald-soft: color-mix(in srgb, var(--color-positive) 12%, transparent);
+  --2pi-sky: var(--color-accent);
+  --2pi-indigo: var(--color-accent);
 
   --2pi-night: var(--color-canvas);
   --2pi-canvas: var(--color-canvas);
@@ -38,7 +38,7 @@
 
   --2pi-border: var(--color-border);
   --2pi-border-strong: var(--color-border-dark);
-  --2pi-border-accent: var(--color-math-orange-border);
+  --2pi-border-accent: var(--color-accent-border);
 
   --2pi-text: var(--color-text-main);
   --2pi-text-secondary: var(--color-text-secondary);
@@ -151,7 +151,7 @@ body {
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
   border-radius: var(--radius-xl);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-lg);
   transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -169,7 +169,7 @@ body {
 }
 
 .full-page-glass-substrate {
-  background: rgba(5, 7, 12, 0.22);
+  background: color-mix(in srgb, var(--color-midnight-950) 22%, transparent);
 }
 
 body.glass-mode-disabled .full-page-glass-substrate {
@@ -262,10 +262,10 @@ a:focus-visible {
 .app-control:hover {
   color: var(--2pi-text);
   border-color: var(--2pi-border-strong);
-  background: rgba(255,255,255,.07);
+  background: var(--color-surface-hover);
 }
 .app-control.active {
-  color: #09090b;
+  color: var(--color-text-inverse);
   border-color: var(--2pi-amber);
   background: var(--2pi-amber);
 }
@@ -274,29 +274,29 @@ a:focus-visible {
 .app-layout.sky-background-active .text-zinc-400,
 .app-layout.sky-background-active .text-zinc-500 {
   color: var(--2pi-text-on-sky-secondary) !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,.65);
+  text-shadow: 0 1px 3px color-mix(in srgb, var(--color-midnight-950) 65%, transparent);
 }
 .app-layout.sky-background-active .text-slate-600,
 .app-layout.sky-background-active .text-zinc-600 {
   color: var(--2pi-text-on-sky-muted) !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,.7);
+  text-shadow: 0 1px 3px color-mix(in srgb, var(--color-midnight-950) 70%, transparent);
 }
 
 
 /* Bright-sky contrast guard: glass stays atmospheric without becoming translucent text-on-sky. */
 .app-layout.sky-background-active .glass-panel {
-  background: rgba(13, 17, 23, 0.92);
-  border-color: rgba(255,255,255,.14);
+  background: color-mix(in srgb, var(--color-midnight-900) 92%, transparent);
+  border-color: color-mix(in srgb, var(--color-text-main) 14%, transparent);
 }
 .app-layout.sky-background-active .glass-card {
-  background: rgba(22, 27, 34, 0.94);
-  border-color: rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--color-midnight-800) 94%, transparent);
+  border-color: color-mix(in srgb, var(--color-text-main) 12%, transparent);
 }
 .app-layout.sky-background-active h1,
 .app-layout.sky-background-active h2,
 .app-layout.sky-background-active h3,
 .app-layout.sky-background-active h4 {
-  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+  text-shadow: 0 1px 4px color-mix(in srgb, var(--color-midnight-950) 60%, transparent);
 }
 
 /* ==========================================================================
