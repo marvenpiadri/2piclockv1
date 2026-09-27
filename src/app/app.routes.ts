@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { Routes, CanActivateFn, Router } from '@angular/router';
 import { LocationService } from './core/services/location.service';
-import { GeoLocation } from './core/models/location.model';
 import { SkyHomeComponent } from './features/sky-view/sky-home';
 import { WorldClocksComponent } from './features/world-clocks/world-clocks';
 import { WorldViewComponent } from './shared/components/world-view/world-view';
