@@ -306,7 +306,10 @@ export class SeoService {
   private isLocationPage(url: string, locationId: string): boolean {
     if (!locationId) return false;
     const parts = url.split('/').filter(Boolean);
-    return parts[0] === locationId;
+    if (parts.length < 2) return false;
+    const location = this.locationService.selectedLocation();
+    const slug = this.locationService.getLocationSlug(location).split('/');
+    return parts[0] === slug[0] && parts[1] === slug[1];
   }
 
   private breadcrumbs(url: string): { name: string; path: string }[] {
