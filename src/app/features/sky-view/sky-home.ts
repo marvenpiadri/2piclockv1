@@ -73,7 +73,7 @@ export class SkyHomeComponent implements OnDestroy {
   readonly showEventsPanel = signal<boolean>(false);
   readonly showSettingsModal = signal<boolean>(false);
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets = this.locationService.allPresets;
+  readonly allLocations = this.locationService.locations;
   readonly activeDate = this.timeControlService.currentActiveDate;
   readonly isLive = this.timeControlService.isLive;
   readonly isPlaying = this.timeControlService.isPlaying;
@@ -678,7 +678,7 @@ export class SkyHomeComponent implements OnDestroy {
 
   readonly filteredDrawerLocations = computed(() => {
     const q = this.drawerSearchQuery().trim();
-    if (!q) return this.allPresets;
+    if (!q) return this.allLocations();
     return this.drawerLocationResults();
   });
 
