@@ -306,6 +306,27 @@ app.get('/api/v1/locations/random', async (req, res) => {
   }
 });
 
+app.get('/api/v1/locations/map', async (req, res) => {
+  apiHeaders(res);
+  const count = Math.min(5000, Math.max(500, Number(req.query['count'] ?? 2500) || 2500));
+  try {
+    const locations = await getLocationIndex();
+    const grid = new Map<string, GeoLocation>();
+    const latStep = 180 / 90;
+    const lonStep = 360 / 120;
+    for (const location of locations) {
+      const latBucket = Math.floor((location.latitude + 90) / latStep);
+      const lonBucket = Math.floor((location.longitude + 180) / lonStep);
+      const key = latBucket + ':' + lonBucket;
+      if (!grid.has(key)) grid.set(key, location);
+    }
+    const results = [...grid.values()].slice(0, count);
+    res.json({ version: '1', count: results.length, locations: results });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
 app.get('/api/v1/locations/:id', async (req, res) => {
   apiHeaders(res);
   try {
