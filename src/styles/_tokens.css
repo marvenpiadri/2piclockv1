@@ -197,9 +197,9 @@ body[data-theme="light"],
   --color-text-secondary: #475569;
   --color-text-muted: #94a3b8;
   --color-text-inverse: #ffffff;
-  --color-accent: #d97706;
-  --color-accent-soft: rgba(245, 158, 11, 0.12);
-  --color-accent-border: rgba(217, 119, 6, 0.35);
+  --color-accent: #f59e0b;
+  --color-accent-soft: rgba(245, 158, 11, 0.14);
+  --color-accent-border: rgba(245, 158, 11, 0.38);
 
   --color-status-draft: #64748b;
   --color-status-draft-bg: #f1f5f9;
