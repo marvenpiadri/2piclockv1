@@ -156,7 +156,22 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
   }
 
   if (!locations.length) throw new Error('The bundled country/city catalogue loaded but contained no cities.');
-  return locations;
+
+  // The source dataset can contain the same city more than once under
+  // different administrative records. Keep one canonical record per
+  // city/country/coordinate combination so search never shows duplicates.
+  const uniqueLocations = new Map<string, GeoLocation>();
+  for (const location of locations) {
+    const key = [
+      normalizeLocationText(location.name),
+      normalizeLocationText(location.countryCode),
+      location.latitude.toFixed(5),
+      location.longitude.toFixed(5)
+    ].join('|');
+    if (!uniqueLocations.has(key)) uniqueLocations.set(key, location);
+  }
+
+  return [...uniqueLocations.values()];
 };
 const getLocationIndex = (): Promise<GeoLocation[]> => {
   if (!locationIndexPromise) {
