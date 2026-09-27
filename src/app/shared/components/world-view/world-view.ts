@@ -390,7 +390,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
     this.remoteSearchTimer = setTimeout(() => {
       this.isRemoteSearching.set(true);
-      this.geocodingService.search(value, 20).subscribe(results => {
+      this.geocodingService.search(value, 50).subscribe(results => {
         this.remoteSearchResults.set(results);
         this.isRemoteSearching.set(false);
       });
