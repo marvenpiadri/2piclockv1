@@ -26,7 +26,7 @@ export type TimeToolTab = 'converter' | 'difference' | 'duration' | 'date-differ
 export class TimeSuiteComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private locationService = inject(LocationService);
+  readonly locationService = inject(LocationService);
   private timeCalc = inject(TimeCalculationService);
   private title = inject(Title);
   private meta = inject(Meta);
