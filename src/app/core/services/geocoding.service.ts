@@ -38,7 +38,7 @@ export class GeocodingService {
     return this.countries$;
   }
 
-  search(query: string, count = 8): Observable<GeoLocation[]> {
+  search(query: string, count = 50): Observable<GeoLocation[]> {
     const term = query.trim();
     if (term.length < 2) return of([]);
 
@@ -48,7 +48,7 @@ export class GeocodingService {
 
     const params = new HttpParams()
       .set('q', term)
-      .set('count', Math.min(20, Math.max(1, count)));
+      .set('count', Math.min(50, Math.max(1, count)));
 
     return this.http.get<InternalLocationSearchResponse>(this.endpoint, { params }).pipe(
       map(response => {
