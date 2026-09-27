@@ -43,7 +43,6 @@ export class AstronomySuiteComponent implements OnInit {
   private meta = inject(Meta);
   private celestialService = inject(CelestialService);
 
-  readonly allLocations = computed(() => this.locationService.locations());
   readonly activeTab = signal<AstronomyTab>('overview');
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly selectedDate = signal<string>(
@@ -409,7 +408,7 @@ export class AstronomySuiteComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const slug = params.get('location');
       if (slug) {
-        const found = this.allLocations().find(p => p.id === slug);
+        const found = this.locationService.locations().find(p => p.id === slug);
         if (found) {
           this.locationService.selectLocation(found);
           this.selectedDate.set(new Intl.DateTimeFormat('en-CA', {
@@ -429,7 +428,7 @@ export class AstronomySuiteComponent implements OnInit {
         this.activeTab.set(params['tab'] as AstronomyTab);
       }
       if (params['loc']) {
-        const found = this.allLocations().find(p => p.id === params['loc'] || p.name.toLowerCase() === params['loc'].toLowerCase());
+        const found = this.locationService.locations().find(p => p.id === params['loc'] || p.name.toLowerCase() === params['loc'].toLowerCase());
         if (found) this.locationService.selectLocation(found);
       }
       if (params['date']) {
@@ -459,7 +458,7 @@ export class AstronomySuiteComponent implements OnInit {
   }
 
   setLocationById(id: string): void {
-    const loc = this.allLocations().find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) {
       this.locationService.selectLocation(loc);
     }
