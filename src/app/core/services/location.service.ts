@@ -12,6 +12,7 @@ export class LocationService {
   private weatherService = inject(WeatherService);
 
   private readonly catalogueUrl = '/api/v1/locations';
+  private readonly randomLocationsStorageKey = '2piclock_random_locations_v1';
   private catalogue?: GeoLocation[];
   readonly randomLocations = signal<GeoLocation[]>([]);
   readonly selectedLocation = signal<GeoLocation>(this.createNeutralLocation());
@@ -22,7 +23,12 @@ export class LocationService {
 
   constructor() {
     if (this.isBrowser) {
-      void this.loadCatalogue().then(() => this.refreshRandomLocations());
+      const storedRandomLocations = this.loadStoredRandomLocations();
+      if (storedRandomLocations.length > 0) {
+        this.randomLocations.set(storedRandomLocations);
+      } else {
+        void this.loadCatalogue().then(() => this.refreshRandomLocations());
+      }
       try {
         const savedWatchlist = localStorage.getItem('2piclock_watchlist');
         if (savedWatchlist) {
@@ -194,8 +200,8 @@ export class LocationService {
   }
 
   /**
-   * Build a fresh, non-curated 50-city preset from the complete library catalogue.
-   * The sample changes whenever the application is loaded.
+   * Build a fresh, non-curated 50-city preset from the complete library catalogue
+   * and persist it in the user's browser for subsequent page loads.
    */
   refreshRandomLocations(): void {
     const catalogue = this.catalogue ?? [];
@@ -209,7 +215,38 @@ export class LocationService {
       const j = Math.floor(Math.random() * (i + 1));
       [sample[i], sample[j]] = [sample[j], sample[i]];
     }
-    this.randomLocations.set(sample.slice(0, 50));
+    const randomLocations = sample.slice(0, 50);
+    this.randomLocations.set(randomLocations);
+    this.persistRandomLocations(randomLocations);
+  }
+
+  private loadStoredRandomLocations(): GeoLocation[] {
+    if (!this.isBrowser) return [];
+    try {
+      const stored = localStorage.getItem(this.randomLocationsStorageKey);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored) as unknown;
+      if (!Array.isArray(parsed) || parsed.length !== 50) return [];
+      return parsed.filter((loc): loc is GeoLocation =>
+        Boolean(loc) &&
+        typeof loc === 'object' &&
+        typeof (loc as GeoLocation).id === 'string' &&
+        typeof (loc as GeoLocation).name === 'string' &&
+        Number.isFinite(Number((loc as GeoLocation).latitude)) &&
+        Number.isFinite(Number((loc as GeoLocation).longitude))
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  private persistRandomLocations(locations: GeoLocation[]): void {
+    if (!this.isBrowser) return;
+    try {
+      localStorage.setItem(this.randomLocationsStorageKey, JSON.stringify(locations));
+    } catch {
+      // Ignore storage errors; the in-memory preset remains usable.
+    }
   }
 
   addToWatchlist(loc: GeoLocation): void {
