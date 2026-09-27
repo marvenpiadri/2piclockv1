@@ -1103,7 +1103,7 @@ export class TonightComponent {
   selectLocation(loc: GeoLocation): void {
     this.locationService.selectLocation(loc);
     this.showLocationPicker.set(false);
-    this.router.navigate(['/', loc.id, 'tonight']);
+    this.router.navigate(this.locationService.getLocationPath(loc, 'tonight'));
   }
 
   toggleTarget(targetId: string): void {
