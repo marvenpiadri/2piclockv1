@@ -345,6 +345,8 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly inspectedLocation = signal<GeoLocation | null>(null);
   private map: MapLibreMap | null = null;
   private readonly cityMarkers = new Map<string, Marker>();
+  private allMapLocations: GeoLocation[] = [];
+  private readonly mapLocationById = new Map<string, GeoLocation>();
   private observerMarker: Marker | null = null;
   private subsolarMarker: Marker | null = null;
   private sublunarMarker: Marker | null = null;
@@ -597,8 +599,9 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       // Add Observer Location Marker
       this.initObserverMarker();
 
-      // Render the curated major-city layer; the same internal catalogue powers search.
+      // Render curated labels plus the complete internal city catalogue.
       this.initCityMarkers();
+      this.initGlobalCityCatalogue();
 
       // Update on zoom change for level-of-detail rendering
       map.on('zoom', () => {
@@ -1088,6 +1091,134 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   /**
    * Initializes Global City Markers with progressive Level-Of-Detail
    */
+  private initGlobalCityCatalogue(): void {
+    if (!this.map) return;
+
+    this.geocodingService.getAllLocations().subscribe(locations => {
+      if (!this.map || !locations.length) return;
+
+      this.allMapLocations = locations;
+      this.mapLocationById.clear();
+      for (const location of locations) this.mapLocationById.set(location.id, location);
+
+      const data = {
+        type: 'FeatureCollection' as const,
+        features: locations.map(location => ({
+          type: 'Feature' as const,
+          id: location.id,
+          properties: {
+            id: location.id,
+            name: location.name,
+            country: location.country
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [location.longitude, location.latitude]
+          }
+        }))
+      };
+
+      this.map.addSource('global-city-catalogue', {
+        type: 'geojson',
+        data: data as any,
+        cluster: true,
+        clusterMaxZoom: 5,
+        clusterRadius: 42
+      });
+
+      this.map.addLayer({
+        id: 'global-city-clusters',
+        type: 'circle',
+        source: 'global-city-catalogue',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#f59e0b',
+          'circle-opacity': 0.72,
+          'circle-radius': ['step', ['get', 'point_count'], 11, 25, 15, 100, 20],
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#fde68a',
+          'circle-stroke-opacity': 0.55
+        }
+      });
+
+      this.map.addLayer({
+        id: 'global-city-cluster-count',
+        type: 'symbol',
+        source: 'global-city-catalogue',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-size': 10,
+          'text-allow-overlap': true
+        },
+        paint: { 'text-color': '#111827' }
+      });
+
+      this.map.addLayer({
+        id: 'global-city-points',
+        type: 'circle',
+        source: 'global-city-catalogue',
+        minzoom: 3.5,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 3.5, 1.5, 7, 3, 10, 4],
+          'circle-color': '#fbbf24',
+          'circle-opacity': 0.72,
+          'circle-stroke-width': 0.6,
+          'circle-stroke-color': '#fff7ed',
+          'circle-stroke-opacity': 0.55
+        }
+      });
+
+      this.map.addLayer({
+        id: 'global-city-labels',
+        type: 'symbol',
+        source: 'global-city-catalogue',
+        minzoom: 6,
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 6, 9, 10, 12],
+          'text-offset': [0, 0.9],
+          'text-anchor': 'top',
+          'text-allow-overlap': false
+        },
+        paint: {
+          'text-color': '#fef3c7',
+          'text-halo-color': '#07111f',
+          'text-halo-width': 1.4
+        }
+      });
+
+      this.map.on('click', 'global-city-clusters', async event => {
+        const feature = event.features?.[0];
+        if (!feature) return;
+        const clusterId = feature.properties?.['cluster_id'];
+        const source = this.map?.getSource('global-city-catalogue') as GeoJSONSource | undefined;
+        if (!source || clusterId == null) return;
+        const zoom = await source.getClusterExpansionZoom(Number(clusterId));
+        const coordinates = (feature.geometry as any).coordinates as [number, number];
+        this.map?.easeTo({ center: coordinates, zoom });
+      });
+
+      this.map.on('click', 'global-city-points', event => {
+        const feature = event.features?.[0];
+        const id = String(feature?.properties?.['id'] ?? '');
+        const location = this.mapLocationById.get(id);
+        if (location) this.selectLocation(location);
+      });
+
+      for (const layerId of ['global-city-clusters', 'global-city-points']) {
+        this.map.on('mouseenter', layerId, () => {
+          if (this.map) this.map.getCanvas().style.cursor = 'pointer';
+        });
+        this.map.on('mouseleave', layerId, () => {
+          if (this.map) this.map.getCanvas().style.cursor = '';
+        });
+      }
+    });
+  }
+
   private initCityMarkers(): void {
     if (!this.map) return;
 
