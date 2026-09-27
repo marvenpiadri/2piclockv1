@@ -6,6 +6,16 @@ import { TimeControlService } from '../../../core/services/time-control.service'
 import { WeatherService } from '../../../core/services/weather.service';
 import { CelestialService } from '../../../core/services/celestial.service';
 import { calculateSolarPosition } from '../../../core/astronomy/astronomy-engine';
+import clearDayIcon from '@meteocons/svg/fill/clear-day.svg';
+import clearNightIcon from '@meteocons/svg/fill/clear-night.svg';
+import partlyCloudyDayIcon from '@meteocons/svg/fill/partly-cloudy-day.svg';
+import partlyCloudyNightIcon from '@meteocons/svg/fill/partly-cloudy-night.svg';
+import overcastIcon from '@meteocons/svg/fill/overcast.svg';
+import fogIcon from '@meteocons/svg/fill/fog.svg';
+import drizzleIcon from '@meteocons/svg/fill/drizzle.svg';
+import rainIcon from '@meteocons/svg/fill/rain.svg';
+import snowIcon from '@meteocons/svg/fill/snow.svg';
+import thunderstormsIcon from '@meteocons/svg/fill/thunderstorms-day-rain.svg';
 
 @Component({
   selector: 'app-share-export-modal',
@@ -90,93 +100,66 @@ export class ShareExportModalComponent implements AfterViewInit {
     });
   }
 
-  private drawWeatherIcon(ctx: CanvasRenderingContext2D, condition: string, isDay: boolean, x: number, y: number, size: number): void {
+  private weatherIconUrl(condition: string, isDay: boolean): string {
     const key = condition.toLowerCase();
-    const night = !isDay;
-    const accent = isDay ? '#fbbf24' : '#cbd5e1';
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.lineWidth = Math.max(3, size * 0.055);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    if (key === 'clear') return isDay ? clearDayIcon : clearNightIcon;
+    if (key === 'partly_cloudy') return isDay ? partlyCloudyDayIcon : partlyCloudyNightIcon;
+    if (key === 'overcast') return overcastIcon;
+    if (key === 'fog') return fogIcon;
+    if (key === 'drizzle') return drizzleIcon;
+    if (key === 'rain' || key === 'heavy_rain' || key === 'freezing_rain') return rainIcon;
+    if (key === 'snow' || key === 'heavy_snow' || key === 'blizzard') return snowIcon;
+    if (key === 'thunderstorm' || key === 'severe_thunderstorm') return thunderstormsIcon;
+    return isDay ? partlyCloudyDayIcon : partlyCloudyNightIcon;
+  }
 
-    const cloudy = key.includes('cloud') || key.includes('overcast') || key.includes('fog');
-    const rainy = key.includes('rain') || key.includes('drizzle') || key.includes('shower');
-    const snowy = key.includes('snow') || key.includes('sleet');
-    const storm = key.includes('thunder') || key.includes('storm');
+  private loadImage(src: string, crossOrigin = false): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      if (crossOrigin) image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Image failed to load'));
+      image.src = src;
+    });
+  }
 
-    if (night && !cloudy && !rainy && !snowy && !storm) {
-      ctx.fillStyle = accent;
-      ctx.beginPath();
-      ctx.arc(size * .52, size * .46, size * .25, Math.PI * .25, Math.PI * 1.75);
-      ctx.fill();
-      ctx.fillStyle = '#07111f';
-      ctx.beginPath();
-      ctx.arc(size * .65, size * .37, size * .23, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      if (!night && !cloudy) {
-        ctx.strokeStyle = accent;
-        ctx.beginPath();
-        ctx.arc(size * .34, size * .36, size * .18, 0, Math.PI * 2);
-        ctx.stroke();
-        for (let i = 0; i < 8; i++) {
-          const a = i * Math.PI / 4;
-          const x1 = size * .34 + Math.cos(a) * size * .27;
-          const y1 = size * .36 + Math.sin(a) * size * .27;
-          const x2 = size * .34 + Math.cos(a) * size * .34;
-          const y2 = size * .36 + Math.sin(a) * size * .34;
-          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-        }
-      } else if (night && !cloudy) {
-        ctx.fillStyle = accent;
-        ctx.beginPath();
-        ctx.arc(size * .34, size * .35, size * .18, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (cloudy || rainy || snowy || storm) {
-        ctx.fillStyle = '#dbe7f5';
-        ctx.beginPath();
-        ctx.arc(size * .47, size * .58, size * .18, Math.PI, 0);
-        ctx.arc(size * .63, size * .56, size * .24, Math.PI, 0);
-        ctx.arc(size * .77, size * .62, size * .16, Math.PI, 0);
-        ctx.lineTo(size * .86, size * .76);
-        ctx.lineTo(size * .34, size * .76);
-        ctx.closePath();
-        ctx.fill();
-
-        if (storm) {
-          ctx.fillStyle = '#fbbf24';
-          ctx.beginPath();
-          ctx.moveTo(size * .58, size * .77);
-          ctx.lineTo(size * .49, size * .98);
-          ctx.lineTo(size * .63, size * .84);
-          ctx.lineTo(size * .55, size * .84);
-          ctx.closePath();
-          ctx.fill();
-        } else if (snowy) {
-          ctx.strokeStyle = '#93c5fd';
-          for (const sx of [0.48, 0.62, 0.76]) {
-            ctx.beginPath();
-            ctx.moveTo(size * sx, size * .82);
-            ctx.lineTo(size * sx, size * .98);
-            ctx.moveTo(size * sx - size * .06, size * .9);
-            ctx.lineTo(size * sx + size * .06, size * .9);
-            ctx.stroke();
-          }
-        } else if (rainy) {
-          ctx.strokeStyle = '#60a5fa';
-          for (const rx of [0.48, 0.62, 0.76]) {
-            ctx.beginPath();
-            ctx.moveTo(size * rx, size * .82);
-            ctx.lineTo(size * (rx - .05), size * .98);
-            ctx.stroke();
-          }
-        }
-      }
+  private async drawWeatherIcon(
+    ctx: CanvasRenderingContext2D,
+    condition: string,
+    isDay: boolean,
+    x: number,
+    y: number,
+    size: number
+  ): Promise<void> {
+    try {
+      const image = await this.loadImage(this.weatherIconUrl(condition, isDay));
+      ctx.drawImage(image, x, y, size, size);
+    } catch {
+      // Keep export generation resilient if an icon asset cannot be decoded.
     }
-    ctx.restore();
+  }
+
+  private async drawCountryFlag(
+    ctx: CanvasRenderingContext2D,
+    countryCode: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): Promise<void> {
+    const code = countryCode.trim().toLowerCase();
+    if (!/^[a-z]{2}$/.test(code)) return;
+    try {
+      const image = await this.loadImage(`https://flagcdn.com/w160/${code}.png`, true);
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, 5);
+      ctx.clip();
+      ctx.drawImage(image, x, y, width, height);
+      ctx.restore();
+    } catch {
+      // Do not replace the export with an emoji if the real flag cannot load.
+    }
   }
 
   private drawMetric(ctx: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number): void {
@@ -194,7 +177,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     ctx.stroke();
   }
 
-  renderExportCard(): void {
+  async renderExportCard(): Promise<void> {
     const canvas = this.canvasRef.nativeElement;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -226,11 +209,10 @@ export class ShareExportModalComponent implements AfterViewInit {
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
 
-    // Location header with the real country flag.
+    // Location header with the same real country flag source used by the app.
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.font = '34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
-    ctx.fillText(loc.flag, 62, 93);
+    await this.drawCountryFlag(ctx, loc.countryCode, 62, 66, 38, 25);
     ctx.fillStyle = '#f8fafc';
     ctx.font = '700 34px system-ui, -apple-system, sans-serif';
     ctx.fillText(loc.name, 112, 91);
@@ -271,7 +253,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     ctx.beginPath();
     ctx.arc(1035, 226, 82, 0, Math.PI * 2);
     ctx.fill();
-    this.drawWeatherIcon(ctx, weather.condition, weather.isDay, 975, 170, 120);
+    await this.drawWeatherIcon(ctx, weather.condition, weather.isDay, 975, 170, 120);
 
 
 
