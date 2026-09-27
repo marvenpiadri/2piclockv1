@@ -28,14 +28,14 @@ export class LocationService {
       if (storedRandomLocations.length > 0) {
         this.randomLocations.set(storedRandomLocations);
       } else {
-        void this.loadCatalogue().then(() => this.refreshRandomLocations());
+        void this.loadLocations().then(() => this.refreshRandomLocations());
       }
       try {
         const savedWatchlist = localStorage.getItem('2piclock_watchlist');
         if (savedWatchlist) {
           try {
             const ids = JSON.parse(savedWatchlist) as string[];
-            void this.loadCatalogue().then(() => {
+            void this.loadLocations().then(() => {
               const restored = ids
                 .map(id => this.catalogue?.find(loc => loc.id === id))
                 .filter((loc): loc is GeoLocation => Boolean(loc));
@@ -53,13 +53,13 @@ export class LocationService {
             if (custom && Number.isFinite(Number(custom.latitude)) && Number.isFinite(Number(custom.longitude)) && custom.isCustom) {
               this.selectedLocation.set(custom);
             } else {
-              void this.loadCatalogue().then(() => {
+              void this.loadLocations().then(() => {
                 const found = this.catalogue?.find(l => l.id === savedLocId);
                 if (found) this.selectedLocation.set(found);
               });
             }
           } catch {
-            void this.loadCatalogue().then(() => {
+            void this.loadLocations().then(() => {
               const found = this.catalogue?.find(l => l.id === savedLocId);
               if (found) this.selectedLocation.set(found);
             });
@@ -166,7 +166,7 @@ export class LocationService {
     }
 
     // Keep the no-GPS fallback deterministic by selecting a city from the library catalogue.
-    const catalogue = await this.loadCatalogue();
+    const catalogue = await this.loadLocations();
     const timezone = this.isBrowser ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
     const fallback = catalogue.find(loc => loc.timezone === timezone) ?? catalogue[0] ?? current;
     this.selectedLocation.set(fallback);
@@ -187,7 +187,7 @@ export class LocationService {
     };
   }
 
-  private async loadCatalogue(): Promise<GeoLocation[]> {
+  async loadLocations(): Promise<GeoLocation[]> {
     if (this.catalogue) return this.catalogue;
     try {
       const response = await fetch(this.catalogueUrl);
