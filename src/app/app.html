@@ -157,14 +157,6 @@
               </button>
             </div>
 
-            <button
-              type="button"
-              class="btn-explore-current"
-              (click)="router.navigate(['/', selectedLocation().id]); closeMenus()">
-              <span>Explore {{ selectedLocation().name }}</span>
-              <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </button>
-
             <!-- Remote Search Results -->
             @if (isRemoteSearching()) {
               <div class="search-loading-row">
