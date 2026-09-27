@@ -36,7 +36,7 @@ export class WorldClocksComponent implements OnDestroy {
 
  readonly defaultLocations=computed(()=> {
    const defaults=['new-york','london','tokyo','casablanca','los-angeles'];
-   return defaults.map(id=>this.locationService.allPresets.find(x=>x.id===id)).filter(Boolean) as GeoLocation[];
+   return defaults.map(id=>this.locationService.locations().find(x=>x.id===id)).filter(Boolean) as GeoLocation[];
  });
  readonly displayedLocations=computed(()=> {
    const saved=this.pinnedLocations();
