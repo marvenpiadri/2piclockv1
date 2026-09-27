@@ -434,7 +434,13 @@ export class App {
       this.observatoryViewService.setView(item.view);
     }
     if (item.path) {
-      this.router.navigate([item.path]);
+      const locationAwareSections = new Set(['weather', 'tonight']);
+      const section = item.path.replace(/^\//, '');
+      if (locationAwareSections.has(section)) {
+        this.router.navigate(this.locationService.getLocationPath(this.selectedLocation(), section));
+      } else {
+        this.router.navigate([item.path]);
+      }
     }
     this.closeMenus();
   }
