@@ -34,14 +34,14 @@
           <mat-icon>schedule</mat-icon>
           <span>Now</span>
         </a>
-        <a [routerLink]="locationPath('weather')" [class.active]="skyPage === 'weather'">
+        <button type="button" (click)="navigateToSection('weather')" [class.active]="skyPage === 'weather'">
           <mat-icon>cloud</mat-icon>
           <span>Weather</span>
-        </a>
-        <a [routerLink]="locationPath('tonight')" [class.active]="skyPage === 'tonight'">
+        </button>
+        <button type="button" (click)="navigateToSection('tonight')" [class.active]="skyPage === 'tonight'">
           <mat-icon>dark_mode</mat-icon>
           <span>Tonight</span>
-        </a>
+        </button>
       </nav>
 
             <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
