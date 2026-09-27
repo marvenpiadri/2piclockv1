@@ -35,7 +35,7 @@ const validLocationGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const slug = route.paramMap.get('location');
   const preset = slug
-    ? locationService.allPresets.find((loc: GeoLocation) => loc.id === slug)
+    ? locationService.allLocations().find((loc: GeoLocation) => loc.id === slug)
     : undefined;
 
   if (preset) {
