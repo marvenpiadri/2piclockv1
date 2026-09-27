@@ -22,6 +22,11 @@ export class GeocodingService {
   private readonly endpoint = '/api/v1/locations/search';
   private countries$?: Observable<GeoLocation[]>;
 
+  /** Return the complete internal location catalogue when a feature needs to browse it. */
+  getAllLocations(): Observable<GeoLocation[]> {
+    return this.getCountries();
+  }
+
   getCountries(): Observable<GeoLocation[]> {
     if (!this.countries$) {
       this.countries$ = this.http.get<{ locations?: GeoLocation[] }>('/api/v1/locations').pipe(
