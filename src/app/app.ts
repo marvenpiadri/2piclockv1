@@ -407,6 +407,11 @@ export class App {
 
   toggleLocationDropdown(): void {
     this.showLocationDropdown.update(v => !v);
+    if (this.showLocationDropdown() && this.locationService.locations().length === 0) {
+      void this.locationService.loadLocations().then(() => {
+        if (this.locationService.randomLocations().length === 0) this.locationService.refreshRandomLocations();
+      });
+    }
     if (this.showLocationDropdown()) {
       this.showNavMenu.set(false);
     }
