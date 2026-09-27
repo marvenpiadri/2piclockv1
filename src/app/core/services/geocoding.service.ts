@@ -31,4 +31,13 @@ export class GeocodingService {
   }
 
   getRandomLocations(): Observable<GeoLocation[]> { return this.randomLocations$; }
+
+  getMapLocations(limit = 2500): Observable<GeoLocation[]> {
+    const safeLimit = Math.min(5000, Math.max(500, limit));
+    return from(fetch('/api/v1/locations/map?count=' + safeLimit).then(async response => {
+      if (!response.ok) throw new Error('Map locations unavailable');
+      const data = await response.json() as LocationResponse;
+      return data.locations ?? [];
+    })).pipe(catchError(() => of([])));
+  }
 }
