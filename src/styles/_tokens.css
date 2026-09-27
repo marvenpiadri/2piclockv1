@@ -71,6 +71,12 @@ body[data-theme="dark"],
   --color-neutral-500: #484f58;
   --color-positive: #34d399;
   --color-danger: #f87171;
+  --color-accent-strong: #fbbf24;
+  --color-accent-deep: #b45309;
+  --color-text-on-accent: #111827;
+  --color-sky-highlight: #fffdf0;
+  --color-sky-shadow: #431407;
+  --color-star: #ffd76a;
 
   --color-midnight-950: #020617;
   --color-midnight-900: #07111f;
