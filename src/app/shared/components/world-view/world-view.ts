@@ -323,7 +323,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private readonly mapBackbone = inject(MapBackboneService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets: GeoLocation[] = [];
   readonly activeDate = this.timeControlService.currentActiveDate;
   readonly celestial = this.celestialService.celestialState;
   readonly localTime = this.celestialService.formattedLocalTime;
