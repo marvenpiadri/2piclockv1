@@ -534,7 +534,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.stopWindParticleLoop();
     if (this.map) {
       this.cityMarkers.forEach(m => m.remove());
       this.cityMarkers.clear();
