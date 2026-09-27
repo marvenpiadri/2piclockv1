@@ -371,16 +371,13 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly observatories = FAMOUS_OBSERVATORIES;
   private worldWeatherSourceReady = false;
 
+  /**
+   * Search results come from the complete server-side city catalogue.
+   * Presets are only defaults/watchlist data and must never limit map search.
+   */
   readonly searchResults = computed<GeoLocation[]>(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return [];
-    const local = this.allPresets.filter(loc =>
-      loc.name.toLowerCase().includes(q) ||
-      loc.country.toLowerCase().includes(q) ||
-      loc.timezone.toLowerCase().includes(q)
-    );
-    const seen = new Set(local.map(loc => loc.id));
-    return [...local, ...this.remoteSearchResults().filter(loc => !seen.has(loc.id))].slice(0, 12);
+    if (this.searchQuery().trim().length < 2) return [];
+    return this.remoteSearchResults().slice(0, 20);
   });
 
   onSearchQueryChange(value: string): void {
@@ -393,7 +390,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
     this.remoteSearchTimer = setTimeout(() => {
       this.isRemoteSearching.set(true);
-      this.geocodingService.search(value, 10).subscribe(results => {
+      this.geocodingService.search(value, 20).subscribe(results => {
         this.remoteSearchResults.set(results);
         this.isRemoteSearching.set(false);
       });
