@@ -31,7 +31,6 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   private title = inject(Title);
   private meta = inject(Meta);
 
-  readonly allLocations = computed(() => this.locationService.locations());
   readonly activeTab = signal<TimeToolTab>('converter');
   readonly copyNotification = signal<string | null>(null);
 
@@ -40,16 +39,10 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   private timerId: ReturnType<typeof setInterval> | null = null;
 
   // --- 1. TIME ZONE CONVERTER STATE ---
-  readonly converterSourceLoc = signal<GeoLocation>(this.allLocations()[0]);
+  readonly converterSourceLoc = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly converterDate = signal<string>(new Date().toISOString().slice(0, 10));
   readonly converterTime = signal<string>('14:30');
-  readonly converterTargets = signal<GeoLocation[]>([
-    this.allLocations().find(p => p.id === 'london') || this.allLocations()[2],
-    this.allLocations().find(p => p.id === 'new-york') || this.allLocations()[1],
-    this.allLocations().find(p => p.id === 'tokyo') || this.allLocations()[3],
-    this.allLocations().find(p => p.id === 'dubai') || this.allLocations()[7] || this.allLocations()[0],
-    this.allLocations().find(p => p.id === 'sydney') || this.allLocations()[5] || this.allLocations()[0]
-  ]);
+  readonly converterTargets = signal<GeoLocation[]>([this.locationService.selectedLocation()]);
 
   readonly conversionResults = computed<{ sourceInstant: Date; conversions: TimezoneConversionResult[] }>(() => {
     const src = this.converterSourceLoc();
@@ -59,8 +52,8 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   });
 
   // --- 2. TIME DIFFERENCE CALCULATOR STATE ---
-  readonly diffLocA = signal<GeoLocation>(this.allLocations()[0]);
-  readonly diffLocB = signal<GeoLocation>(this.allLocations().find(p => p.id === 'tokyo') || this.allLocations()[3]);
+  readonly diffLocA = signal<GeoLocation>(this.locationService.selectedLocation());
+  readonly diffLocB = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly diffDate = signal<string>(new Date().toISOString().slice(0, 10));
 
   readonly timeDifferenceResult = computed<TimeDifferenceResult>(() => {
@@ -142,8 +135,8 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   });
 
   // --- 8. WORLD TIME MATRIX STATE ---
-  readonly matrixReferenceCity = signal<GeoLocation>(this.allLocations()[0]);
-  readonly matrixCities = signal<GeoLocation[]>([...this.allLocations().slice(0, 12)]);
+  readonly matrixReferenceCity = signal<GeoLocation>(this.locationService.selectedLocation());
+  readonly matrixCities = signal<GeoLocation[]>([this.locationService.selectedLocation()]);
 
   readonly worldMatrixRows = computed<WorldComparisonRow[]>(() => {
     this.liveTick();
@@ -171,7 +164,7 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
         this.activeTab.set(params['tab'] as TimeToolTab);
       }
       if (params['from']) {
-        const found = this.allLocations().find(p => p.id === params['from'] || p.name.toLowerCase() === params['from'].toLowerCase());
+        const found = this.locationService.locations().find(p => p.id === params['from'] || p.name.toLowerCase() === params['from'].toLowerCase());
         if (found) this.converterSourceLoc.set(found);
       }
       if (params['time']) {
@@ -268,22 +261,22 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   }
 
   setConverterSourceById(id: string): void {
-    const loc = this.allLocations().find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.converterSourceLoc.set(loc);
   }
 
   setDiffLocAById(id: string): void {
-    const loc = this.allLocations().find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.diffLocA.set(loc);
   }
 
   setDiffLocBById(id: string): void {
-    const loc = this.allLocations().find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.diffLocB.set(loc);
   }
 
   setMatrixReferenceCityById(id: string): void {
-    const loc = this.allLocations().find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.matrixReferenceCity.set(loc);
   }
 
