@@ -69,8 +69,6 @@ const apiHeaders = (res: express.Response) => {
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
 };
 
-const resolveApiLocation = resolveLocation;
-
 const resolveApiDate = (value: unknown): Date | null => {
   if (typeof value !== 'string' || !value) return new Date();
   const date = new Date(value);
@@ -118,7 +116,7 @@ const buildLocationIndex = async (): Promise<GeoLocation[]> => {
       const id = `${countryCode.toLowerCase()}-${slugifyLocation(name)}`;
       if (seen.has(id)) continue;
 
-      const timezone = city.timezone || countryTimezone;
+      const timezone = city.timezone || 'UTC';
       locations.push({
         id,
         name,
