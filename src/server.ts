@@ -421,6 +421,41 @@ app.get('/api/v1/locations/map', async (req, res) => {
   }
 });
 
+app.get('/api/v1/locations/nearest', async (req, res) => {
+  apiHeaders(res);
+  const latitude = Number(req.query['latitude']);
+  const longitude = Number(req.query['longitude']);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return apiError(res, 400, 'INVALID_COORDINATES', 'Provide valid latitude and longitude.');
+  }
+
+  try {
+    const locations = await getLocationIndex();
+    const toRadians = (value: number) => value * Math.PI / 180;
+    const earthRadiusKm = 6371;
+    let nearest: GeoLocation | undefined;
+    let nearestDistanceKm = Number.POSITIVE_INFINITY;
+
+    for (const location of locations) {
+      const dLat = toRadians(location.latitude - latitude);
+      const dLon = toRadians(location.longitude - longitude);
+      const lat1 = toRadians(latitude);
+      const lat2 = toRadians(location.latitude);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+      const distanceKm = 2 * earthRadiusKm * Math.asin(Math.sqrt(a));
+      if (distanceKm < nearestDistanceKm) {
+        nearest = location;
+        nearestDistanceKm = distanceKm;
+      }
+    }
+
+    if (!nearest) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'No nearby city was found.');
+    res.json({ version: '1', location: nearest, distanceKm: Math.round(nearestDistanceKm * 10) / 10 });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
 app.get('/api/v1/locations/:id', async (req, res) => {
   apiHeaders(res);
   try {
