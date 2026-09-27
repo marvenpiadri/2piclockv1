@@ -80,7 +80,7 @@ const resolveApiDate = (value: unknown): Date | null => {
 const apiError = (res: express.Response, status: number, code: string, message: string) => {
   res.status(status).json({ error: { code, message } });
 };
-type CityRecord = {
+interface CityRecord {
   id?: number;
   name?: string;
   countryCode?: string;
@@ -88,7 +88,7 @@ type CityRecord = {
   latitude?: string | number;
   longitude?: string | number;
   timezone?: string;
-};
+}
 
 let locationIndexPromise: Promise<GeoLocation[]> | undefined;
 
