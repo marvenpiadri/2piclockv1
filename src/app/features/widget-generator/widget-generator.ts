@@ -128,13 +128,13 @@ export class WidgetGeneratorComponent {
   private readonly timeControl = inject(TimeControlService);
 
   readonly activeDate = this.timeControl.currentActiveDate;
-  readonly allPresets = this.locationService.allPresets;
+  readonly allLocations = this.locationService.locations;
   readonly selectedLocationId = signal('tokyo');
   readonly style = signal<WidgetStyle>('analog');
   readonly theme = signal<WidgetTheme>('dark');
   readonly copied = signal(false);
 
-  readonly activeLoc = computed(() => this.allPresets.find(p => p.id === this.selectedLocationId()) ?? this.allPresets[0]);
+  readonly activeLoc = computed(() => this.allLocations().find(p => p.id === this.selectedLocationId()) ?? this.allLocations()[0]);
   readonly previewTime = computed(() => {
     try { return this.activeDate().toLocaleTimeString('en-US',{timeZone:this.activeLoc().timezone,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}); }
     catch { return '00:00:00'; }
