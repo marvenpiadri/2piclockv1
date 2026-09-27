@@ -213,7 +213,36 @@ const randomSample = <T>(items: T[], count: number): T[] => {
 };
 
 
-app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));
+app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));\n\napp.get('/api/v1/assets/meteocon/:slug', async (req, res) => {
+  const slug = String(req.params['slug'] ?? '');
+  if (!/^[a-z0-9-]+$/.test(slug)) return apiError(res, 400, 'INVALID_ASSET', 'Invalid weather icon.');
+  try {
+    const upstream = await fetch(`https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/fill/${slug}.svg`);
+    if (!upstream.ok) return apiError(res, 404, 'ASSET_NOT_FOUND', 'Weather icon not found.');
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+    res.send(await upstream.text());
+  } catch {
+    apiError(res, 502, 'ASSET_UNAVAILABLE', 'Weather icon is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/assets/flag/:countryCode', async (req, res) => {
+  const countryCode = String(req.params['countryCode'] ?? '').toLowerCase();
+  if (!/^[a-z]{2}$/.test(countryCode)) return apiError(res, 400, 'INVALID_ASSET', 'Invalid country flag.');
+  try {
+    const upstream = await fetch(`https://flagcdn.com/w160/${countryCode}.png`);
+    if (!upstream.ok) return apiError(res, 404, 'ASSET_NOT_FOUND', 'Country flag not found.');
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+    res.send(buffer);
+  } catch {
+    apiError(res, 502, 'ASSET_UNAVAILABLE', 'Country flag is temporarily unavailable.');
+  }
+});
+
+
 
 const weatherProxyCache = new Map<string, { expiresAt: number; data: unknown }>();
 const WEATHER_CACHE_MS = 10 * 60 * 1000;
