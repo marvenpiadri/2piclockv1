@@ -93,7 +93,7 @@ let locationIndexPromise: Promise<GeoLocation[]> | undefined;
 const normalizeLocationText = (value: string) =>
   value
     .normalize('NFKD')
-    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase()
     .trim();
 
