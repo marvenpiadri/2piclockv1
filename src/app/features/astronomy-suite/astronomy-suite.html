@@ -26,7 +26,7 @@
       <div class="param-item">
         <label>Location</label>
         <select [ngModel]="selectedLocation().id" (ngModelChange)="setLocationById($event)">
-          @for (loc of allPresets; track loc.id) {
+          @for (loc of allLocations; track loc.id) {
             <option [value]="loc.id">{{ loc.name }} ({{ loc.country }}) · {{ loc.latitude.toFixed(2) }}°, {{ loc.longitude.toFixed(2) }}°</option>
           }
         </select>
