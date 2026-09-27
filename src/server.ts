@@ -93,12 +93,40 @@ app.get('/api/v1', (_req, res) => {
     documentation: 'https://2piclock.com/api',
     endpoints: [
       '/api/v1/locations',
+      '/api/v1/locations/search?q=paris',
       '/api/v1/solar?location=paris&at=2026-09-26T12:00:00Z',
       '/api/v1/lunar?location=paris&at=2026-09-26T12:00:00Z',
       '/api/v1/celestial?location=paris&at=2026-09-26T12:00:00Z',
       '/api/v1/events?location=paris&date=2026-09-26'
     ]
   });
+});
+
+app.get('/api/v1/locations/search', (req, res) => {
+  apiHeaders(res);
+  const query = typeof req.query['q'] === 'string' ? req.query['q'].trim().toLocaleLowerCase() : '';
+  const count = Math.min(20, Math.max(1, Number(req.query['count'] ?? 8) || 8));
+
+  const locations = PRESET_LOCATIONS
+    .filter(location => {
+      if (!query) return true;
+      return [
+        location.name,
+        location.country,
+        location.countryCode,
+        location.id,
+        location.timezone
+      ].some(value => value.toLocaleLowerCase().includes(query));
+    })
+    .sort((a, b) => {
+      if (!query) return (a.tier ?? 3) - (b.tier ?? 3);
+      const aExact = [a.id, a.name.toLocaleLowerCase(), a.countryCode.toLocaleLowerCase()].includes(query);
+      const bExact = [b.id, b.name.toLocaleLowerCase(), b.countryCode.toLocaleLowerCase()].includes(query);
+      return Number(bExact) - Number(aExact) || (a.tier ?? 3) - (b.tier ?? 3);
+    })
+    .slice(0, count);
+
+  res.json({ version: '1', query, count: locations.length, locations });
 });
 
 app.get('/api/v1/locations', (_req, res) => {
