@@ -267,11 +267,11 @@ export class ShareExportModalComponent implements AfterViewInit {
       264
     );
 
-    this.drawWeatherIcon(ctx, weather.condition, weather.isDay, 1035, 180, 120);
     ctx.fillStyle = 'rgba(251,191,36,.12)';
     ctx.beginPath();
-    ctx.arc(1095, 226, 82, 0, Math.PI * 2);
+    ctx.arc(1035, 226, 82, 0, Math.PI * 2);
     ctx.fill();
+    this.drawWeatherIcon(ctx, weather.condition, weather.isDay, 975, 170, 120);
 
 
 
