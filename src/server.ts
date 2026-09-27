@@ -84,6 +84,7 @@ interface CountryRecord {
 
 let locationIndexPromise: Promise<GeoLocation[]> | undefined;
 const locationById = new Map<string, GeoLocation>();
+const locationBySlug = new Map<string, GeoLocation>();
 const locationSearchCache = new Map<string, GeoLocation[]>();
 
 const normalizeLocationText = (value: string) =>
@@ -95,6 +96,9 @@ const normalizeLocationText = (value: string) =>
 
 const slugifyLocation = (value: string) =>
   normalizeLocationText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const locationSlug = (location: GeoLocation): string =>
+  slugifyLocation(location.country) + '/' + slugifyLocation(location.name);
 
 const packageDataDirectory = (): string => {
   const require = createRequire(import.meta.url);
@@ -175,12 +179,17 @@ const getLocationIndex = (): Promise<GeoLocation[]> => {
   if (!locationIndexPromise) {
     locationIndexPromise = buildLocationIndex().then(locations => {
       locationById.clear();
-      for (const location of locations) locationById.set(location.id.toLowerCase(), location);
+      locationBySlug.clear();
+      for (const location of locations) {
+        locationById.set(location.id.toLowerCase(), location);
+        locationBySlug.set(locationSlug(location), location);
+      }
       locationSearchCache.clear();
       return locations;
     }).catch(error => {
       locationIndexPromise = undefined;
       locationById.clear();
+      locationBySlug.clear();
       throw error;
     });
   }
@@ -190,7 +199,8 @@ const getLocationIndex = (): Promise<GeoLocation[]> => {
 const resolveLocation = async (value: unknown): Promise<GeoLocation | undefined> => {
   if (typeof value !== 'string') return undefined;
   await getLocationIndex();
-  return locationById.get(value.trim().toLowerCase());
+  const normalized = value.trim().toLowerCase();
+  return locationById.get(normalized) ?? locationBySlug.get(normalized.replace(/^\/+|\/+$/g, ''));
 };
 
 const randomSample = <T>(items: T[], count: number): T[] => {
@@ -361,7 +371,7 @@ app.get('/api/v1/locations/:id', async (req, res) => {
   try {
     const location = await resolveLocation(req.params['id']);
     if (!location) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'The requested location was not found.');
-    res.json({ version: '1', location });
+    res.json({ version: '1', location, slug: locationSlug(location) });
   } catch {
     apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
   }
