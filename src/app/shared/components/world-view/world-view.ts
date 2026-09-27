@@ -29,7 +29,7 @@ import {
   calculateSolarPosition,
   calculateSolarEvents
 } from '../../../core/astronomy/astronomy-engine';
-import { Map as MapLibreMap, Marker, GeoJSONSource } from 'maplibre-gl';
+import { Marker, GeoJSONSource } from 'maplibre-gl';
 
 export interface WorldHubStatus {
   location: GeoLocation;
