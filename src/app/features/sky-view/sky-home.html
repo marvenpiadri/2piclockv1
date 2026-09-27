@@ -34,14 +34,14 @@
           <mat-icon>schedule</mat-icon>
           <span>Now</span>
         </a>
-        <button type="button" (click)="navigateToSection('weather')" [class.active]="skyPage === 'weather'">
+        <a href="#" (click)="navigateToSection('weather'); $event.preventDefault()" [class.active]="skyPage === 'weather'">
           <mat-icon>cloud</mat-icon>
           <span>Weather</span>
-        </button>
-        <button type="button" (click)="navigateToSection('tonight')" [class.active]="skyPage === 'tonight'">
+        </a>
+        <a href="#" (click)="navigateToSection('tonight'); $event.preventDefault()" [class.active]="skyPage === 'tonight'">
           <mat-icon>dark_mode</mat-icon>
           <span>Tonight</span>
-        </button>
+        </a>
       </nav>
 
             <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
