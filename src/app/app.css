@@ -4,7 +4,7 @@
   height:100vh;
   overflow:hidden;
   position:relative;
-  background:#050505;
+  background:var(--color-canvas);
   color:var(--color-text-main);
   font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","SF Pro Display",system-ui,sans-serif;
 }
