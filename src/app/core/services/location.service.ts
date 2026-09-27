@@ -1,6 +1,6 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { GeoLocation, PRESET_LOCATIONS } from '../models/location.model';
+import { GeoLocation } from '../models/location.model';
 import { WeatherService } from './weather.service';
 
 @Injectable({
@@ -11,16 +11,10 @@ export class LocationService {
   private isBrowser = isPlatformBrowser(this.platformId);
   private weatherService = inject(WeatherService);
 
-  readonly allPresets: GeoLocation[] = PRESET_LOCATIONS;
-  readonly selectedLocation = signal<GeoLocation>(PRESET_LOCATIONS[0]); // Default to Tokyo or local
-  readonly watchlist = signal<GeoLocation[]>([
-    PRESET_LOCATIONS[0], // Tokyo
-    PRESET_LOCATIONS[1], // London
-    PRESET_LOCATIONS[2], // New York
-    PRESET_LOCATIONS[3], // Paris
-    PRESET_LOCATIONS[4], // Casablanca
-    PRESET_LOCATIONS[7]  // Reykjavik
-  ]);
+  private readonly catalogueUrl = '/api/v1/locations';
+  private catalogue?: GeoLocation[];
+  readonly selectedLocation = signal<GeoLocation>(this.createNeutralLocation());
+  readonly watchlist = signal<GeoLocation[]>([]);
 
   readonly isLocating = signal<boolean>(false);
   readonly locationError = signal<string | null>(null);
@@ -32,10 +26,12 @@ export class LocationService {
         if (savedWatchlist) {
           try {
             const ids = JSON.parse(savedWatchlist) as string[];
-            const restored = ids
-              .map(id => this.allPresets.find(loc => loc.id === id))
-              .filter((loc): loc is GeoLocation => Boolean(loc));
-            if (restored.length > 0) this.watchlist.set(restored);
+            void this.loadCatalogue().then(() => {
+              const restored = ids
+                .map(id => this.catalogue?.find(loc => loc.id === id))
+                .filter((loc): loc is GeoLocation => Boolean(loc));
+              if (restored.length > 0) this.watchlist.set(restored);
+            });
           } catch {
             // Ignore malformed watchlist data.
           }
@@ -43,10 +39,10 @@ export class LocationService {
 
         const savedLocId = localStorage.getItem('2piclock_selected_location');
         if (savedLocId) {
-          const found = this.allPresets.find(l => l.id === savedLocId);
-          if (found) {
-            this.selectedLocation.set(found);
-          } else {
+          void this.loadCatalogue().then(() => {
+            const found = this.catalogue?.find(l => l.id === savedLocId);
+            if (found) this.selectedLocation.set(found);
+          }); else {
             const custom = JSON.parse(savedLocId);
             if (custom && Number.isFinite(Number(custom.latitude)) && Number.isFinite(Number(custom.longitude))) {
               this.selectedLocation.set(custom);
@@ -155,9 +151,38 @@ export class LocationService {
 
     // Keep the no-GPS fallback deterministic. The app must never change cities
     // randomly between visits or renders.
-    const fallback = this.allPresets[0];
+    const catalogue = await this.loadCatalogue();
+    const timezone = this.isBrowser ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+    const fallback = catalogue.find(loc => loc.timezone === timezone) ?? catalogue[0] ?? current;
     this.selectedLocation.set(fallback);
     return fallback;
+  }
+
+  private createNeutralLocation(): GeoLocation {
+    return {
+      id: 'initializing',
+      name: 'Current location',
+      country: 'Location',
+      countryCode: '',
+      flag: '📍',
+      latitude: 0,
+      longitude: 0,
+      timezone: 'UTC',
+      isCustom: true
+    };
+  }
+
+  private async loadCatalogue(): Promise<GeoLocation[]> {
+    if (this.catalogue) return this.catalogue;
+    try {
+      const response = await fetch(this.catalogueUrl);
+      if (!response.ok) throw new Error('Location catalogue unavailable');
+      const data = await response.json() as { locations?: GeoLocation[] };
+      this.catalogue = data.locations ?? [];
+    } catch {
+      this.catalogue = [];
+    }
+    return this.catalogue;
   }
 
   addToWatchlist(loc: GeoLocation): void {
