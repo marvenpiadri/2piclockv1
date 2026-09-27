@@ -542,7 +542,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       if (this.subsolarMarker) this.subsolarMarker.remove();
       if (this.sublunarMarker) this.sublunarMarker.remove();
       if (this.probeMarker) this.probeMarker.remove();
-      this.countryLocations = [];
       this.map.remove();
       this.map = null;
     }
@@ -588,8 +587,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       // Add Observer Location Marker
       this.initObserverMarker();
 
-      // Add global country database pins first, then the curated city hubs.
-      this.initCountryPins();
+      // Render the curated major-city layer; the same internal catalogue powers search.
       this.initCityMarkers();
 
       // Update on zoom change for level-of-detail rendering
@@ -1080,56 +1078,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   /**
    * Initializes Global City Markers with progressive Level-Of-Detail
    */
-  private initCountryPins(): void {
-    if (!this.map) return;
-
-    this.geocodingService.getCountries().subscribe(countries => {
-      if (!this.map || !this.isMapLoaded()) return;
-      this.countryLocations = countries;
-      const sourceData = {
-        type: 'FeatureCollection',
-        features: countries.map(loc => ({
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
-          properties: { id: loc.id, name: loc.country, flag: loc.flag, countryCode: loc.countryCode }
-        }))
-      };
-
-      if (this.map.getSource('country-pins')) {
-        (this.map.getSource('country-pins') as GeoJSONSource).setData(sourceData as any);
-      } else {
-        this.map.addSource('country-pins', { type: 'geojson', data: sourceData as any });
-        this.map.addLayer({
-          id: 'country-pins',
-          type: 'circle',
-          source: 'country-pins',
-          minzoom: 1,
-          maxzoom: 3.8,
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 2.2, 3.5, 3.8],
-            'circle-color': '#fbbf24',
-            'circle-opacity': 0.82,
-            'circle-stroke-color': '#0a1628',
-            'circle-stroke-width': 1
-          }
-        });
-      }
-
-      this.map.on('click', 'country-pins', event => {
-        const feature = event.features?.[0];
-        const id = feature?.properties?.['id'];
-        const country = this.countryLocations.find(loc => loc.id === id);
-        if (country) this.selectLocation(country);
-      });
-      this.map.on('mouseenter', 'country-pins', () => {
-        if (this.map) this.map.getCanvas().style.cursor = 'pointer';
-      });
-      this.map.on('mouseleave', 'country-pins', () => {
-        if (this.map) this.map.getCanvas().style.cursor = '';
-      });
-    });
-  }
-
   private initCityMarkers(): void {
     if (!this.map) return;
 
