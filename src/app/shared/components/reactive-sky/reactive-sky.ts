@@ -6,7 +6,7 @@ import {
   OnInit,
   PLATFORM_ID,
   ViewChild,
-  inject
+  inject, Input
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CelestialService } from '../../../core/services/celestial.service';
@@ -80,6 +80,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
   readonly atmosphericState = this.celestialService.atmosphericState;
+
+  @Input() sleepMode = false;
 
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrameId: number | null = null;
@@ -356,7 +358,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const atmos = this.atmosphericState();
     const isSouthern = this.celestialService.selectedLocation().latitude < 0;
 
-    const sunAlt = celestial.sun.altitudeDeg;
+    const sunAlt = this.sleepMode ? Math.min(celestial.sun.altitudeDeg, -12) : celestial.sun.altitudeDeg;
     const sunAz = celestial.sun.azimuthDeg;
     const moonAlt = celestial.moon.altitudeDeg;
 
