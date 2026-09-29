@@ -25,6 +25,7 @@ export class SleepCalculatorComponent implements OnInit {
   setMode(m:Mode){this.mode.set(m);if(m==='now')this.setWakeTimeFromNow();} setAge(v:Age){this.age.set(v);} setWakeTimeFromNow(){const d=new Date();d.setMinutes(d.getMinutes()+8);this.wakeTime.set(this.inputTime(d));}
   calculate(){this.save(this.bestPlan());} save(p:Plan){if(!isPlatformBrowser(this.platformId))return;const e={id:Date.now(),createdAt:new Date().toISOString(),mode:this.mode(),bedtime:p.bedtime.toISOString(),wakeTime:p.wakeTime.toISOString(),sleepMinutes:p.sleepMinutes,cycles:p.cycles,location:this.locationService.selectedLocation().name};const next=[e,...this.history()].slice(0,20);this.history.set(next);localStorage.setItem('2piclock-sleep-history',JSON.stringify(next));}
   clearHistory(){this.history.set([]);if(isPlatformBrowser(this.platformId))localStorage.removeItem('2piclock-sleep-history');}
+  formatHistoryTime(value:string){return this.formatTime(new Date(value));}
   formatTime(d:Date){return new Intl.DateTimeFormat('en-US',{timeZone:this.locationService.selectedLocation().timezone,hour:'numeric',minute:'2-digit',hour12:true}).format(d);}
   formatDuration(m:number){return Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':'');}
   private parseTime(v:string){const [h,m]=v.split(':').map(Number);const d=new Date();d.setHours(h||0,m||0,0,0);return d;} private inputTime(d:Date){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
