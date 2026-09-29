@@ -67,6 +67,8 @@ export class App {
   // This prevents the 60fps sky renderer from consuming CPU on calculators,
   // maps and other product routes.
   readonly currentRoute = signal<string>('/');
+  readonly sleepMode = computed(() => this.currentRoute().split('?')[0] === '/sleep-calculator');
+
   readonly showDeepSpace = computed(() => {
     const url = this.currentRoute().toLowerCase();
     return (
@@ -88,6 +90,7 @@ export class App {
     return (
       url === '/now' ||
       url === '/weather' ||
+      url === '/sleep-calculator' ||
       /^\/[a-z0-9-]+(?:\/(?:weather|time|sun|moon))?(?:\?.*)?$/.test(url) ||
       url.startsWith('/sky')
     );
