@@ -374,6 +374,13 @@ export class App {
           tag: 'Live'
         },
         {
+          label: 'Sleep Calculator',
+          path: '/sleep-calculator',
+          desc: 'Plan bedtime and wake time with sleep-cycle math, local night context, and private on-device history.',
+          icon: 'bedtime',
+          tag: 'Sleep'
+        },
+        {
           label: 'Real-Time Severe & Astronomical Alerts',
           path: '/alerts',
           desc: 'Live severe weather warnings, geomagnetic storms, eclipses, and visibility alerts.',
