@@ -1,7 +1,7 @@
 <!-- Living substrates are route-scoped so heavy canvas animation never runs
      behind calculators, maps or other non-visual product pages. -->
 @if (showReactiveSky()) {
-  <app-reactive-sky></app-reactive-sky>
+  <app-reactive-sky [sleepMode]="sleepMode()"></app-reactive-sky>
 } @else if (showDeepSpace()) {
   <app-deep-space-backdrop></app-deep-space-backdrop>
 }
