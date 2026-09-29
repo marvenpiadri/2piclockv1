@@ -39,6 +39,7 @@ const staticSitemapUrls = [
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
   '/time/unix-timestamp', '/time/world-matrix',
   '/widget',
+  '/sleep-calculator',
   '/radio/stations', '/radio/map', '/radio/favorites', '/radio/recent',
   '/atmosphere', '/ephemeris', '/planner', '/space',
   '/stargazing', '/eclipses', '/satellites'
