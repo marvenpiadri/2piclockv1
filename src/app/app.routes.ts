@@ -22,6 +22,7 @@ import { WidgetEmbedComponent } from './features/widget-generator/widget-embed';
 import { WorldEventsComponent } from './features/world-events/world-events';
 import { AlertsComponent } from './features/alerts/alerts';
 import { ApiDocsComponent } from './features/api-docs/api-docs';
+import { SleepCalculatorComponent } from './features/sleep-calculator/sleep-calculator';
 
 const resolveRootLocation: CanActivateFn = async () => {
   const locationService = inject(LocationService);
@@ -59,6 +60,7 @@ export const routes: Routes = [
   { path: 'tonight', component: TonightComponent },
   { path: 'events', component: WorldEventsComponent },
   { path: 'api', component: ApiDocsComponent },
+  { path: 'sleep-calculator', component: SleepCalculatorComponent },
 
   // Astronomical & Stargazing Suites (Option B)
   { path: 'stargazing', component: StargazingPlannerComponent },
