@@ -146,7 +146,7 @@ export class ShareExportModalComponent implements AfterViewInit {
   }
 
   private async drawWeatherIcon(ctx: CanvasRenderingContext2D, condition: string, isDay: boolean, x: number, y: number, size: number): Promise<void> {
-    try { const image = await this.loadImage(this.weatherIconUrl(condition, isDay)); ctx.drawImage(image, x, y, size, size); } catch {}
+    try { const image = await this.loadImage(this.weatherIconUrl(condition, isDay)); ctx.drawImage(image, x, y, size, size); } catch { /* Ignore non-fatal export asset errors. */ }
   }
 
   private async drawCountryFlag(ctx: CanvasRenderingContext2D, countryCode: string, x: number, y: number, width: number, height: number): Promise<void> {
@@ -155,7 +155,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     try {
       const image = await this.loadImage(`/api/v1/assets/flag/${code}`);
       ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, width, height, 5); ctx.clip(); ctx.drawImage(image, x, y, width, height); ctx.restore();
-    } catch {}
+    } catch { /* Ignore non-fatal export asset errors. */ }
   }
 
   private drawMetric(ctx: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number): void {
@@ -193,8 +193,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     const ctx=this.setupCanvas(); if(!ctx)return;
     const loc=this.locationService.selectedLocation(); const date=this.timeControlService.currentActiveDate();
     const weather=this.weatherService.currentWeather(); const celestial=this.celestialService.celestialState();
-    const w=1200;
-    await this.drawHeader(ctx,'CITY STATUS · NOW',date,true);
+        await this.drawHeader(ctx,'CITY STATUS · NOW',date,true);
     ctx.fillStyle='#f8fafc'; ctx.font='700 68px system-ui,sans-serif'; ctx.fillText(date.toLocaleTimeString('en-US',{timeZone:loc.timezone,hour:'2-digit',minute:'2-digit',hour12:false}),62,250);
     ctx.fillStyle='#e2e8f0'; ctx.font='600 22px system-ui,sans-serif'; ctx.fillText(weather.conditionLabel,62,286);
     await this.drawWeatherIcon(ctx,weather.condition,weather.isDay,1000,180,130);
@@ -292,7 +291,7 @@ export class ShareExportModalComponent implements AfterViewInit {
     else if(this.activeCard()==='tomorrow') path='/'+this.locationService.getLocationSlug(loc)+'/weather';
     const instant=this.cardType==='sleep' ? null : (this.activeCard()==='tomorrow' ? this.getTomorrowInstant(loc.timezone) : this.timeControlService.currentActiveDate());
     const url=window.location.origin+path+(instant?'?at='+encodeURIComponent(instant.toISOString()):'');
-    try{await navigator.clipboard.writeText(url);this.linkCopied.set(true);window.setTimeout(()=>this.linkCopied.set(false),2200);}catch{}
+    try{await navigator.clipboard.writeText(url);this.linkCopied.set(true);window.setTimeout(()=>this.linkCopied.set(false),2200);}catch { /* Ignore non-fatal local persistence errors. */ }
   }
 
   downloadPng(): void {
