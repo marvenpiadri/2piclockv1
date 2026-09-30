@@ -102,36 +102,7 @@ export class SkyHomeComponent implements OnDestroy {
     );
   });
 
-  /**
-   * Geometry for the atmospheric 24-hour time-machine track.
-   * Sunrise and sunset follow the selected location/date; the track remains
-   * visible even when the current time is deep night.
-   */
-  readonly solarTimeline = computed(() => {
-    const events = this.celestial().solarEvents;
-    const zone = this.selectedLocation().timezone;
 
-    const fractionFor = (date: Date | null): number | null => {
-      if (!date || !Number.isFinite(date.getTime())) return null;
-      const parts = this.getLocalDateParts(date, zone);
-      return (
-        (parts.hour * 3600000 +
-          parts.minute * 60000 +
-          parts.second * 1000 +
-          date.getMilliseconds()) / 86400000
-      );
-    };
-
-    const sunriseFraction = fractionFor(events.sunrise);
-    const sunsetFraction = fractionFor(events.sunset);
-
-    return {
-      sunrisePosition: sunriseFraction === null ? '24%' : String(Math.max(2, Math.min(48, sunriseFraction * 100))) + '%',
-      sunsetPosition: sunsetFraction === null ? '76%' : String(Math.max(52, Math.min(98, sunsetFraction * 100))) + '%',
-      hasSunrise: sunriseFraction !== null,
-      hasSunset: sunsetFraction !== null
-    };
-  });
 
   readonly localTime = this.celestialService.formattedLocalTime;
   readonly localDate = this.celestialService.formattedLocalDate;
