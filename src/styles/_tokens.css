@@ -11,38 +11,38 @@ body[data-theme="dark"],
   color-scheme: dark;
 
   --color-canvas: #020617;
-  --color-surface: #07111f;
-  --color-surface-subtle: #0b1729;
-  --color-surface-elevated: #0f1d31;
-  --color-surface-hover: #14243b;
-  --color-surface-active: #1d304b;
-  --color-surface-modal: #07111f;
-  --color-border: #1d304b;
-  --color-border-dark: #314563;
+  --color-surface: rgba(2, 6, 23, 0.46);
+  --color-surface-subtle: rgba(2, 6, 23, 0.32);
+  --color-surface-elevated: rgba(2, 6, 23, 0.58);
+  --color-surface-hover: rgba(2, 6, 23, 0.70);
+  --color-surface-active: rgba(2, 6, 23, 0.80);
+  --color-surface-modal: rgba(2, 6, 23, 0.78);
+  --color-border: rgba(251, 191, 36, 0.16);
+  --color-border-dark: rgba(251, 191, 36, 0.28);
   --color-border-focus: #f59e0b;
 
-  --color-input-bg: #07111f;
-  --color-input-border: #1d304b;
+  --color-input-bg: rgba(2, 6, 23, 0.42);
+  --color-input-border: rgba(251, 191, 36, 0.16);
   --color-input-text: #f0f6fc;
   --color-input-placeholder: #8b949e;
 
-  --color-btn-dark-bg: #0f1d31;
-  --color-btn-dark-hover: #14243b;
+  --color-btn-dark-bg: rgba(2, 6, 23, 0.58);
+  --color-btn-dark-hover: rgba(2, 6, 23, 0.72);
   --color-btn-dark-text: #f0f6fc;
-  --color-header-bg: #020617;
-  --color-header-border: #1d304b;
+  --color-header-bg: rgba(2, 6, 23, 0.72);
+  --color-header-border: rgba(251, 191, 36, 0.14);
   --color-header-text: #f0f6fc;
   --color-header-subtext: #8b949e;
   --color-header-link: #c9d1d9;
   --color-header-link-hover: #ffffff;
-  --color-header-link-hover-bg: #14243b;
+  --color-header-link-hover-bg: rgba(2, 6, 23, 0.68);
   --color-header-link-active: #f59e0b;
   --color-header-link-active-bg: rgba(245, 158, 11, 0.14);
 
   --color-text-main: #f0f6fc;
   --color-text-secondary: #8b949e;
   --color-text-muted: #6e7681;
-  --color-text-inverse: #0d1117;
+  --color-text-inverse: #020617;
 
   --color-math-orange: var(--color-accent);
   --color-math-orange-dark: var(--color-accent-deep);
@@ -63,12 +63,12 @@ body[data-theme="dark"],
   --color-accent-soft: rgba(245, 158, 11, 0.14);
   --color-accent-border: rgba(245, 158, 11, 0.38);
   --color-neutral-950: #020617;
-  --color-neutral-900: #0d1117;
-  --color-neutral-850: #111827;
-  --color-neutral-800: #161b22;
-  --color-neutral-700: #21262d;
-  --color-neutral-600: #30363d;
-  --color-neutral-500: #484f58;
+  --color-neutral-900: #020617;
+  --color-neutral-850: #020617;
+  --color-neutral-800: #020617;
+  --color-neutral-700: #020617;
+  --color-neutral-600: #020617;
+  --color-neutral-500: #020617;
   --color-positive: #34d399;
   --color-danger: #f87171;
   --color-accent-strong: #fbbf24;
@@ -80,19 +80,19 @@ body[data-theme="dark"],
   --color-star: #ffd76a;
 
   --color-midnight-950: #020617;
-  --color-midnight-900: #07111f;
-  --color-midnight-850: #0b1729;
-  --color-midnight-800: #0f1d31;
-  --color-midnight-700: #14243b;
-  --color-midnight-600: #1d304b;
-  --color-midnight-500: #314563;
+  --color-midnight-900: #020617;
+  --color-midnight-850: #020617;
+  --color-midnight-800: #020617;
+  --color-midnight-700: #020617;
+  --color-midnight-600: rgba(251, 191, 36, 0.16);
+  --color-midnight-500: rgba(251, 191, 36, 0.28);
 
   --color-status-draft: #8b949e;
-  --color-status-draft-bg: #0f1d31;
-  --color-status-draft-border: #1d304b;
-  --color-status-sent: #58a6ff;
-  --color-status-sent-bg: rgba(56, 139, 253, 0.15);
-  --color-status-sent-border: rgba(56, 139, 253, 0.35);
+  --color-status-draft-bg: rgba(2, 6, 23, 0.58);
+  --color-status-draft-border: rgba(251, 191, 36, 0.14);
+  --color-status-sent: var(--color-text-secondary);
+  --color-status-sent-bg: rgba(255, 255, 255, 0.06);
+  --color-status-sent-border: rgba(255, 255, 255, 0.12);
   --color-status-paid: var(--color-accent);
   --color-status-paid-bg: var(--color-accent-soft);
   --color-status-paid-border: var(--color-accent-border);
@@ -100,8 +100,8 @@ body[data-theme="dark"],
   --color-status-overdue-bg: rgba(248, 81, 73, 0.15);
   --color-status-overdue-border: rgba(248, 81, 73, 0.35);
   --color-status-void: #8b949e;
-  --color-status-void-bg: #0f1d31;
-  --color-status-void-border: #1d304b;
+  --color-status-void-bg: rgba(2, 6, 23, 0.58);
+  --color-status-void-border: rgba(251, 191, 36, 0.14);
 
   --space-0: 0;
   --space-1: 4px;
