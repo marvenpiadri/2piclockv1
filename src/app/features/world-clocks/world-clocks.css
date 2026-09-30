@@ -353,7 +353,7 @@
 .digital-time {
   width: 100%;
   color: var(--color-accent);
-  font: 700 clamp(34px, 5vw, 58px)/.98 "Share Tech Mono", var(--font-mono);
+  font: 700 clamp(34px, 5vw, 58px)/.98 "Dekatron", var(--font-mono);
   letter-spacing: .035em;
   white-space: nowrap;
   text-align: center;
@@ -600,4 +600,13 @@
 .add-clock-hint {
   background: transparent;
   border-color: color-mix(in srgb, var(--color-midnight-500) 42%, transparent);
+}
+
+
+/* Clock numerals use the same designed numeral family as the 2pi mark. */
+.digital-time,
+.digital-seconds,
+.analog-readout {
+  font-family: "Dekatron", var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
