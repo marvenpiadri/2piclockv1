@@ -5,17 +5,18 @@ import { Meta, Title } from '@angular/platform-browser';
 import { CelestialService } from '../../core/services/celestial.service';
 import { LocationService } from '../../core/services/location.service';
 import { getCelestialState } from '../../core/astronomy/astronomy-engine';
+import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 
 type Mode = 'wake' | 'bed' | 'now';
 type Age = 'teen' | 'adult' | 'older' | 'senior';
 interface Plan { cycles:number; sleepMinutes:number; inBedMinutes:number; bedtime:Date; wakeTime:Date; score:string; }
 interface HistoryEntry { id:number; createdAt:string; mode:Mode; bedtime:string; wakeTime:string; sleepMinutes:number; cycles:number; location:string; timezone:string; }
 
-@Component({selector:'app-sleep-calculator',standalone:true,imports:[CommonModule,FormsModule],changeDetection:ChangeDetectionStrategy.OnPush,templateUrl:'./sleep-calculator.html',styleUrl:'./sleep-calculator.css'})
+@Component({selector:'app-sleep-calculator',standalone:true,imports:[CommonModule,FormsModule,ShareExportModalComponent],changeDetection:ChangeDetectionStrategy.OnPush,templateUrl:'./sleep-calculator.html',styleUrl:'./sleep-calculator.css'})
 export class SleepCalculatorComponent implements OnInit {
   private readonly title=inject(Title); private readonly meta=inject(Meta); private readonly platformId=inject(PLATFORM_ID);
   readonly locationService=inject(LocationService); readonly celestialService=inject(CelestialService);
-  readonly mode=signal<Mode>('wake'); readonly age=signal<Age>('adult'); readonly wakeTime=signal('07:00'); readonly bedtime=signal('23:00'); readonly latency=signal(15); readonly history=signal<HistoryEntry[]>([]);
+  readonly mode=signal<Mode>('wake'); readonly age=signal<Age>('adult'); readonly showShareModal=signal(false); readonly wakeTime=signal('07:00'); readonly bedtime=signal('23:00'); readonly latency=signal(15); readonly history=signal<HistoryEntry[]>([]);
   readonly targetRange=computed(()=>this.age()==='teen'?{min:8,max:10,label:'8–10 h'}:this.age()==='adult'?{min:7,max:9,label:'7–9 h'}:this.age()==='older'?{min:7,max:9,label:'7–9 h'}:{min:7,max:8,label:'7–8 h'});
   readonly currentSky=computed(()=>{const a=this.celestialService.celestialState().sun.altitudeDeg;return a<-6?'Night sky':a<6?'Twilight':'Day sky';});
   readonly weatherContext=computed(()=>{const w=this.celestialService.currentWeather();return w?w.temperatureC+'°C · '+w.conditionLabel:'Weather loading';});
