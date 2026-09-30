@@ -102,6 +102,14 @@ export class SkyHomeComponent implements OnDestroy {
     );
   });
 
+  // The scrubber is deliberately decoupled from the astronomical state while
+  // dragging. The thumb can move freely without recomputing the sky or
+  // refreshing weather until the user releases the control.
+  readonly scrubberPreviewFraction = signal<number | null>(null);
+  readonly scrubberFraction = computed(() =>
+    this.scrubberPreviewFraction() ?? this.localDayFraction()
+  );
+
 
 
   readonly localTime = this.celestialService.formattedLocalTime;
@@ -871,6 +879,12 @@ export class SkyHomeComponent implements OnDestroy {
   onScrubberInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
+    this.scrubberPreviewFraction.set(fraction);
+  }
+
+  onScrubberChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
     const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
     const totalMs = fraction * 86400000;
     const hours = Math.floor(totalMs / 3600000);
@@ -890,6 +904,13 @@ export class SkyHomeComponent implements OnDestroy {
         milliseconds
       )
     );
+
+    this.scrubberPreviewFraction.set(null);
+
+    // Refreshing here is intentionally release-only. WeatherService caches
+    // the location forecast, so repeated Time Machine releases do not spam
+    // the provider within the cache window.
+    this.weatherService.fetchWeatherForLocation(this.selectedLocation());
   }
 
   private getLocalDateParts(date: Date, timeZone: string): { year: number; month: number; day: number; hour: number; minute: number; second: number } {
