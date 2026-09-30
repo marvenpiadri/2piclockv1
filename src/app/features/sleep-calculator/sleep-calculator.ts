@@ -20,9 +20,9 @@ export class SleepCalculatorComponent implements OnInit {
   readonly currentSky=computed(()=>{const a=this.celestialService.celestialState().sun.altitudeDeg;return a<-6?'Night sky':a<6?'Twilight':'Day sky';});
   readonly weatherContext=computed(()=>{const w=this.celestialService.currentWeather();return w?w.temperatureC+'°C · '+w.conditionLabel:'Weather loading';});
   readonly sunset=computed(()=>{const d=this.celestialService.celestialState().solarEvents.sunset;return d?this.formatTime(d):'—';});
-  readonly plans=computed<Plan[]>(()=>{const base=this.parseTime(this.mode()==='bed'?this.bedtime():this.wakeTime());const forward=this.mode()==='bed';return [4,5,6].map(cycles=>{const sleep=cycles*90;const inBed=sleep+this.latency();const bed=forward?base:new Date(base.getTime()-inBed*60000);const wake=forward?new Date(base.getTime()+inBed*60000):base;const hours=sleep/60;const r=this.targetRange();return {cycles,sleepMinutes:sleep,inBedMinutes:inBed,bedtime:bed,wakeTime:wake,score:hours>=r.min&&hours<=r.max?'recommended':hours<r.min?'short':'long'};});});
+  readonly plans=computed<Plan[]>(()=>{if(this.mode()==='now')return this.sleepNowPlans();const base=this.parseTime(this.mode()==='bed'?this.bedtime():this.wakeTime());const forward=this.mode()==='bed';return [4,5,6].map(cycles=>{const sleep=cycles*90;const inBed=sleep+this.latency();const bed=forward?base:new Date(base.getTime()-inBed*60000);const wake=forward?new Date(base.getTime()+inBed*60000):base;const hours=sleep/60;const r=this.targetRange();return {cycles,sleepMinutes:sleep,inBedMinutes:inBed,bedtime:bed,wakeTime:wake,score:hours>=r.min&&hours<=r.max?'recommended':hours<r.min?'short':'long'};});});
   readonly bestPlan=computed(()=>{const r=this.targetRange();return [...this.plans()].sort((a,b)=>Math.abs(a.sleepMinutes/60-(r.min+r.max)/2)-Math.abs(b.sleepMinutes/60-(r.min+r.max)/2))[0];});
-  readonly sleepNowPlans=computed(()=>{const now=new Date();return [4,5,6].map(cycles=>({cycles,bedtime:now,wakeTime:new Date(now.getTime()+(cycles*90+this.latency())*60000),sleepMinutes:cycles*90}));});
+  readonly sleepNowPlans=computed<Plan[]>(()=>{const now=new Date();const r=this.targetRange();return [4,5,6].map(cycles=>{const sleep=cycles*90;return {cycles,sleepMinutes:sleep,inBedMinutes:sleep+this.latency(),bedtime:now,wakeTime:new Date(now.getTime()+(sleep+this.latency())*60000),score:sleep/60>=r.min&&sleep/60<=r.max?'recommended':sleep/60<r.min?'short':'long'};});});
   readonly astronomyInsight=computed(()=>{
     const loc=this.locationService.selectedLocation();
     const plan=this.bestPlan();
@@ -58,5 +58,5 @@ export class SleepCalculatorComponent implements OnInit {
   formatHistoryTime(value:string,timezone?:string){return this.formatTime(new Date(value),timezone);}
   formatTime(d:Date,timezone=this.locationService.selectedLocation().timezone){return new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'numeric',minute:'2-digit',hour12:true}).format(d);}
   formatDuration(m:number){return Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':'');}
-  private parseTime(v:string){const [h,m]=v.split(':').map(Number);const d=new Date();d.setHours(h||0,m||0,0,0);return d;} private inputTime(d:Date){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+  private parseTime(v:string){const [h,m]=v.split(':').map(Number);const d=new Date();d.setHours(h||0,m||0,0,0);if(d.getTime()<=Date.now())d.setDate(d.getDate()+1);return d;} private inputTime(d:Date){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 }
