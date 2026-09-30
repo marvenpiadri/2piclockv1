@@ -78,9 +78,48 @@
           </div>
 
           <div class="time-scrubber">
-            <div class="scrubber-head"><span>TIME MACHINE</span><span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span></div>
-            <input type="range" min="0" max="1" step="0.0001" [value]="localDayFraction()" [style.--scrubber-progress]="(localDayFraction() * 100) + '%'" (input)="onScrubberInput($event)" aria-label="Time of day"/>
-            <div class="scrubber-labels"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+            <div class="scrubber-head">
+              <span>TIME MACHINE</span>
+              <span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span>
+            </div>
+
+            <div
+              class="scrubber-track"
+              [style.--sunrise-position]="solarTimeline().sunrisePosition"
+              [style.--sunset-position]="solarTimeline().sunsetPosition"
+              [class.no-sunrise]="!solarTimeline().hasSunrise"
+              [class.no-sunset]="!solarTimeline().hasSunset"
+            >
+              <div class="scrubber-atmosphere" aria-hidden="true"></div>
+              <div
+                class="scrubber-progress"
+                [style.width]="(localDayFraction() * 100) + '%'"
+                aria-hidden="true"
+              ></div>
+              <div
+                class="scrubber-sun-marker"
+                [style.left]="(localDayFraction() * 100) + '%'"
+                aria-hidden="true"
+              ></div>
+
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.0001"
+                [value]="localDayFraction()"
+                (input)="onScrubberInput($event)"
+                aria-label="Time of day"
+              />
+            </div>
+
+            <div class="scrubber-labels" aria-hidden="true">
+              <span><b>00:00</b><small>Midnight</small></span>
+              <span><b>06:00</b><small>Sunrise</small></span>
+              <span><b>12:00</b><small>Sun</small></span>
+              <span><b>18:00</b><small>Sunset</small></span>
+              <span><b>24:00</b><small>Midnight</small></span>
+            </div>
           </div>
         </div>
 
