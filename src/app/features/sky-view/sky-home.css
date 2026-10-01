@@ -2,7 +2,7 @@
 :host{display:block;width:100%;min-height:calc(100vh - 64px);color:#f5f5f5;background:transparent}
 .sky-report{position:relative;min-height:calc(100vh - 64px);overflow:hidden;background:transparent;color:#f5f5f5;transition:color .45s ease}
 .sky-header,.sky-navigation,.sky-page{position:relative;z-index:2}
-.sky-header{width:100%;margin:0;padding:9px 20px 8px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:0;border-bottom:1px solid rgba(255,255,255,.08);border-radius:0;background:rgba(8,10,14,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:none}
+.sky-header{width:100%;margin:0;padding:9px 20px 8px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:0;border-bottom:1px solid rgba(255,255,255,.08);border-radius:0;background:var(--color-surface-elevated);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:none}
 .sky-header-left{display:flex;flex-direction:column;gap:1px;min-width:0}
 .sky-header-left h1{margin:1px 0 0;font:650 clamp(18px,1.8vw,24px)/1.2 system-ui,sans-serif;letter-spacing:-.025em;color:#f8fafc}
 .sky-header-left p{margin:2px 0 0;color:#94a3b8;font:11px monospace}
@@ -454,7 +454,7 @@
 
 .sky-header {
   padding: 10px 22px 8px;
-  background: rgba(8,10,14,.34);
+  background: var(--color-surface);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -782,7 +782,7 @@
 .sky-report .time-scrubber,
 .sky-report .weather-section-block > *,
 .sky-report .astronomy-now-badge .separation-tag {
-  background: rgba(13, 17, 23, .90);
+  background: var(--color-surface-elevated);
   border-color: rgba(255, 255, 255, .14);
   box-shadow: 0 10px 35px rgba(0, 0, 0, .22);
   backdrop-filter: blur(18px) saturate(115%);
@@ -1051,7 +1051,7 @@
 .sky-report .time-controls .time-tool,
 .sky-report .time-scrubber,
 .sky-report .astronomy-now-badge .separation-tag {
-  background: rgba(13, 17, 23, .90);
+  background: var(--color-surface-elevated);
   border-color: rgba(255,255,255,.14);
 }
 
@@ -1069,7 +1069,7 @@
 .sky-report .week-day,
 .sky-report .deck-hour-item,
 .sky-report .deck-week-row {
-  background: rgba(13, 17, 23, .90) !important;
+  background: var(--color-surface-elevated) !important;
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 8px 24px rgba(0,0,0,.18);
   backdrop-filter: blur(14px) saturate(115%);
@@ -1094,7 +1094,7 @@
 
 /* Compact Sky route navigation: Now / Weather / Tonight lives beside Settings. */
 .sky-report .sky-header {
-  background: rgba(13, 17, 23, .94);
+  background: var(--color-surface-modal);
   border-color: rgba(255,255,255,.14);
 }
 
@@ -1191,7 +1191,7 @@
 .sky-report .tonight-observatory,
 .sky-report .tonight-metric-card,
 .sky-report .tonight-planet-card {
-  background: rgba(13,17,23,.90);
+  background: var(--color-surface-elevated);
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 10px 35px rgba(0,0,0,.22);
   backdrop-filter: blur(18px) saturate(115%);
@@ -1426,15 +1426,15 @@
   .tonight-events { grid-template-columns: 1fr; }
 }
 
-.time-machine-compare{display:flex;align-items:center;gap:8px;min-width:0;margin-top:7px}.time-machine-compare>label{display:flex;align-items:center;gap:7px;color:#71717a;font:700 7px monospace;letter-spacing:.08em}.time-machine-compare input{height:26px;padding:0 7px;border:1px solid rgba(255,255,255,.08);border-radius:7px;background:rgba(10,10,12,.72);color:#e4e4e7;font:9px monospace;outline:none}.time-machine-compare input:focus{border-color:rgba(245,158,11,.38)}.comparison-readout{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;white-space:nowrap;padding:4px 7px;border:1px solid rgba(245,158,11,.16);border-radius:7px;background:rgba(245,158,11,.045);color:#a1a1aa;font:8px monospace}.comparison-readout span{color:#fbbf24}.comparison-readout b{font-weight:700;color:#d4d4d8}.comparison-readout button{display:grid;place-items:center;border:0;background:transparent;color:#71717a;cursor:pointer;padding:0}.comparison-readout button:hover{color:#fff}.comparison-readout mat-icon{width:13px;height:13px;font-size:13px}@media(max-width:700px){.time-machine-compare{align-items:flex-start;flex-direction:column}.comparison-readout{max-width:100%;width:100%;box-sizing:border-box}}
+.time-machine-compare{display:flex;align-items:center;gap:8px;min-width:0;margin-top:7px}.time-machine-compare>label{display:flex;align-items:center;gap:7px;color:#71717a;font:700 7px monospace;letter-spacing:.08em}.time-machine-compare input{height:26px;padding:0 7px;border:1px solid rgba(255,255,255,.08);border-radius:7px;background:var(--color-surface);color:#e4e4e7;font:9px monospace;outline:none}.time-machine-compare input:focus{border-color:rgba(245,158,11,.38)}.comparison-readout{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;white-space:nowrap;padding:4px 7px;border:1px solid rgba(245,158,11,.16);border-radius:7px;background:rgba(245,158,11,.045);color:#a1a1aa;font:8px monospace}.comparison-readout span{color:#fbbf24}.comparison-readout b{font-weight:700;color:#d4d4d8}.comparison-readout button{display:grid;place-items:center;border:0;background:transparent;color:#71717a;cursor:pointer;padding:0}.comparison-readout button:hover{color:#fff}.comparison-readout mat-icon{width:13px;height:13px;font-size:13px}@media(max-width:700px){.time-machine-compare{align-items:flex-start;flex-direction:column}.comparison-readout{max-width:100%;width:100%;box-sizing:border-box}}
 
 
 /* Final 2pi glass language: consistent translucent midnight surfaces over the living sky. */
 :root {
   --sky-midnight-950: #020617;
-  --sky-midnight-900: #07111f;
-  --sky-midnight-800: #0f172a;
-  --sky-glass-bg: rgba(7, 17, 31, .46);
+  --sky-midnight-900: #020617;
+  --sky-midnight-800: #020617;
+  --sky-glass-bg: rgba(2, 6, 23, .46);
   --sky-glass-bg-strong: rgba(2, 6, 23, .82);
   --sky-glass-border: rgba(251, 191, 36, .16);
   --sky-glass-highlight: rgba(255, 255, 255, .07);
@@ -1588,7 +1588,7 @@
 .deck-astro-card,
 .deck-insight-card,
 .deck-d3-wrapper {
-  background: rgba(7,17,31,.58);
+  background: rgba(2,6,23,.58);
 }
 
 .metric-label,
