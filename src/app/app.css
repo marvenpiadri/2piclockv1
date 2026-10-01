@@ -914,3 +914,8 @@
 .app-layout.sky-background-active .btn-gps-trigger:hover {
   color: var(--color-text-main);
 }
+
+
+/* Deep-space routes must let the astronomical substrate remain visible behind the UI. */
+:host:has(.deep-space-active) { background: transparent; }
+.deep-space-active .main-content-viewport { background: transparent; }
