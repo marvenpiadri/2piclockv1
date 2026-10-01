@@ -14,7 +14,7 @@
   [class.glass-inactive]="!glassThemeService.isGlassEnabled()">
 </div>
 
-<div class="app-layout" [class.sky-background-active]="showReactiveSky()" (click)="closeMenus()">
+<div class="app-layout" [class.sky-background-active]="showReactiveSky()" [class.deep-space-active]="showDeepSpace()" (click)="closeMenus()">
 
   <!-- Universal Top Header -->
   <header class="universal-top-header">
