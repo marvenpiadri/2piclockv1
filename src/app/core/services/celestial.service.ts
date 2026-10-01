@@ -1,4 +1,4 @@
-import { Injectable, inject, computed, effect, PLATFORM_ID } from '@angular/core';
+import { Injectable, inject, computed, effect, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LocationService } from './location.service';
 import { TimeControlService } from './time-control.service';
@@ -26,6 +26,10 @@ export class CelestialService {
   private timeControlService = inject(TimeControlService);
   private weatherService = inject(WeatherService);
   private precisionAstronomy = inject(PrecisionAstronomyService);
+  private readonly authoritativeTimezoneOffsetMinutes = signal<number | null>(null);
+  private readonly timezoneOffsetCache = new Map<string, number>();
+  private timezoneOffsetRequestKey = '';
+
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly activeDate = this.timeControlService.currentActiveDate;
@@ -393,10 +397,19 @@ export class CelestialService {
     };
   });
 
-  // Formatted city local time
+  // Formatted city local time.
+  // The offset is resolved by the Node runtime so a client's stale OS/browser
+  // timezone database cannot shift the selected city's clock by an hour.
   readonly formattedLocalTime = computed(() => {
-    const loc = this.selectedLocation();
     const date = this.activeDate();
+    const offsetMinutes = this.authoritativeTimezoneOffsetMinutes();
+
+    if (offsetMinutes !== null) {
+      const local = new Date(date.getTime() + offsetMinutes * 60_000);
+      return local.toISOString().slice(11, 19);
+    }
+
+    const loc = this.selectedLocation();
     try {
       return date.toLocaleTimeString('en-US', {
         timeZone: loc.timezone,
@@ -427,20 +440,18 @@ export class CelestialService {
     }
   });
 
-  // Timezone display (e.g. UTC+9 / JST)
+  // Timezone display is derived from the same authoritative offset as the clock.
   readonly timezoneDisplay = computed(() => {
     const loc = this.selectedLocation();
-    const date = this.activeDate();
-    try {
-      const str = new Intl.DateTimeFormat('en-US', {
-        timeZone: loc.timezone,
-        timeZoneName: 'shortOffset'
-      }).format(date);
-      const parts = str.split(' ');
-      return parts[parts.length - 1] || loc.timezone;
-    } catch {
-      return loc.timezone;
-    }
+    const offsetMinutes = this.authoritativeTimezoneOffsetMinutes();
+    if (offsetMinutes === null) return loc.timezone;
+
+    if (offsetMinutes === 0) return 'UTC+0';
+    const sign = offsetMinutes > 0 ? '+' : '-';
+    const absolute = Math.abs(offsetMinutes);
+    return 'UTC' + sign +
+      String(Math.floor(absolute / 60)).padStart(2, '0') +
+      ':' + String(absolute % 60).padStart(2, '0');
   });
 
   // Derived atmospheric brightness for UI contrast adaptation
