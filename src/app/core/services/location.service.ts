@@ -142,7 +142,29 @@ export class LocationService {
   }
 
   private createNeutralLocation(): GeoLocation { return { id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true }; }
-  private async restoreStoredLocations(): Promise<void> { const [selected, saved] = await Promise.all([this.readSelectedLocation(), this.readSavedLocations()]); if (selected) this.selectedLocation.set(selected); this.watchlist.set(saved); }
+  private async restoreStoredLocations(): Promise<void> {
+    const [selected, saved] = await Promise.all([
+      this.readSelectedLocation(),
+      this.readSavedLocations()
+    ]);
+
+    if (selected) {
+      // Catalogue locations are re-resolved so persisted data cannot carry a
+      // stale timezone after the underlying city/timezone dataset changes.
+      const canonical = selected.isCustom ? null : await this.getLocation(selected.id);
+      const restored = canonical ?? selected;
+      this.selectedLocation.set(restored);
+      if (this.isBrowser) await this.persistSelectedLocation(restored);
+    }
+
+    const canonicalWatchlist = await Promise.all(
+      saved.map(async location => {
+        if (location.isCustom) return location;
+        return (await this.getLocation(location.id)) ?? location;
+      })
+    );
+    this.watchlist.set(canonicalWatchlist);
+  }
   private openDatabase(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const request = indexedDB.open('2piClockLocations', 1); request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains(this.selectedLocationStore)) db.createObjectStore(this.selectedLocationStore); if (!db.objectStoreNames.contains(this.savedLocationsStore)) db.createObjectStore(this.savedLocationsStore, { keyPath: 'id' }); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error ?? new Error('IndexedDB unavailable')); }); }
   private async readSelectedLocation(): Promise<GeoLocation | null> { try { const db = await this.openDatabase(); return await new Promise(resolve => { const request = db.transaction(this.selectedLocationStore, 'readonly').objectStore(this.selectedLocationStore).get('current'); request.onsuccess = () => resolve((request.result as GeoLocation | undefined) ?? null); request.onerror = () => resolve(null); }); } catch { return null; } }
   private async persistSelectedLocation(location: GeoLocation): Promise<void> { try { const db = await this.openDatabase(); await new Promise<void>((resolve, reject) => { const request = db.transaction(this.selectedLocationStore, 'readwrite').objectStore(this.selectedLocationStore).put(location, 'current'); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); } catch { /* Optional local persistence. */ } }
