@@ -33,6 +33,12 @@ export class MeetingPlannerComponent implements OnDestroy {
  private searchTimer:ReturnType<typeof setTimeout>|null=null;
  private searchSubscription:Subscription|null=null;
 
+ constructor(){
+   void this.locationService.loadLocations().then(() => {
+     if (this.selectedCities().length === 0) this.selectedCities.set(this.initialCities());
+   }).catch(() => undefined);
+ }
+
  readonly rows=computed<PlannerRow[]>(()=>{
    const date=this.baseUtcDate();
    return this.selectedCities().map(location=>{
