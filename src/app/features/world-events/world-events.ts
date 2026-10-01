@@ -87,6 +87,11 @@ export class WorldEventsComponent {
     return this.allEvents().filter(event => this.eventTime(event) >= now - 86400000).slice(0, 18);
   });
 
+  readonly nextEvent = computed<WorldEvent | null>(() => {
+    const now = this.activeDate().getTime();
+    return this.allEvents().find(event => this.eventTime(event) >= now) ?? null;
+  });
+
   readonly visibleEvents = computed(() => {
     const selected = this.filter();
     return this.upcomingEvents().filter(event => {
