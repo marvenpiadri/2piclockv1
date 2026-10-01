@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -137,6 +137,18 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   // --- 8. WORLD TIME MATRIX STATE ---
   readonly matrixReferenceCity = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly matrixCities = signal<GeoLocation[]>([this.locationService.selectedLocation()]);
+
+  private readonly selectedLocationSync = effect(() => {
+    const location = this.locationService.selectedLocation();
+    if (location.id === 'initializing') return;
+
+    if (this.converterSourceLoc().id === 'initializing') this.converterSourceLoc.set(location);
+    if (this.converterTargets().length === 1 && this.converterTargets()[0].id === 'initializing') this.converterTargets.set([location]);
+    if (this.diffLocA().id === 'initializing') this.diffLocA.set(location);
+    if (this.diffLocB().id === 'initializing') this.diffLocB.set(location);
+    if (this.matrixReferenceCity().id === 'initializing') this.matrixReferenceCity.set(location);
+    if (this.matrixCities().length === 1 && this.matrixCities()[0].id === 'initializing') this.matrixCities.set([location]);
+  });
 
   readonly worldMatrixRows = computed<WorldComparisonRow[]>(() => {
     this.liveTick();
