@@ -354,6 +354,58 @@ app.get('/api/v1', (_req, res) => {
   });
 });
 
+
+app.get('/api/v1/timezone', (req, res) => {
+  apiHeaders(res);
+
+  const timezone = typeof req.query['timezone'] === 'string' ? req.query['timezone'].trim() : '';
+  const rawAt = typeof req.query['at'] === 'string' ? req.query['at'] : '';
+  const date = rawAt ? new Date(rawAt) : new Date();
+
+  if (!timezone) return apiError(res, 400, 'MISSING_TIMEZONE', 'Provide an IANA timezone.');
+  if (!Number.isFinite(date.getTime())) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Provide a valid ISO-8601 timestamp.');
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'longOffset',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(date);
+
+    const offsetLabel = parts.find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
+    const match = offsetLabel.match(/^GMT(?:(\\+|-)\\d{2}:?\\d{2})?$/);
+    if (!match) return apiError(res, 422, 'TIMEZONE_OFFSET_UNAVAILABLE', 'The timezone offset could not be resolved.');
+
+    const signedOffset = match[1] ?? '';
+    const offsetMinutes = signedOffset
+      ? (signedOffset.startsWith('+') ? 1 : -1) * (
+          Number(signedOffset.slice(1, 3)) * 60 +
+          Number(signedOffset.slice(-2))
+        )
+      : 0;
+
+    res.json({
+      version: '1',
+      timezone,
+      instant: date.toISOString(),
+      offsetMinutes,
+      offset: offsetMinutes === 0
+        ? 'UTC+0'
+        : 'UTC' + (offsetMinutes > 0 ? '+' : '-') +
+          String(Math.floor(Math.abs(offsetMinutes) / 60)).padStart(2, '0') +
+          ':' + String(Math.abs(offsetMinutes) % 60).padStart(2, '0')
+    });
+  } catch {
+    apiError(res, 400, 'INVALID_TIMEZONE', 'Use a valid IANA timezone.');
+  }
+});
+
 app.get('/api/v1/locations/search', async (req, res) => {
   apiHeaders(res);
   const rawQuery = typeof req.query['q'] === 'string' ? req.query['q'].trim() : '';
