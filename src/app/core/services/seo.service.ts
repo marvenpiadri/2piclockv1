@@ -248,11 +248,12 @@ export class SeoService {
       {
         '@type': 'WebApplication',
         '@id': canonical + '#app',
-        name: page.title.split(' | ')[0],
+        name: '2piClock',
         url: canonical,
         applicationCategory: 'UtilitiesApplication',
         operatingSystem: 'Web',
-        isAccessibleForFree: true
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
       },
       {
         '@type': 'WebPage',
@@ -279,11 +280,7 @@ export class SeoService {
         '@id': canonical + '#place',
         name: loc.name,
         address: { '@type': 'PostalAddress', addressCountry: loc.country },
-        geo: {
-          '@type': 'GeoCoordinates',
-          latitude: loc.latitude,
-          longitude: loc.longitude
-        },
+        geo: { '@type': 'GeoCoordinates', latitude: loc.latitude, longitude: loc.longitude },
         additionalProperty: loc.timezone
           ? [{ '@type': 'PropertyValue', name: 'IANA time zone', value: loc.timezone }]
           : undefined
@@ -293,6 +290,7 @@ export class SeoService {
     if (url === '/api') {
       graph.push({
         '@type': 'TechArticle',
+        '@id': canonical + '#article',
         headline: page.title,
         description: page.description,
         url: canonical
