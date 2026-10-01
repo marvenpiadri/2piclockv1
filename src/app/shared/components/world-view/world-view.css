@@ -175,7 +175,7 @@
 /* Final 2piClock instrument chrome: the map controls use the same amber language as the Sky controls. */
 :host {
   --sky-amber-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 52%, #b45309 100%);
-  --map-glass-bg: rgba(7, 17, 31, .38);
+  --map-glass-bg: rgba(2, 6, 23, .38);
   --map-glass-border: rgba(251, 191, 36, .16);
 }
 
@@ -200,7 +200,7 @@
 
 .world-tool.active {
   background: var(--sky-amber-gradient) !important;
-  color: #111827 !important;
+  color: var(--color-text-inverse) !important;
   border-color: rgba(255,255,255,.18) !important;
   box-shadow: 0 5px 16px rgba(245,158,11,.24), inset 0 1px 0 rgba(255,255,255,.20);
 }
@@ -208,14 +208,14 @@
 .world-tool.active mat-icon,
 .world-tool.active .sun-tool,
 .world-tool.active .moon-tool {
-  color: #111827 !important;
+  color: var(--color-text-inverse) !important;
 }
 
 .world-search,
 .world-search-results,
 .world-search-result,
 .observatory-chip {
-  background: rgba(7, 17, 31, .38) !important;
+  background: rgba(2, 6, 23, .38) !important;
   border-color: rgba(251, 191, 36, .14) !important;
   backdrop-filter: blur(16px) saturate(120%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
@@ -231,7 +231,7 @@
 .world-tool[title="Center on subsolar point"],
 .world-tool[title="Center on sublunar point"] {
   background: var(--sky-amber-gradient);
-  color: #111827;
+  color: var(--color-text-inverse);
   border-color: rgba(255,255,255,.16);
   box-shadow: 0 5px 16px rgba(245,158,11,.20);
 }
@@ -239,7 +239,7 @@
 .world-tool[title="Observer location"] mat-icon,
 .world-tool[title="Center on subsolar point"] mat-icon,
 .world-tool[title="Center on sublunar point"] mat-icon {
-  color: #111827 !important;
+  color: var(--color-text-inverse) !important;
 }
 
 .location-search-status {
