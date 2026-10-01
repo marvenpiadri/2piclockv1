@@ -309,7 +309,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--color-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   transition: border-color 0.2s;
@@ -457,7 +457,7 @@
 
 .diff-result-banner {
   padding: 24px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--color-surface-elevated);
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 16px;
   text-align: center;
@@ -489,7 +489,7 @@
 }
 
 .diff-clock-card {
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-surface-modal);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 16px;
   border-radius: 14px;
@@ -618,7 +618,7 @@
 /* Date Diff Banner */
 .date-diff-banner {
   padding: 24px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--color-surface-elevated);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   display: flex;
@@ -706,7 +706,7 @@
 /* Countdown Display */
 .countdown-hero-display, .countup-hero-display {
   padding: 24px;
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-surface-modal);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   text-align: center;
