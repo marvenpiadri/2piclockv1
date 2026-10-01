@@ -23,7 +23,7 @@
   justify-content: space-between;
   gap: 20px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 24px;
 }
 
@@ -44,8 +44,8 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: radial-gradient(circle at 35% 30%, #1e293b 0%, #0d121f 100%);
-  border: 1px solid #334155;
+  background: radial-gradient(circle at 35% 30%, var(--color-border) 0%, #0d121f 100%);
+  border: 1px solid var(--color-border-dark);
   color: #f59e0b;
   display: flex;
   align-items: center;
@@ -84,8 +84,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #111827;
-  border: 1px solid #334155;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border-dark);
   color: #f8fafc;
   padding: 4px 10px;
   border-radius: 6px;
@@ -96,7 +96,7 @@
 }
 
 .location-trigger-btn:hover {
-  background: #1e293b;
+  background: var(--color-border);
   border-color: #64748b;
 }
 
@@ -138,7 +138,7 @@
   max-width: 640px;
   max-height: 80vh;
   background: #0d121f;
-  border: 1px solid #334155;
+  border: 1px solid var(--color-border-dark);
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
   display: flex;
@@ -151,8 +151,8 @@
   align-items: center;
   gap: 10px;
   padding: 14px 18px;
-  border-bottom: 1px solid #1e293b;
-  background: #111827;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-midnight-950);
   color: #94a3b8;
 }
 
@@ -192,8 +192,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: #111827;
-  border: 1px solid #1e293b;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
@@ -202,7 +202,7 @@
 }
 
 .picker-result-card:hover {
-  background: #1e293b;
+  background: var(--color-border);
   border-color: #f59e0b;
 }
 
@@ -235,8 +235,8 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #111827;
-  border: 1px solid #334155;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border-dark);
   border-radius: 6px;
   font-size: 12.5px;
 }
@@ -272,7 +272,7 @@
 .live-clock-card {
   text-align: right;
   padding-left: 12px;
-  border-left: 1px solid #1e293b;
+  border-left: 1px solid var(--color-border);
 }
 
 .live-clock-time {
@@ -319,12 +319,12 @@
 
 .action-btn-share {
   background: #161e2e;
-  border: 1px solid #334155;
+  border: 1px solid var(--color-border-dark);
   color: #cbd5e1;
 }
 
 .action-btn-share:hover {
-  background: #1e293b;
+  background: var(--color-border);
   color: #ffffff;
   border-color: #64748b;
 }
@@ -334,7 +334,7 @@
    -------------------------------------------------------------------------- */
 .twilight-spectrum-ribbon {
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 18px 22px;
   margin-bottom: 24px;
@@ -388,7 +388,7 @@
 .color-civil { background: #b45309; }
 .color-nautical { background: #1e3a8a; }
 .color-astro { background: #1e1b4b; }
-.color-dark { background: #030712; border: 1px solid #334155; }
+.color-dark { background: #030712; border: 1px solid var(--color-border-dark); }
 
 /* The Color Ramp Track */
 .spectrum-track {
@@ -397,7 +397,7 @@
   overflow: hidden;
   display: flex;
   width: 100%;
-  border: 1px solid #334155;
+  border: 1px solid var(--color-border-dark);
   margin-bottom: 14px;
   background: #020617;
 }
@@ -443,7 +443,7 @@
   justify-content: space-between;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid var(--color-border);
 }
 
 .milestone-col {
@@ -473,7 +473,7 @@
    -------------------------------------------------------------------------- */
 .tonight-scrubber-deck {
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 16px 22px;
   margin-bottom: 24px;
@@ -523,7 +523,7 @@
 
 .quick-jump-btn {
   background: #161e2e;
-  border: 1px solid #334155;
+  border: 1px solid var(--color-border-dark);
   color: #94a3b8;
   padding: 4px 10px;
   border-radius: 6px;
@@ -533,7 +533,7 @@
 }
 
 .quick-jump-btn:hover {
-  background: #1e293b;
+  background: var(--color-border);
   color: #ffffff;
   border-color: #64748b;
 }
@@ -589,7 +589,7 @@
 /* Left / Primary: Sky Planisphere Card */
 .sky-planisphere-card {
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 22px;
   display: flex;
@@ -731,7 +731,7 @@
 
 .observatory-panel {
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px;
 }
@@ -794,10 +794,10 @@
 .lunar-riseset-strip {
   display: flex;
   justify-content: space-between;
-  background: #111827;
+  background: var(--color-midnight-950);
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   font-size: 12px;
   margin-bottom: 16px;
 }
@@ -813,7 +813,7 @@
 
 /* Lunar Glare Meter */
 .lunar-glare-card {
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid var(--color-border);
   padding-top: 14px;
 }
 
@@ -835,7 +835,7 @@
 
 .glare-bar-bg {
   height: 6px;
-  background: #1e293b;
+  background: var(--color-border);
   border-radius: 3px;
   overflow: hidden;
   margin-bottom: 8px;
@@ -903,10 +903,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  background: #111827;
+  background: var(--color-midnight-950);
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
 }
 
 .seeing-stat {
@@ -950,7 +950,7 @@
    -------------------------------------------------------------------------- */
 .tonight-table-section {
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 22px;
   margin-bottom: 24px;
@@ -1001,13 +1001,13 @@
   font-size: 11px;
   font-weight: 600;
   color: #64748b;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
 }
 
 .planetary-table td {
   padding: 12px;
-  border-bottom: 1px solid #111827;
+  border-bottom: 1px solid var(--color-midnight-950);
   color: #cbd5e1;
   white-space: nowrap;
 }
@@ -1018,7 +1018,7 @@
 }
 
 .planetary-table tr:hover {
-  background-color: #111827;
+  background-color: var(--color-midnight-950);
 }
 
 .planetary-table tr.highlighted {
@@ -1048,7 +1048,7 @@
   padding: 2px 8px;
   border-radius: 4px;
   display: inline-block;
-  background: #1e293b;
+  background: var(--color-border);
   color: #94a3b8;
 }
 
@@ -1065,7 +1065,7 @@
 }
 
 .status-indicator-tag.below {
-  background: #111827;
+  background: var(--color-midnight-950);
   color: #64748b;
 }
 
@@ -1130,10 +1130,10 @@
 }
 
 .toggle-pill.active {
-  background: #0e1e47;
-  border-color: #2563eb;
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
   color: #ffffff;
-  box-shadow: 0 0 10px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
 .toggle-pill.pill-moon.active .pill-dot { background: #ffffff; }
@@ -1145,11 +1145,11 @@
 .altitude-svg-wrapper {
   width: 100%;
   position: relative;
-  background: radial-gradient(ellipse at 50% 0%, #0a183d 0%, #050d22 55%, #020512 100%);
+  background: radial-gradient(ellipse at 50% 0%, var(--color-surface-elevated) 0%, #050d22 55%, #020512 100%);
   border: 1px solid #162a56;
   border-radius: 10px;
   padding: 14px 14px 18px;
-  box-shadow: 0 12px 36px -8px rgba(2, 6, 23, 0.8), inset 0 1px 0 rgba(37, 99, 235, 0.25);
+  box-shadow: 0 12px 36px -8px rgba(2, 6, 23, 0.8), inset 0 1px 0 color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
 .altitude-svg {
@@ -1199,7 +1199,7 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #60a5fa;
+  color: var(--color-accent-strong);
 }
 
 .guide-hint {
@@ -1232,9 +1232,9 @@
 }
 
 .celestial-guide-card.active {
-  background: #0a183d;
-  border-color: #2563eb;
-  box-shadow: 0 0 12px rgba(37, 99, 235, 0.2);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 .guide-card-top {
@@ -1281,7 +1281,7 @@
 }
 
 .guide-status-tag.visible {
-  background: rgba(37, 99, 235, 0.2);
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
   color: #93c5fd;
   border: 1px solid rgba(37, 99, 235, 0.35);
 }
@@ -1295,7 +1295,7 @@
 .guide-status-tag.below {
   background: #030712;
   color: #64748b;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
 }
 
 .peak-time-row {
@@ -1362,7 +1362,7 @@
    -------------------------------------------------------------------------- */
 .targets-checklist-section {
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 22px;
   margin-bottom: 24px;
@@ -1375,8 +1375,8 @@
 }
 
 .target-card {
-  background: #111827;
-  border: 1px solid #1e293b;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
@@ -1448,7 +1448,7 @@
   font-size: 10px;
   font-family: monospace;
   padding: 2px 6px;
-  background: #1e293b;
+  background: var(--color-border);
   color: #cbd5e1;
   border-radius: 4px;
 }
@@ -1468,7 +1468,7 @@
   gap: 8px;
   font-size: 11.5px;
   color: #cbd5e1;
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid var(--color-border);
   padding-top: 8px;
 }
 
@@ -1494,7 +1494,7 @@
   align-items: center;
   gap: 14px;
   background: #0d121f;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 16px 20px;
   color: #f1f5f9;
@@ -1503,7 +1503,7 @@
 }
 
 .footer-link-card:hover {
-  background: #111827;
+  background: var(--color-midnight-950);
   border-color: #f59e0b;
   transform: translateY(-1px);
 }
