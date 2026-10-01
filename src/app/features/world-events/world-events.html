@@ -1,43 +1,119 @@
 <section class="events-page">
-  <header class="events-header">
-    <div>
+  <header class="events-hero">
+    <div class="events-hero-copy">
       <span class="section-eyebrow">WORLD EVENTS · {{ selectedLocation().name }}</span>
-      <h1>Holidays, Seasons & Religious Calendars</h1>
-      <p>Location-aware events connected to the same clock, astronomy and timezone used by 2piClock.</p>
+      <h1>The world is not still.</h1>
+      <p>2piClock connects calendars, solar geometry and local time into one living event stream.</p>
+      <div class="hero-meta">
+        <span><mat-icon>public</mat-icon>{{ selectedLocation().country }}</span>
+        <span><mat-icon>schedule</mat-icon>{{ selectedLocation().timezone }}</span>
+        <span><mat-icon>calendar_today</mat-icon>{{ activeDate() | date:'EEE, MMM d, yyyy' }}</span>
+      </div>
     </div>
-    <div class="events-location"><mat-icon>public</mat-icon><span>{{ selectedLocation().country }} · {{ selectedLocation().timezone }}</span></div>
+    @if (nextEvent(); as event) {
+      <div class="next-event">
+        <span class="next-label">NEXT IN THE SKY / CALENDAR</span>
+        <strong>{{ event.title }}</strong>
+        <span>{{ formatEventDate(event) }} · {{ formatEventTime(event) }}</span>
+        <small>{{ event.description }}</small>
+      </div>
+    }
   </header>
 
+  <section class="sky-cycle">
+    <div class="cycle-heading">
+      <div>
+        <span class="section-eyebrow">TODAY'S SKY CYCLE</span>
+        <h2>Light changes before the clock does.</h2>
+      </div>
+      <span class="cycle-location">{{ selectedLocation().name }}</span>
+    </div>
+    <div class="cycle-track">
+      @for (event of observatoryEvents(); track event.id) {
+        <button type="button" class="cycle-event" (click)="setFilter('sky')">
+          <span class="cycle-dot"></span>
+          <span class="cycle-name">{{ event.title }}</span>
+          <strong>{{ formatEventTime(event) }}</strong>
+        </button>
+      }
+      @if (observatoryEvents().length === 0) {
+        <div class="cycle-empty">Solar window data is unavailable for this location.</div>
+      }
+    </div>
+  </section>
+
   <nav class="events-filters" aria-label="Event categories">
-    <button type="button" [class.active]="filter() === 'all'" (click)="setFilter('all')"><mat-icon>event</mat-icon><span>All</span></button>
+    <button type="button" [class.active]="filter() === 'all'" (click)="setFilter('all')"><mat-icon>public</mat-icon><span>All</span></button>
+    <button type="button" [class.active]="filter() === 'sky'" (click)="setFilter('sky')"><mat-icon>wb_twilight</mat-icon><span>Sky</span></button>
+    <button type="button" [class.active]="filter() === 'prayer'" (click)="setFilter('prayer')"><mat-icon>schedule</mat-icon><span>Daily times</span></button>
     <button type="button" [class.active]="filter() === 'civil'" (click)="setFilter('civil')"><mat-icon>flag</mat-icon><span>Public holidays</span></button>
-    <button type="button" [class.active]="filter() === 'religious'" (click)="setFilter('religious')"><mat-icon>church</mat-icon><span>Religious</span></button>
+    <button type="button" [class.active]="filter() === 'religious'" (click)="setFilter('religious')"><mat-icon>event</mat-icon><span>Religious</span></button>
     <button type="button" [class.active]="filter() === 'seasonal'" (click)="setFilter('seasonal')"><mat-icon>wb_sunny</mat-icon><span>Seasons</span></button>
   </nav>
 
-  <div class="events-note"><mat-icon>info</mat-icon><span>Islamic dates are calculation-based and can differ from local moon-sighting decisions by about a day.</span></div>
+  <div class="events-note">
+    <mat-icon>info</mat-icon>
+    <span>Daily prayer times are calculation-based. Islamic calendar dates can differ from local moon-sighting decisions by about a day.</span>
+  </div>
 
   @if (eventsService.isLoading()) {
-    <div class="events-loading"><mat-icon class="spin">sync</mat-icon> Updating local calendars…</div>
+    <div class="events-loading"><mat-icon class="spin">sync</mat-icon> Updating the local observatory…</div>
   }
 
-  <div class="events-grid">
-    @for (event of visibleEvents(); track event.id) {
-      <article class="event-card">
-        <div class="event-icon"><mat-icon>{{ eventIcon(event) }}</mat-icon></div>
-        <div class="event-copy">
-          <div class="event-topline">
-            <span class="event-category">{{ event.category === 'solar' ? 'SEASONAL / ASTRONOMY' : event.category.toUpperCase() }}</span>
-            @if (event.tentative) { <span class="tentative">CALCULATED</span> }
-          </div>
-          <h2>{{ event.title }}</h2>
-          <div class="event-date">{{ formatEventDate(event) }} · {{ formatEventTime(event) }}</div>
-          <p>{{ event.description }}</p>
-          <footer>{{ event.source }} · {{ daysAway(event) === 0 ? 'Today' : daysAway(event) === 1 ? 'Tomorrow' : daysAway(event) > 1 ? 'In ' + daysAway(event) + ' days' : 'Passed' }}</footer>
+  <div class="events-layout">
+    <section class="events-list">
+      <div class="list-heading">
+        <div>
+          <span class="section-eyebrow">UPCOMING</span>
+          <h2>What is changing next</h2>
         </div>
-      </article>
-    } @empty {
-      <div class="events-empty"><mat-icon>event_busy</mat-icon><h2>No upcoming events in this view</h2><p>Calendar providers can fail independently without affecting the clock, sky or weather experience.</p></div>
-    }
+        <span>{{ visibleEvents().length }} events</span>
+      </div>
+
+      <div class="events-grid">
+        @for (event of visibleEvents(); track event.id) {
+          <article class="event-card" [class.event-card-sky]="event.id.startsWith('sky-')" [class.event-card-time]="event.category === 'time'">
+            <div class="event-icon"><mat-icon>{{ eventIcon(event) }}</mat-icon></div>
+            <div class="event-copy">
+              <div class="event-topline">
+                <span class="event-category">{{ event.category === 'solar' ? 'SKY' : event.category === 'time' ? 'LOCAL TIME' : event.category.toUpperCase() }}</span>
+                @if (event.tentative) { <span class="tentative">CALCULATED</span> }
+              </div>
+              <h3>{{ event.title }}</h3>
+              <div class="event-date">{{ formatEventDate(event) }} · {{ formatEventTime(event) }}</div>
+              <p>{{ event.description }}</p>
+              <footer>{{ event.source }} · {{ daysAway(event) === 0 ? 'Today' : daysAway(event) === 1 ? 'Tomorrow' : daysAway(event) > 1 ? 'In ' + daysAway(event) + ' days' : 'Passed' }}</footer>
+            </div>
+          </article>
+        } @empty {
+          <div class="events-empty"><mat-icon>event_busy</mat-icon><h2>No upcoming events in this view</h2><p>Try another category or move the simulation date.</p></div>
+        }
+      </div>
+    </section>
+
+    <aside class="event-side">
+      <div class="side-card">
+        <span class="section-eyebrow">DAILY RHYTHM</span>
+        <h3>Local prayer times</h3>
+        <div class="prayer-list">
+          @for (event of prayerEvents(); track event.id) {
+            <div class="prayer-row">
+              <span>{{ event.title }}</span>
+              <strong>{{ formatEventTime(event) }}</strong>
+            </div>
+          }
+          @if (prayerEvents().length === 0) {
+            <p class="side-empty">Daily timing provider unavailable.</p>
+          }
+        </div>
+      </div>
+
+      <div class="side-card">
+        <span class="section-eyebrow">WHY IT MATTERS</span>
+        <h3>One date, many clocks</h3>
+        <p class="side-copy">A holiday, a prayer, sunrise and an equinox are different kinds of events, but they all happen on the same physical timeline. This page puts them back onto that timeline.</p>
+        <div class="side-stat"><strong>{{ allEvents().length }}</strong><span>events in the current window</span></div>
+      </div>
+    </aside>
   </div>
 </section>
