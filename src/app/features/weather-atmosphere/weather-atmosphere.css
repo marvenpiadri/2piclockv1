@@ -290,7 +290,7 @@
   transform: translateY(-1px);
 }
 
-.weather-studio-page .condition-card.bg-amber-500\\/15 {
+.weather-studio-page .condition-card[class*="bg-amber-500/15"] {
   background: var(--color-accent-soft) !important;
   border-color: var(--color-accent-border) !important;
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.10) !important;
