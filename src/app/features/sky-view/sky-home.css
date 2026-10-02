@@ -1697,3 +1697,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* LIVE is a stateful control: neutral when simulated, amber when following real time. */
+.time-controls .live-toggle {
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: var(--color-surface-elevated);
+  color: #ddd;
+  font: 10px/1 monospace;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.time-controls .live-toggle:hover {
+  background: rgba(255,255,255,.07);
+  color: #fff;
+}
+.time-controls .live-toggle.active {
+  background: var(--sky-amber-gradient);
+  border-color: rgba(251,191,36,.45);
+  color: #07111f;
+  box-shadow: 0 5px 18px rgba(245,158,11,.18);
+}
+.time-controls .live-toggle.active:hover { filter: brightness(1.05); }
