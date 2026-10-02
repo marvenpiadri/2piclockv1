@@ -966,7 +966,13 @@ export class SkyHomeComponent implements OnDestroy {
     );
   }
 
-  setLive(): void {
+  toggleLive(): void {
+    if (this.isLive()) {
+      // Leaving live mode freezes the exact instant currently displayed.
+      this.timeControlService.setSpecificInstant(this.activeDate());
+      return;
+    }
+
     this.timeControlService.setLive();
   }
 
