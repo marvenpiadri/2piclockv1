@@ -23,6 +23,7 @@ export class SeoService {
   private readonly defaultDescription =
     '2piClock is a living sky, world clock and astronomy platform with precise solar and lunar calculations, weather-aware skies, time tools and global location pages.';
   private readonly origin = 'https://2piclock.com';
+  private readonly socialImage = this.origin + '/2pi.png';
 
   init(): void {
     this.router.events
@@ -51,12 +52,14 @@ export class SeoService {
     this.meta.updateTag({ property: 'og:url', content: canonical });
     this.meta.updateTag({ property: 'og:site_name', content: '2piClock' });
     this.meta.updateTag({ property: 'og:locale', content: 'en_US' });
-    this.meta.updateTag({ property: 'og:image', content: this.origin + '/icon.svg' });
+    this.meta.updateTag({ property: 'og:image', content: this.socialImage });
+    this.meta.updateTag({ property: 'og:image:alt', content: '2piClock living sky and astronomical world clock' });
 
     this.meta.updateTag({ name: 'twitter:card', content: 'summary' });
     this.meta.updateTag({ name: 'twitter:title', content: page.title });
     this.meta.updateTag({ name: 'twitter:description', content: page.description });
-    this.meta.updateTag({ name: 'twitter:image', content: this.origin + '/icon.svg' });
+    this.meta.updateTag({ name: 'twitter:image', content: this.socialImage });
+    this.meta.updateTag({ name: 'twitter:image:alt', content: '2piClock living sky and astronomical world clock' });
     this.meta.updateTag({ name: 'theme-color', content: '#11100d' });
 
     let link = this.document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
@@ -75,150 +78,143 @@ export class SeoService {
   }
 
   private describe(url: string, location: string, country: string): SeoPage {
+    const locationSlug = this.locationService.selectedLocation().id !== 'initializing'
+      ? this.locationService.getLocationSlug(this.locationService.selectedLocation())
+      : '';
+    const locationPrefix = locationSlug ? '/' + locationSlug : '';
+    const locationSection = locationPrefix && url.startsWith(locationPrefix + '/')
+      ? url.slice(locationPrefix.length + 1)
+      : '';
+
+    if (locationSection === 'time') {
+      return {
+        title: \`Time in \${location}, \${country} | Current Local Time | 2piClock\`,
+        description: \`See the current local time in \${location}, \${country}, including the IANA time zone, UTC offset, date, sunrise and sunset.\`
+      };
+    }
+    if (locationSection === 'weather') {
+      return {
+        title: \`\${location} Weather & Local Time | 2piClock\`,
+        description: \`See current weather, local time, sunrise, sunset and astronomical conditions in \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'sun') {
+      return {
+        title: \`Sunrise, Sunset & Solar Time in \${location} | 2piClock\`,
+        description: \`Explore sunrise, sunset, solar noon, twilight and the Sun's position for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'moon') {
+      return {
+        title: \`Moon Phase & Moon Times in \${location} | 2piClock\`,
+        description: \`See the current Moon phase, illumination, moonrise, moonset and lunar timing for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'astronomy') {
+      return {
+        title: \`Astronomy & Sky in \${location} | Solar, Lunar & Celestial Data | 2piClock\`,
+        description: \`Explore Sun and Moon geometry, celestial positions, twilight, coordinates and observing data for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'tonight') {
+      return {
+        title: \`Tonight Sky in \${location} | Moon, Planets & Stargazing | 2piClock\`,
+        description: \`See tonight's Moon, visible planets, darkness window and observing conditions for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'events') {
+      return {
+        title: \`Celestial Events in \${location} | 2piClock\`,
+        description: \`Explore upcoming celestial events, solar timing and local sky events for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'alerts') {
+      return {
+        title: \`Sky & Weather Alerts for \${location} | 2piClock\`,
+        description: \`Review relevant sky and weather alerts for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'stargazing') {
+      return {
+        title: \`Stargazing in \${location} | Darkness, Moon & Sky Conditions | 2piClock\`,
+        description: \`Plan stargazing in \${location} with astronomical darkness, Moon interference and local sky conditions.\`
+      };
+    }
+    if (locationSection === 'eclipses') {
+      return {
+        title: \`Solar & Lunar Eclipses for \${location} | 2piClock\`,
+        description: \`Explore solar and lunar eclipse timing and local sky geometry for \${location}, \${country}.\`
+      };
+    }
+    if (locationSection === 'satellites') {
+      return {
+        title: \`Satellite & ISS Sky for \${location} | 2piClock\`,
+        description: \`Explore satellite visibility and astronomical sky information for \${location}, \${country}.\`
+      };
+    }
+    if (locationSlug && url === locationPrefix) {
+      return {
+        title: \`\${location}, \${country} — Local Time, Weather & Sky | 2piClock\`,
+        description: \`Current local time, weather, Sun, Moon and living sky conditions for \${location}, \${country}. Explore today's sky and astronomy.\`
+      };
+    }
+
     const timeTools: Record<string, SeoPage> = {
-      '/time/converter': {
-        title: 'Time Zone Converter | 2piClock',
-        description: 'Convert a date and time between cities and IANA time zones with precise local results.'
-      },
-      '/time/difference': {
-        title: 'Time Difference Calculator | 2piClock',
-        description: 'Calculate the exact time difference between two cities and time zones.'
-      },
-      '/time/duration': {
-        title: 'Time Duration Calculator | 2piClock',
-        description: 'Calculate the exact duration between two dates and times in days, hours, minutes and seconds.'
-      },
-      '/time/date-difference': {
-        title: 'Date Difference Calculator | 2piClock',
-        description: 'Calculate the number of days and calendar difference between two dates.'
-      },
-      '/time/add-subtract': {
-        title: 'Add or Subtract Time | 2piClock',
-        description: 'Add or subtract years, months, days, hours, minutes and seconds from a date and time.'
-      },
-      '/time/countdown': {
-        title: 'Countdown & Count-Up Calculator | 2piClock',
-        description: 'Create a live countdown to an event or measure elapsed time from a starting instant.'
-      },
-      '/time/unix-timestamp': {
-        title: 'Unix Timestamp Converter | 2piClock',
-        description: 'Convert Unix timestamps between seconds, milliseconds, ISO and local date-time formats.'
-      },
-      '/time/world-matrix': {
-        title: 'World Time Matrix | 2piClock',
-        description: 'Compare local times, UTC offsets and day status across cities around the world.'
-      }
+      '/time/converter': { title: 'Time Zone Converter | 2piClock', description: 'Convert a date and time between cities and IANA time zones with precise local results.' },
+      '/time/difference': { title: 'Time Difference Calculator | 2piClock', description: 'Calculate the exact time difference between two cities and time zones.' },
+      '/time/duration': { title: 'Time Duration Calculator | 2piClock', description: 'Calculate the exact duration between two dates and times in days, hours, minutes and seconds.' },
+      '/time/date-difference': { title: 'Date Difference Calculator | 2piClock', description: 'Calculate the number of days and calendar difference between two dates.' },
+      '/time/add-subtract': { title: 'Add or Subtract Time | 2piClock', description: 'Add or subtract years, months, days, hours, minutes and seconds from a date and time.' },
+      '/time/countdown': { title: 'Countdown & Count-Up Calculator | 2piClock', description: 'Create a live countdown to an event or measure elapsed time from a starting instant.' },
+      '/time/unix-timestamp': { title: 'Unix Timestamp Converter | 2piClock', description: 'Convert Unix timestamps between seconds, milliseconds, ISO and local date-time formats.' },
+      '/time/world-matrix': { title: 'World Time Matrix | 2piClock', description: 'Compare local times, UTC offsets and day status across cities around the world.' }
     };
 
     if (timeTools[url]) return timeTools[url];
-    if (url === '/api') {
-      return {
-        title: '2piClock API — Astronomical Data for Developers',
-        description: 'Public 2piClock API documentation for solar position, lunar position, celestial state, solar events and global locations.',
-        type: 'website'
-      };
-    }
-    if (url === '/astronomy' || url.endsWith('/astronomy')) {
-      return {
-        title: `Astronomy & Ephemeris for ${location} | 2piClock`,
-        description: `Explore Solar System positions, Sun and Moon geometry, coordinates, constellations, deep-sky objects and observing data for ${location}, ${country}.`
-      };
-    }
-    if (url === '/tonight' || url.endsWith('/tonight')) {
-      return {
-        title: `Tonight Sky in ${location} | Planets, Moon & Stargazing | 2piClock`,
-        description: `See tonight's Moon, visible planets, constellations, darkness window and observing conditions for ${location}, ${country}.`
-      };
-    }
-    if (url === '/weather' || url === '/atmosphere' || url.endsWith('/weather')) {
-      return {
-        title: `Weather & Living Sky in ${location} | 2piClock`,
-        description: `See local weather alongside solar position, twilight, Moon conditions and an atmospheric living sky for ${location}, ${country}.`
-      };
-    }
-    if (url === '/stargazing' || url.endsWith('/stargazing')) {
-      return {
-        title: `Stargazing in ${location} | Darkness, Moon & Sky Conditions | 2piClock`,
-        description: `Plan stargazing in ${location} with astronomical darkness, Moon interference, visible sky conditions and celestial guidance.`
-      };
-    }
-    if (url === '/eclipses' || url.endsWith('/eclipses')) {
-      return {
-        title: `Solar & Lunar Eclipses for ${location} | 2piClock`,
-        description: `Explore solar and lunar eclipse timing and local sky geometry for ${location}, ${country}.`
-      };
-    }
-    if (url === '/satellites' || url.endsWith('/satellites')) {
-      return {
-        title: `Satellite & ISS Sky for ${location} | 2piClock`,
-        description: `Explore satellite visibility and astronomical sky information for ${location}, ${country}.`
-      };
-    }
-    if (url === '/events' || url.endsWith('/events')) {
-      return {
-        title: `Celestial Events for ${location} | 2piClock`,
-        description: `Explore upcoming celestial events and sky timing for ${location}, ${country}.`
-      };
-    }
-    if (url === '/world-clocks') {
-      return {
-        title: 'World Clock — Current Time Around the World | 2piClock',
-        description: 'Compare current local time across cities and time zones with an astronomical world clock.'
-      };
-    }
-    if (url === '/world') {
-      return {
-        title: 'World Map — Day, Night, Weather & Global Time | 2piClock',
-        description: 'Explore day and night, twilight, world weather and global time across Earth.'
-      };
-    }
-    if (url === '/radio' || url.startsWith('/radio/')) {
-      return {
-        title: 'World Radio — Listen Around Earth | 2piClock',
-        description: 'Explore live radio stations around the world while following the changing clock and sky.'
-      };
-    }
-    if (url === '/widget' || url.startsWith('/widget/')) {
-      return {
-        title: '2piClock Widget — Embeddable Astronomical Clock',
-        description: 'Create and embed a compact 2piClock time and sky widget on your website.'
-      };
-    }
-    if (url === '/dashboard') {
-      return {
-        title: '2piClock Dashboard — Multiple Cities, Time & Sky',
-        description: 'Monitor multiple cities with local time, day status and astronomical context in one workspace.'
-      };
-    }
-    if (url === '/space') {
-      return {
-        title: 'Space View — Solar System & Celestial Context | 2piClock',
-        description: 'Explore space-oriented views and astronomical context powered by the 2piClock calculation engine.'
-      };
-    }
-    if (url === '/ephemeris') {
-      return {
-        title: 'Celestial Ephemeris — Planet Positions | 2piClock',
-        description: 'Explore calculated celestial positions, coordinates and rise and set information.'
-      };
-    }
-    if (url === '/planner') {
-      return {
-        title: 'Meeting Planner Across Time Zones | 2piClock',
-        description: 'Find practical meeting times across cities and time zones while keeping local day and night context visible.'
-      };
-    }
-    if (url === '/alerts') {
-      return {
-        title: 'Sky & Weather Alerts | 2piClock',
-        description: 'Review relevant sky and weather alerts for your selected location.'
-      };
-    }
+    if (url === '/api') return {
+      title: '2piClock API — Astronomical Data for Developers',
+      description: 'Public 2piClock API documentation for solar position, lunar position, celestial state, solar events and global locations.'
+    };
+    if (url === '/sleep-calculator') return {
+      title: 'Sleep Calculator — Bedtime & Wake Time | 2piClock',
+      description: 'Calculate practical bedtime and wake-up options using sleep-cycle timing and your local night context.'
+    };
+    if (url === '/astronomy') return {
+      title: \`Astronomy & Ephemeris | \${location} | 2piClock\`,
+      description: \`Explore Sun and Moon geometry, celestial positions, twilight, coordinates and observing data for \${location}, \${country}.\`
+    };
+    if (url === '/tonight') return {
+      title: \`Tonight Sky in \${location} | Planets, Moon & Stargazing | 2piClock\`,
+      description: \`See tonight's Moon, visible planets, darkness window and observing conditions for \${location}, \${country}.\`
+    };
+    if (url === '/weather' || url === '/atmosphere') return {
+      title: \`Weather & Living Sky in \${location} | 2piClock\`,
+      description: \`See local weather alongside solar position, twilight, Moon conditions and a living sky for \${location}, \${country}.\`
+    };
+    if (url === '/stargazing') return {
+      title: 'Stargazing Planner | Darkness, Moon & Sky Conditions | 2piClock',
+      description: 'Plan stargazing with astronomical darkness, Moon interference and local sky conditions.'
+    };
+    if (url === '/eclipses') return { title: 'Solar & Lunar Eclipses | 2piClock', description: 'Explore solar and lunar eclipse timing, visibility and local sky geometry.' };
+    if (url === '/satellites') return { title: 'Satellite & ISS Sky Tracker | 2piClock', description: 'Explore satellite visibility and astronomical sky information for your selected location.' };
+    if (url === '/events') return {
+      title: \`Celestial Events for \${location} | 2piClock\`,
+      description: \`Explore upcoming celestial events and sky timing for \${location}, \${country}.\`
+    };
+    if (url === '/world-clocks') return { title: 'World Clock — Current Time Around the World | 2piClock', description: 'Compare current local time across cities and time zones with an astronomical world clock.' };
+    if (url === '/world') return { title: 'World Map — Day, Night, Weather & Global Time | 2piClock', description: 'Explore day and night, twilight, world weather and global time across Earth.' };
+    if (url === '/radio' || url.startsWith('/radio/')) return { title: 'World Radio — Listen Around Earth | 2piClock', description: 'Explore live radio stations around the world while following the changing clock and sky.' };
+    if (url === '/widget' || url.startsWith('/widget/')) return { title: '2piClock Widget — Embeddable Astronomical Clock', description: 'Create and embed a compact 2piClock time and sky widget on your website.' };
+    if (url === '/dashboard') return { title: '2piClock Dashboard — Multiple Cities, Time & Sky', description: 'Monitor multiple cities with local time, day status and astronomical context in one workspace.' };
+    if (url === '/space') return { title: 'Space View — Solar System & Celestial Context | 2piClock', description: 'Explore space-oriented views and astronomical context powered by the 2piClock calculation engine.' };
+    if (url === '/ephemeris') return { title: 'Celestial Ephemeris — Planet Positions | 2piClock', description: 'Explore calculated celestial positions, coordinates and rise and set information.' };
+    if (url === '/planner') return { title: 'Meeting Planner Across Time Zones | 2piClock', description: 'Find practical meeting times across cities and time zones while keeping local day and night context visible.' };
+    if (url === '/alerts') return { title: 'Sky & Weather Alerts | 2piClock', description: 'Review relevant sky and weather alerts for your selected location.' };
 
     return {
-      title: location ? `${location} Sky, Time & Astronomy | 2piClock` : this.defaultTitle,
-      description: location
-        ? `Live sky, exact local time, weather, Sun and Moon information for ${location}, ${country}. Explore tonight's sky and local astronomy.`
+      title: location && location !== 'Current location' ? \`\${location} Sky, Time & Astronomy | 2piClock\` : this.defaultTitle,
+      description: location && location !== 'Current location'
+        ? \`Live sky, exact local time, weather, Sun and Moon information for \${location}, \${country}. Explore tonight's sky and local astronomy.\`
         : this.defaultDescription
     };
   }
@@ -279,7 +275,7 @@ export class SeoService {
         '@type': 'Place',
         '@id': canonical + '#place',
         name: loc.name,
-        address: { '@type': 'PostalAddress', addressCountry: loc.country },
+        address: { '@type': 'PostalAddress', addressLocality: loc.name, addressCountry: loc.country },
         geo: { '@type': 'GeoCoordinates', latitude: loc.latitude, longitude: loc.longitude },
         additionalProperty: loc.timezone
           ? [{ '@type': 'PropertyValue', name: 'IANA time zone', value: loc.timezone }]
