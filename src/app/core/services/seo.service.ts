@@ -23,7 +23,7 @@ export class SeoService {
   private readonly defaultDescription =
     '2piClock is a living sky, world clock and astronomy platform with precise solar and lunar calculations, weather-aware skies, time tools and global location pages.';
   private readonly origin = 'https://2piclock.com';
-  private readonly socialImage = this.origin + '/2pi.png';
+  private readonly socialImage = this.origin + '/2pi-sun.png';
 
   init(): void {
     this.router.events
