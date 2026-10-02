@@ -1,4 +1,4 @@
-import { Injectable, inject, computed, effect, PLATFORM_ID } from '@angular/core';
+import { Injectable, inject, computed, effect, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LocationService } from './location.service';
 import { TimeControlService } from './time-control.service';
@@ -7,6 +7,15 @@ import { PrecisionAstronomyService, SolarCrossCheck, PlanetaryPosition } from '.
 import { getCelestialState, get24HourSolarCurve } from '../astronomy/astronomy-engine';
 import { CelestialState } from '../models/celestial.model';
 import { AtmosphericState, Season } from '../models/weather.model';
+import * as Astronomy from 'astronomy-engine';
+interface VisibleConstellation {
+  name: string;
+  altitudeDeg: number;
+  azimuthDeg: number;
+  season: string;
+}
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +26,10 @@ export class CelestialService {
   private timeControlService = inject(TimeControlService);
   private weatherService = inject(WeatherService);
   private precisionAstronomy = inject(PrecisionAstronomyService);
+  private readonly authoritativeTimezoneOffsetMinutes = signal<number | null>(null);
+  private readonly timezoneOffsetCache = new Map<string, number>();
+  private timezoneOffsetRequestKey = '';
+
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly activeDate = this.timeControlService.currentActiveDate;
@@ -43,7 +56,57 @@ export class CelestialService {
           this.weatherService.fetchWeatherForLocation(loc);
         }
       });
+
+      effect(() => {
+        const loc = this.selectedLocation();
+        if (!loc?.timezone) return;
+        this.refreshTimezoneOffset();
+      });
     }
+  }
+
+  /**
+   * Refresh network-backed timezone state for the current simulated instant.
+   * This is deliberately explicit so high-frequency local time simulation does
+   * not turn a range drag into a stream of API requests.
+   */
+  refreshExternalDataForInstant(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.weatherService.fetchWeatherForLocation(this.selectedLocation());
+    this.refreshTimezoneOffset();
+  }
+
+  private refreshTimezoneOffset(): void {
+    const loc = this.selectedLocation();
+    const date = this.activeDate();
+    if (!loc?.timezone) return;
+
+    const requestKey = loc.timezone + '|' + Math.floor(date.getTime() / 3600000);
+    if (requestKey === this.timezoneOffsetRequestKey) return;
+
+    const cached = this.timezoneOffsetCache.get(requestKey);
+    if (cached !== undefined) {
+      this.authoritativeTimezoneOffsetMinutes.set(cached);
+      this.timezoneOffsetRequestKey = requestKey;
+      return;
+    }
+
+    this.timezoneOffsetRequestKey = requestKey;
+    void fetch(
+      '/api/v1/timezone?timezone=' +
+      encodeURIComponent(loc.timezone) +
+      '&at=' +
+      encodeURIComponent(date.toISOString())
+    )
+      .then(response => response.ok ? response.json() as Promise<{ offsetMinutes?: number }> : null)
+      .then(data => {
+        if (!data || typeof data.offsetMinutes !== 'number') return;
+        this.timezoneOffsetCache.set(requestKey, data.offsetMinutes);
+        if (this.timezoneOffsetRequestKey === requestKey) {
+          this.authoritativeTimezoneOffsetMinutes.set(data.offsetMinutes);
+        }
+      })
+      .catch(() => undefined);
   }
 
   // Active Astronomical & Celestial State computed from Date + Location
@@ -277,6 +340,65 @@ export class CelestialService {
     return this.cachedPlanetaryPositions;
   });
 
+  /**
+   * Returns a compact observing list based on representative constellation
+   * coordinates. This is intentionally a guide for Tonight, not a dense chart.
+   */
+  getVisibleConstellations(
+    date: Date,
+    latitude: number,
+    longitude: number,
+    minAltitudeDeg = 8
+  ): VisibleConstellation[] {
+    const observer = new Astronomy.Observer(latitude, longitude, 0);
+    const catalog: { name: string; ra: number; dec: number; season: string }[] = [
+      { name: 'Orion', ra: 83.8, dec: 0.0, season: 'Winter' },
+      { name: 'Taurus', ra: 68.0, dec: 15.0, season: 'Winter' },
+      { name: 'Gemini', ra: 102.5, dec: 22.0, season: 'Winter' },
+      { name: 'Leo', ra: 168.0, dec: 15.0, season: 'Spring' },
+      { name: 'Virgo', ra: 190.0, dec: -2.0, season: 'Spring' },
+      { name: 'Scorpius', ra: 250.0, dec: -30.0, season: 'Summer' },
+      { name: 'Sagittarius', ra: 280.0, dec: -25.0, season: 'Summer' },
+      { name: 'Cygnus', ra: 305.0, dec: 40.0, season: 'Summer' },
+      { name: 'Lyra', ra: 280.0, dec: 40.0, season: 'Summer' },
+      { name: 'Aquila', ra: 296.0, dec: 5.0, season: 'Summer' },
+      { name: 'Pegasus', ra: 350.0, dec: 20.0, season: 'Autumn' },
+      { name: 'Andromeda', ra: 10.0, dec: 35.0, season: 'Autumn' },
+      { name: 'Cassiopeia', ra: 10.0, dec: 60.0, season: 'Autumn' },
+      { name: 'Ursa Major', ra: 165.0, dec: 55.0, season: 'Spring' },
+      { name: 'Canis Major', ra: 101.0, dec: -23.0, season: 'Winter' }
+    ];
+
+    return catalog
+      .map(item => {
+        const horizontal = Astronomy.Horizon(
+          date,
+          observer,
+          item.ra / 15,
+          item.dec,
+          'normal'
+        );
+        return {
+          name: item.name,
+          altitudeDeg: horizontal.altitude,
+          azimuthDeg: horizontal.azimuth,
+          season: item.season
+        };
+      })
+      .filter(item => item.altitudeDeg >= minAltitudeDeg)
+      .sort((a, b) => b.altitudeDeg - a.altitudeDeg);
+  }
+
+  getPlanetRiseSet(
+    body: PlanetaryPosition['body'],
+    date: Date,
+    latitude: number,
+    longitude: number,
+    elevationMeters = 0
+  ): { rise: Date | null; set: Date | null } {
+    return this.precisionAstronomy.getRiseSet(body, date, latitude, longitude, elevationMeters);
+  }
+
   // 24-hour Solar Elevation curve for the active day/location
   readonly solarCurve = computed(() => {
     const loc = this.selectedLocation();
@@ -325,10 +447,19 @@ export class CelestialService {
     };
   });
 
-  // Formatted city local time
+  // Formatted city local time.
+  // The offset is resolved by the Node runtime so a client's stale OS/browser
+  // timezone database cannot shift the selected city's clock by an hour.
   readonly formattedLocalTime = computed(() => {
-    const loc = this.selectedLocation();
     const date = this.activeDate();
+    const offsetMinutes = this.authoritativeTimezoneOffsetMinutes();
+
+    if (offsetMinutes !== null) {
+      const local = new Date(date.getTime() + offsetMinutes * 60_000);
+      return local.toISOString().slice(11, 19);
+    }
+
+    const loc = this.selectedLocation();
     try {
       return date.toLocaleTimeString('en-US', {
         timeZone: loc.timezone,
@@ -359,20 +490,18 @@ export class CelestialService {
     }
   });
 
-  // Timezone display (e.g. UTC+9 / JST)
+  // Timezone display is derived from the same authoritative offset as the clock.
   readonly timezoneDisplay = computed(() => {
     const loc = this.selectedLocation();
-    const date = this.activeDate();
-    try {
-      const str = new Intl.DateTimeFormat('en-US', {
-        timeZone: loc.timezone,
-        timeZoneName: 'shortOffset'
-      }).format(date);
-      const parts = str.split(' ');
-      return parts[parts.length - 1] || loc.timezone;
-    } catch {
-      return loc.timezone;
-    }
+    const offsetMinutes = this.authoritativeTimezoneOffsetMinutes();
+    if (offsetMinutes === null) return loc.timezone;
+
+    if (offsetMinutes === 0) return 'UTC+0';
+    const sign = offsetMinutes > 0 ? '+' : '-';
+    const absolute = Math.abs(offsetMinutes);
+    return 'UTC' + sign +
+      String(Math.floor(absolute / 60)).padStart(2, '0') +
+      ':' + String(absolute % 60).padStart(2, '0');
   });
 
   // Derived atmospheric brightness for UI contrast adaptation

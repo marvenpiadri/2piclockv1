@@ -4,6 +4,15 @@ import { isPlatformBrowser } from '@angular/common';
 import { Season, WeatherAggressivenessLevel, WeatherCondition, WeatherData, WeatherOverrideConfig } from '../models/weather.model';
 import { GeoLocation } from '../models/location.model';
 
+export interface WorldWeatherSnapshot {
+  locationId: string;
+  temperatureC: number;
+  condition: WeatherCondition;
+  cloudCoverPct: number;
+  windSpeedKmh: number;
+  precipitationPct: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,6 +26,44 @@ export class WeatherService {
   readonly isLoading = signal<boolean>(false);
   readonly overrideConfig = signal<WeatherOverrideConfig>({ active: false });
   readonly isFahrenheit = signal<boolean>(false);
+  readonly worldWeather = signal<Record<string, WorldWeatherSnapshot>>({});
+  private worldWeatherFetchedAt = 0;
+
+
+  fetchWorldWeather(locations: GeoLocation[]): void {
+    if (!this.isBrowser || locations.length === 0) return;
+    const now = Date.now();
+    if (now - this.worldWeatherFetchedAt < 10 * 60 * 1000 && Object.keys(this.worldWeather()).length > 0) return;
+
+    const params = new HttpParams()
+      .set('latitude', locations.map(loc => loc.latitude.toFixed(4)).join(','))
+      .set('longitude', locations.map(loc => loc.longitude.toFixed(4)).join(','))
+      .set('current', 'temperature_2m,precipitation,weather_code,cloud_cover,wind_speed_10m')
+      .set('timezone', 'UTC');
+
+    this.http.get<any>('/api/v1/weather', { params }).subscribe({
+      next: (data) => {
+        const rows = Array.isArray(data) ? data : [data];
+        const next: Record<string, WorldWeatherSnapshot> = {};
+        rows.forEach((row: any, index: number) => {
+          const loc = locations[index];
+          if (!loc || !row?.current) return;
+          const current = row.current;
+          const condition = this.mapWmoCodeToCondition(Number(current.weather_code ?? 0));
+          next[loc.id] = {
+            locationId: loc.id,
+            temperatureC: Math.round(Number(current.temperature_2m ?? 0) * 10) / 10,
+            condition,
+            cloudCoverPct: Math.round(Number(current.cloud_cover ?? 0)),
+            windSpeedKmh: Math.round(Number(current.wind_speed_10m ?? 0)),
+            precipitationPct: Number(current.precipitation ?? 0) > 0 ? 100 : 0
+          };
+        });
+        this.worldWeather.set(next);
+        this.worldWeatherFetchedAt = Date.now();
+      }
+    });
+  }
 
   toggleFahrenheit(): void {
     this.isFahrenheit.update(v => !v);
@@ -73,25 +120,20 @@ export class WeatherService {
     return alerts;
   });
 
-  // Compute weather status for any specific simulated date & time.
-  // Hourly forecast values are interpolated so simulated time does not jump
-  // between discrete forecast hours while the sky is moving.
+  // Compute weather status for any specific simulated date & time
   getWeatherForInstant(date: Date, _loc?: GeoLocation): WeatherData {
     const ovr = this.overrideConfig();
     const hourly = this.hourlyForecasts();
 
+    // If manual override is active
     if (ovr.active) {
       const raw = this.rawWeather();
       const condition = ovr.condition || raw.condition;
       const cloudCoverPct = ovr.cloudCoverPct !== undefined ? ovr.cloudCoverPct : this.getConditionDefaultCloud(condition);
       const precipitationPct = ovr.precipitationPct !== undefined ? ovr.precipitationPct : this.getConditionDefaultPrecip(condition);
-      const windSpeedKmh = ovr.windSpeedKmh !== undefined
-        ? ovr.windSpeedKmh
-        : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
+      const windSpeedKmh = ovr.windSpeedKmh !== undefined ? ovr.windSpeedKmh : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
       const windGustKmh = Math.round(windSpeedKmh * 1.45);
-      const { score, label } = this.calculateAggressiveness(
-        condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC
-      );
+      const { score, label } = this.calculateAggressiveness(condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC);
 
       return {
         ...raw,
@@ -107,95 +149,28 @@ export class WeatherService {
       };
     }
 
+    // Try finding exact hourly forecast match for this simulated time
     if (hourly.length > 0) {
       const targetMs = date.getTime();
+      let closest = hourly[0];
+      let minDiff = Math.abs(targetMs - closest.timeMs);
 
-      if (targetMs <= hourly[0].timeMs) {
-        return hourly[0].weather;
-      }
-      const last = hourly[hourly.length - 1];
-      if (targetMs >= last.timeMs) {
-        return last.weather;
-      }
-
-      let upperIndex = 1;
-      while (upperIndex < hourly.length && hourly[upperIndex].timeMs < targetMs) {
-        upperIndex++;
+      for (let i = 1; i < hourly.length; i++) {
+        const diff = Math.abs(targetMs - hourly[i].timeMs);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = hourly[i];
+        }
       }
 
-      const upper = hourly[upperIndex];
-      const lower = hourly[upperIndex - 1];
-      const span = Math.max(1, upper.timeMs - lower.timeMs);
-      const ratio = Math.max(0, Math.min(1, (targetMs - lower.timeMs) / span));
-
-      return this.interpolateWeather(lower.weather, upper.weather, ratio);
+      // If closest forecast is within 2 hours
+      if (minDiff <= 7200000) {
+        return closest.weather;
+      }
     }
 
+    // Default: use current raw weather
     return this.rawWeather();
-  }
-
-  private interpolateWeather(a: WeatherData, b: WeatherData, ratio: number): WeatherData {
-    const lerp = (x: number, y: number) => x + (y - x) * ratio;
-    const rounded = (x: number, y: number, digits = 1) => {
-      const factor = 10 ** digits;
-      return Math.round(lerp(x, y) * factor) / factor;
-    };
-    const aDir = Number.isFinite(a.windDirectionDeg) ? a.windDirectionDeg : 0;
-    const bDir = Number.isFinite(b.windDirectionDeg) ? b.windDirectionDeg : aDir;
-    const directionDelta = ((bDir - aDir + 540) % 360) - 180;
-    const windDirectionDeg = (aDir + directionDelta * ratio + 360) % 360;
-    const condition = ratio < 0.5 ? a.condition : b.condition;
-    const windSpeedKmh = rounded(a.windSpeedKmh, b.windSpeedKmh);
-    const windGustKmh = rounded(a.windGustKmh ?? a.windSpeedKmh, b.windGustKmh ?? b.windSpeedKmh);
-    const precipitationPct = Math.round(lerp(a.precipitationPct, b.precipitationPct));
-    const { score, label } = this.calculateAggressiveness(
-      condition,
-      windSpeedKmh,
-      windGustKmh,
-      precipitationPct,
-      rounded(a.temperatureC, b.temperatureC)
-    );
-
-    return {
-      ...a,
-      condition,
-      conditionLabel: this.formatConditionLabel(condition),
-      temperatureC: rounded(a.temperatureC, b.temperatureC),
-      temperatureF: rounded(a.temperatureF, b.temperatureF),
-      feelsLikeC: rounded(a.feelsLikeC, b.feelsLikeC),
-      feelsLikeF: rounded(a.feelsLikeF, b.feelsLikeF),
-      humidityPct: Math.round(lerp(a.humidityPct, b.humidityPct)),
-      cloudCoverPct: Math.round(lerp(a.cloudCoverPct, b.cloudCoverPct)),
-      precipitationPct,
-      windSpeedKmh,
-      windDirectionDeg,
-      windGustKmh,
-      visibilityKm: rounded(a.visibilityKm, b.visibilityKm),
-      uvIndex: rounded(a.uvIndex, b.uvIndex),
-      dewPointC: rounded(a.dewPointC, b.dewPointC),
-      precipitationMm: rounded(a.precipitationMm, b.precipitationMm),
-      rainMm: rounded(a.rainMm, b.rainMm),
-      showersMm: rounded(a.showersMm, b.showersMm),
-      snowfallCm: rounded(a.snowfallCm, b.snowfallCm),
-      snowDepthCm: rounded(a.snowDepthCm, b.snowDepthCm),
-      cloudCoverLowPct: Math.round(lerp(a.cloudCoverLowPct, b.cloudCoverLowPct)),
-      cloudCoverMidPct: Math.round(lerp(a.cloudCoverMidPct, b.cloudCoverMidPct)),
-      cloudCoverHighPct: Math.round(lerp(a.cloudCoverHighPct, b.cloudCoverHighPct)),
-      freezingLevelM: Math.round(lerp(a.freezingLevelM, b.freezingLevelM)),
-      pressureHpa: Math.round(lerp(a.pressureHpa, b.pressureHpa)),
-      seaLevelPressureHpa: a.seaLevelPressureHpa !== undefined && b.seaLevelPressureHpa !== undefined
-        ? Math.round(lerp(a.seaLevelPressureHpa, b.seaLevelPressureHpa))
-        : (a.seaLevelPressureHpa ?? b.seaLevelPressureHpa),
-      isDay: ratio < 0.5 ? a.isDay : b.isDay,
-      aggressivenessIndex: score,
-      aggressivenessLabel: label,
-      lightningFrequencyPerMin: lerp(a.lightningFrequencyPerMin ?? 0, b.lightningFrequencyPerMin ?? 0),
-      winterFrostLevel: Math.round(lerp(a.winterFrostLevel ?? 0, b.winterFrostLevel ?? 0)),
-      snowAccumulationCm: rounded(a.snowAccumulationCm ?? 0, b.snowAccumulationCm ?? 0),
-      dataSource: a.dataSource || b.dataSource,
-      isSimulated: true,
-      updatedAt: a.updatedAt
-    };
   }
 
   // Active combined weather accounting for manual overrides
@@ -325,16 +300,11 @@ export class WeatherService {
             if (data.hourly && Array.isArray(data.hourly.time)) {
               const times: string[] = data.hourly.time;
               const hTemps = data.hourly.temperature_2m || [];
-              const hFeels = data.hourly.apparent_temperature || hTemps;
               const hCodes = data.hourly.weather_code || [];
               const hClouds = data.hourly.cloud_cover || [];
               const hWinds = data.hourly.wind_speed_10m || [];
-              const hWindDirs = data.hourly.wind_direction_10m || [];
-              const hGusts = data.hourly.wind_gusts_10m || [];
               const hPrecip = data.hourly.precipitation_probability || [];
               const hHumid = data.hourly.relative_humidity_2m || [];
-              const hVisibility = data.hourly.visibility || [];
-              const hUv = data.hourly.uv_index || [];
               const hPress = data.hourly.surface_pressure || [];
 
               const parsed: { timeMs: number; weather: WeatherData }[] = [];
@@ -345,9 +315,8 @@ export class WeatherService {
                   const hTC = Math.round((hTemps[i] ?? tempC) * 10) / 10;
                   const hTF = Math.round((hTC * 9 / 5 + 32) * 10) / 10;
                   const hWind = Math.round(hWinds[i] ?? 10);
-                  const hGust = Math.round(hGusts[i] ?? hWind);
                   const hPrecipPct = hPrecip[i] ?? 0;
-                  const { score: hScore, label: hLabel } = this.calculateAggressiveness(hCond, hWind, hGust, hPrecipPct, hTC);
+                  const { score: hScore, label: hLabel } = this.calculateAggressiveness(hCond, hWind, Math.round(hWind * 1.3), hPrecipPct, hTC);
 
                   parsed.push({
                     timeMs: tMs,
@@ -356,16 +325,16 @@ export class WeatherService {
                       conditionLabel: this.formatConditionLabel(hCond),
                       temperatureC: hTC,
                       temperatureF: hTF,
-                      feelsLikeC: Math.round((hFeels[i] ?? hTC) * 10) / 10,
-                      feelsLikeF: Math.round(((hFeels[i] ?? hTC) * 9 / 5 + 32) * 10) / 10,
+                      feelsLikeC: hTC,
+                      feelsLikeF: hTF,
                       humidityPct: hHumid[i] ?? 50,
                       cloudCoverPct: hClouds[i] ?? 20,
                       precipitationPct: hPrecipPct,
                       windSpeedKmh: hWind,
-                      windDirectionDeg: Number(hWindDirs[i] ?? 180),
-                      windGustKmh: hGust,
-                      visibilityKm: Number.isFinite(hVisibility[i]) ? Math.max(0.1, Math.round((hVisibility[i] / 1000) * 10) / 10) : 16,
-                      uvIndex: Number.isFinite(hUv[i]) ? Math.round(hUv[i] * 10) / 10 : 0,
+                      windDirectionDeg: 180,
+                      windGustKmh: Math.round(hWind * 1.3),
+                      visibilityKm: 16,
+                      uvIndex: 4,
                       dewPointC: Number.isFinite(data.hourly.dew_point_2m?.[i]) ? Math.round(data.hourly.dew_point_2m[i] * 10) / 10 : hTC,
                       precipitationMm: Number(data.hourly.precipitation?.[i] ?? 0), rainMm: Number(data.hourly.rain?.[i] ?? 0), showersMm: Number(data.hourly.showers?.[i] ?? 0),
                       snowfallCm: Number(data.hourly.snowfall?.[i] ?? 0), snowDepthCm: Number(data.hourly.snow_depth?.[i] ?? 0),
@@ -400,33 +369,15 @@ export class WeatherService {
             }
 
           } else {
-            const stale = this.weatherCache.get(key);
-            if (stale) {
-              this.rawWeather.set(stale.weather);
-              this.hourlyForecasts.set(stale.hourly);
-              this.lastFetchedKey = key;
-            } else {
-              this.rawWeather.set(this.generateRealisticWeather(loc));
-            }
+            this.rawWeather.set(this.generateRealisticWeather(loc));
           }
           this.pendingKeys.delete(key);
-          if (key === this.lastRequestedKey) {
-            this.isLoading.set(false);
-          }
         },
         error: () => {
           this.pendingKeys.delete(key);
           if (key !== this.lastRequestedKey) return;
-          const stale = this.weatherCache.get(key);
-          if (stale) {
-            // Keep the last verified forecast when the provider is temporarily unavailable.
-            this.rawWeather.set(stale.weather);
-            this.hourlyForecasts.set(stale.hourly);
-            this.lastFetchedKey = key;
-          } else {
-            this.rawWeather.set(this.generateRealisticWeather(loc));
-          }
           this.isLoading.set(false);
+          this.rawWeather.set(this.generateRealisticWeather(loc));
         }
       });
   }
@@ -611,20 +562,14 @@ export class WeatherService {
   /**
    * Determine astronomical season based on local calendar date and hemisphere
    */
-  getSeason(date: Date, latitude: number, timezone?: string): Season {
-    // Seasons used by the atmosphere are tied to the selected location's
-    // civil calendar, not the browser/UTC calendar. This matters around
-    // midnight when a location and UTC are on different dates.
-    let month: number;
-    if (timezone) {
-      const monthText = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone,
-        month: 'numeric'
-      }).format(date);
-      month = Number(monthText) - 1;
-    } else {
-      month = date.getUTCMonth();
-    }
+  getSeason(date: Date, latitude: number, timezone = 'UTC'): Season {
+    const localDateParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    }).formatToParts(date);
+    const month = Number(localDateParts.find(part => part.type === 'month')?.value ?? date.getUTCMonth() + 1) - 1;
     const isNorthern = latitude >= 0;
 
     // Northern hemisphere:

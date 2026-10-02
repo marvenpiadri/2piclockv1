@@ -33,6 +33,12 @@ export class MeetingPlannerComponent implements OnDestroy {
  private searchTimer:ReturnType<typeof setTimeout>|null=null;
  private searchSubscription:Subscription|null=null;
 
+ constructor(){
+   void this.locationService.loadLocations().then(() => {
+     if (this.selectedCities().length === 0) this.selectedCities.set(this.initialCities());
+   }).catch(() => undefined);
+ }
+
  readonly rows=computed<PlannerRow[]>(()=>{
    const date=this.baseUtcDate();
    return this.selectedCities().map(location=>{
@@ -42,9 +48,9 @@ export class MeetingPlannerComponent implements OnDestroy {
  });
  readonly selectedInstant=computed(()=>{const d=new Date(this.baseUtcDate());d.setUTCHours(this.selectedUtcHour(),0,0,0);return d;});
  readonly selectedSummary=computed(()=>this.selectedCities().map(location=>{const instant=this.selectedInstant();return {location,time:this.formatLocal(instant,location.timezone,true),date:this.formatLocalDate(instant,location.timezone),state:this.classifyLocalHour(this.localHour(instant,location.timezone))};}));
- readonly availableCities=computed(()=>{const ids=new Set(this.selectedCities().map(c=>c.id));return this.locationService.allPresets.filter(c=>!ids.has(c.id));});
+ readonly availableCities=computed(()=>{const ids=new Set(this.selectedCities().map(c=>c.id));return this.locationService.locations().filter(c=>!ids.has(c.id));});
 
- private initialCities():GeoLocation[]{const p=this.locationService.allPresets;const ids=['san-francisco','new-york','london','tokyo'];const r=ids.map(id=>p.find(c=>c.id===id)).filter(Boolean) as GeoLocation[];return r.length>=2?r:p.slice(0,4);}
+ private initialCities():GeoLocation[]{const p=this.locationService.locations();const ids=['san-francisco','new-york','london','tokyo'];const r=ids.map(id=>p.find(c=>c.id===id)).filter(Boolean) as GeoLocation[];return r.length>=2?r:p.slice(0,4);}
  private baseUtcDate():Date{const b=this.activeDate();return new Date(Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate(),0,0,0));}
  private makeCell(date:Date,location:GeoLocation,utcHour:number):TimeCell{
    const instant=new Date(date);instant.setUTCHours(utcHour,0,0,0);

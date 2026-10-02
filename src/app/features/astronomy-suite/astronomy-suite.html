@@ -26,7 +26,7 @@
       <div class="param-item">
         <label>Location</label>
         <select [ngModel]="selectedLocation().id" (ngModelChange)="setLocationById($event)">
-          @for (loc of allPresets; track loc.id) {
+          @for (loc of locationService.locations(); track loc.id) {
             <option [value]="loc.id">{{ loc.name }} ({{ loc.country }}) · {{ loc.latitude.toFixed(2) }}°, {{ loc.longitude.toFixed(2) }}°</option>
           }
         </select>
@@ -156,6 +156,236 @@
           </div>
           <div class="horizon-scale"><span>0° horizon</span><span>45°</span><span>90° zenith</span></div>
         </div>
+
+        <section class="planetary-observatory">
+          <div class="planetary-header">
+            <div>
+              <span class="observatory-kicker">PLANETARY EPHEMERIS</span>
+              <h3>Solar System · {{ selectedLocation().name }}</h3>
+              <p>Topocentric positions for the selected observation time. Coordinates update with the Time Machine.</p>
+            </div>
+            <span class="planetary-count">{{ visiblePlanetaryPositions().length }} visible above horizon</span>
+          </div>
+
+          <div class="planetary-table-wrap">
+            <table class="planetary-table">
+              <thead>
+                <tr>
+                  <th>BODY</th><th>ALT</th><th>AZ</th><th>RA</th><th>DEC</th><th>DISTANCE</th><th>MAG</th><th>RISE / SET</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (planet of planetaryRiseSet(); track planet.name) {
+                  <tr [class.is-visible]="planet.visible && planet.altitudeDeg > 0">
+                    <td><strong>{{ planet.name }}</strong><small>{{ planet.visible && planet.altitudeDeg > 0 ? 'VISIBLE' : 'BELOW HORIZON' }}</small></td>
+                    <td>{{ planet.altitudeDeg.toFixed(1) }}°</td>
+                    <td>{{ planet.azimuthDeg.toFixed(0) }}°</td>
+                    <td>{{ planet.rightAscensionHours.toFixed(2) }}h</td>
+                    <td>{{ planet.declinationDeg.toFixed(1) }}°</td>
+                    <td>{{ planet.distanceAu.toFixed(3) }} AU</td>
+                    <td>{{ planet.magnitude.toFixed(1) }}</td>
+                    <td>{{ formatTime(planet.riseSet.rise) }} / {{ formatTime(planet.riseSet.set) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="solar-system-explorer" aria-label="Interactive Solar System">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">SOLAR SYSTEM</span>
+              <h3>Planetary Orbits · {{ selectedDate() }} {{ selectedTime() }}</h3>
+              <p>Heliocentric orbital geometry for the selected instant. Distances use a logarithmic visual scale so the inner planets remain readable.</p>
+            </div>
+            <div class="planet-selector">
+              @for (body of solarSystemStates(); track body.name) {
+                <button type="button" [class.active]="selectedPlanet() === body.name.toLowerCase()" (click)="selectPlanet(body.name)">{{ body.name }}</button>
+              }
+            </div>
+          </div>
+          <div class="solar-system-layout">
+            <div class="solar-system-stage">
+              <svg viewBox="0 0 100 100" role="img" aria-label="Solar System orbital diagram">
+                <defs>
+                  <radialGradient id="astroSun"><stop offset="0%" stop-color="#fff7ae"/><stop offset="55%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></radialGradient>
+                </defs>
+                @for (body of solarSystemStates(); track body.name) {
+                  <path class="orbit-line" [class.selected-orbit]="selectedPlanet() === body.name.toLowerCase()" [attr.d]="orbitPath(body)"></path>
+                }
+                <circle cx="50" cy="50" r="2.5" fill="url(#astroSun)" class="sun-core"></circle>
+                @for (body of solarSystemStates(); track body.name) {
+                  <g class="planet-node" [class.selected-node]="selectedPlanet() === body.name.toLowerCase()" [attr.transform]="'translate(' + planetX(body) + ' ' + planetY(body) + ')'" (click)="selectPlanet(body.name)">
+                    <circle r="1.25" [attr.fill]="body.color"></circle>
+                    <circle class="planet-hit" r="3.2"></circle>
+                    <text y="-2.2">{{ body.symbol }}</text>
+                  </g>
+                }
+              </svg>
+              <span class="solar-system-center">SUN</span>
+            </div>
+            @if (selectedPlanetState(); as body) {
+              <div class="solar-system-detail">
+                <div class="detail-kicker">{{ body.symbol }} {{ body.name }}</div>
+                <strong>{{ body.heliocentricRadiusAU.toFixed(3) }} AU</strong>
+                <span>heliocentric distance</span>
+                <dl>
+                  <div><dt>ORBIT</dt><dd>{{ body.semiMajorAxisAU.toFixed(3) }} AU</dd></div>
+                  <div><dt>ECCENTRICITY</dt><dd>{{ body.eccentricity.toFixed(4) }}</dd></div>
+                  <div><dt>INCLINATION</dt><dd>{{ body.inclinationDeg.toFixed(2) }}°</dd></div>
+                  <div><dt>TRUE ANOMALY</dt><dd>{{ body.trueAnomalyDeg.toFixed(1) }}°</dd></div>
+                  <div><dt>FROM EARTH</dt><dd>{{ body.geocentricDistanceAU.toFixed(3) }} AU</dd></div>
+                  <div><dt>ALT / AZ</dt><dd>{{ body.altitudeDeg.toFixed(1) }}° / {{ body.azimuthDeg.toFixed(0) }}°</dd></div>
+                </dl>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="earth-moon-sun" aria-label="Earth Moon Sun relationship">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">EARTH · MOON · SUN</span>
+              <h3>Three-Body Relationship · {{ selectedDate() }} {{ selectedTime() }}</h3>
+              <p>Geocentric directions and lunar phase at the selected instant. The geometry is intentionally schematic, not to scale.</p>
+            </div>
+            <div class="relationship-readout">
+              <span>ELONGATION</span>
+              <strong>{{ earthMoonSunSeparation().toFixed(1) }}°</strong>
+            </div>
+          </div>
+          <div class="earth-moon-sun-layout">
+            <div class="earth-moon-sun-stage">
+              <div class="sky-ring"></div>
+              <div class="earth-core"><span>EARTH</span></div>
+              <div class="relationship-node sun-node"
+                [style.left.%]="earthSkyNodeX(solarResult().solarPos.rightAscensionDeg)"
+                [style.top.%]="earthSkyNodeY(solarResult().solarPos.declinationDeg)">
+                <i></i><span>SUN</span>
+              </div>
+              <div class="relationship-node moon-node"
+                [style.left.%]="earthSkyNodeX(moonResult().lunarPos.rightAscensionDeg)"
+                [style.top.%]="earthSkyNodeY(moonResult().lunarPos.declinationDeg)">
+                <i></i><span>MOON</span>
+              </div>
+              <div class="relationship-axis sun-axis" [style.width.%]="relationshipLineWidth(solarResult().solarPos.rightAscensionDeg, solarResult().solarPos.declinationDeg)" [style.transform]="'rotate(' + relationshipLineAngle(solarResult().solarPos.rightAscensionDeg, solarResult().solarPos.declinationDeg) + 'deg)'"></div>
+              <div class="relationship-axis moon-axis" [style.width.%]="relationshipLineWidth(moonResult().lunarPos.rightAscensionDeg, moonResult().lunarPos.declinationDeg)" [style.transform]="'rotate(' + relationshipLineAngle(moonResult().lunarPos.rightAscensionDeg, moonResult().lunarPos.declinationDeg) + 'deg)'"></div>
+            </div>
+            <div class="relationship-detail">
+              <div><span>MOON PHASE</span><strong>{{ moonResult().lunarPos.phaseName }}</strong></div>
+              <div><span>ILLUMINATION</span><strong>{{ (moonResult().lunarPos.illuminationFraction * 100).toFixed(1) }}%</strong></div>
+              <div><span>MOON DISTANCE</span><strong>{{ moonResult().lunarPos.distanceKm.toLocaleString() }} km</strong></div>
+              <div><span>SUN DISTANCE</span><strong>{{ solarResult().solarPos.distanceAU.toFixed(5) }} AU</strong></div>
+              <div><span>PHASE ANGLE</span><strong>{{ moonResult().lunarPos.phaseAngleDeg.toFixed(1) }}°</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="constellation-atlas" aria-label="Constellation atlas">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">CELESTIAL ATLAS</span>
+              <h3>Constellation Map · Equatorial Coordinates</h3>
+              <p>Real right ascension and declination for selected reference stars. This map is a chart, so the denser astronomical treatment stays here rather than in Living Sky.</p>
+            </div>
+            <div class="planet-selector constellation-selector">
+              @for (constellation of constellationCatalog; track constellation.id) {
+                <button type="button" [class.active]="selectedConstellation() === constellation.id" (click)="selectConstellation(constellation.id)">{{ constellation.name }}</button>
+              }
+            </div>
+          </div>
+          <div class="constellation-map-layout">
+            <div class="constellation-map">
+              <div class="map-grid map-grid-ra"></div>
+              <div class="map-grid map-grid-dec"></div>
+              @for (line of selectedConstellationData().lines; track line[0] + line[1]) {
+                @if (constellationStarByName(line[0]); as from) {
+                  @if (constellationStarByName(line[1]); as to) {
+                    <div class="constellation-line"
+                      [style.left.%]="constellationX(from.ra)"
+                      [style.top.%]="constellationY(from.dec)"
+                      [style.width.%]="constellationLineWidth(line[0], line[1])"
+                      [style.transform]="'rotate(' + (constellationLineAngle(line[0], line[1])) + 'deg)'">
+                    </div>
+                  }
+                }
+              }
+              @for (star of selectedConstellationData().stars; track star.name) {
+                <div class="atlas-star"
+                  [style.left.%]="constellationX(star.ra)"
+                  [style.top.%]="constellationY(star.dec)"
+                  [style.width.px]="constellationStarRadius(star.mag)"
+                  [style.height.px]="constellationStarRadius(star.mag)"
+                  [title]="star.name">
+                  <span>{{ star.name }}</span>
+                </div>
+              }
+              <div class="atlas-axis-label atlas-ra-label">RIGHT ASCENSION →</div>
+              <div class="atlas-axis-label atlas-dec-label">DECLINATION ↑</div>
+            </div>
+            <div class="atlas-info">
+              <span class="detail-kicker">{{ selectedConstellationData().name }}</span>
+              <strong>{{ selectedConstellationData().stars.length }} reference stars</strong>
+              <p>Coordinates are plotted in an equatorial frame, independent of local horizon orientation.</p>
+              <dl>
+                @for (star of selectedConstellationData().stars; track star.name) {
+                  <div><dt>{{ star.name }}</dt><dd>{{ (star.ra / 15).toFixed(2) }}h · {{ star.dec.toFixed(1) }}° · mag {{ star.mag.toFixed(1) }}</dd></div>
+                }
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        <section class="deep-sky-atlas" aria-label="Deep sky atlas">
+          <div class="solar-system-header">
+            <div>
+              <span class="observatory-kicker">DEEP SKY ATLAS</span>
+              <h3>Celestial Objects · {{ selectedLocation().name }}</h3>
+              <p>Bright Messier objects plotted from their equatorial coordinates and evaluated for the selected time and location.</p>
+            </div>
+            <div class="planet-selector deep-sky-selector">
+              @for (object of deepSkyCatalog; track object.id) {
+                <button type="button" [class.active]="selectedDeepSkyObject() === object.id" (click)="selectDeepSkyObject(object.id)">{{ object.id.toUpperCase() }}</button>
+              }
+            </div>
+          </div>
+
+          <div class="deep-sky-layout">
+            <div class="deep-sky-field">
+              <div class="deep-sky-grid deep-sky-grid-ra"></div>
+              <div class="deep-sky-grid deep-sky-grid-dec"></div>
+              <div class="deep-sky-crosshair"></div>
+              <div class="deep-sky-object-point"
+                [style.left.%]="deepSkyFieldLeft()"
+                [style.top.%]="deepSkyFieldTop()">
+                <i></i>
+                <span>{{ selectedDeepSkyData().name }}</span>
+              </div>
+              <div class="deep-sky-axis deep-sky-axis-top">ZENITH</div>
+              <div class="deep-sky-axis deep-sky-axis-bottom">HORIZON</div>
+              <div class="deep-sky-axis deep-sky-axis-left">EAST</div>
+              <div class="deep-sky-axis deep-sky-axis-right">WEST</div>
+            </div>
+
+            <div class="deep-sky-detail">
+              <span class="detail-kicker">{{ selectedDeepSkyData().catalog }}</span>
+              <strong>{{ selectedDeepSkyData().name }}</strong>
+              <small>{{ selectedDeepSkyData().type }} · apparent magnitude {{ selectedDeepSkyData().mag.toFixed(2) }}</small>
+              <dl>
+                <div><dt>RA</dt><dd>{{ (selectedDeepSkyData().ra / 15).toFixed(2) }}h</dd></div>
+                <div><dt>DEC</dt><dd>{{ selectedDeepSkyData().dec.toFixed(2) }}°</dd></div>
+                <div><dt>ALTITUDE</dt><dd>{{ selectedDeepSkyPosition().altitudeDeg.toFixed(1) }}°</dd></div>
+                <div><dt>AZIMUTH</dt><dd>{{ selectedDeepSkyPosition().azimuthDeg.toFixed(1) }}°</dd></div>
+                <div><dt>HOUR ANGLE</dt><dd>{{ selectedDeepSkyPosition().hourAngleDeg.toFixed(1) }}°</dd></div>
+                <div><dt>ANGULAR SIZE</dt><dd>{{ selectedDeepSkyData().size }}</dd></div>
+              </dl>
+              <span class="deep-sky-visibility" [class.visible]="selectedDeepSkyPosition().altitudeDeg > 0">
+                {{ selectedDeepSkyPosition().altitudeDeg > 0 ? 'ABOVE HORIZON' : 'BELOW HORIZON' }}
+              </span>
+            </div>
+          </div>
+        </section>
 
         <div class="observatory-actions">
           <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>

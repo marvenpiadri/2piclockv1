@@ -5,8 +5,11 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import {join} from 'node:path';
-import { PRESET_LOCATIONS } from './app/core/models/location.model';
+import {dirname, join} from 'node:path';
+import {createRequire} from 'node:module';
+import {readdirSync, readFileSync} from 'node:fs';
+import { GeoLocation } from './app/core/models/location.model';
+import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -29,43 +32,609 @@ const angularApp = new AngularNodeAppEngine();
 // Redirect-only intent aliases remain useful for navigation/search entry, but
 // indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
-  '/', '/weather', '/astronomy', '/tonight',
+  '/', '/api', '/weather', '/astronomy', '/tonight',
   '/world', '/world-clocks', '/events',
-  '/maps/clocks', '/maps/weather', '/maps/radio',
+  '/maps/clocks', '/maps/radio',
   '/time/converter', '/time/difference', '/time/duration',
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
   '/time/unix-timestamp', '/time/world-matrix',
+  '/widget',
+  '/sleep-calculator',
   '/radio/stations', '/radio/map', '/radio/favorites', '/radio/recent',
   '/atmosphere', '/ephemeris', '/planner', '/space',
   '/stargazing', '/eclipses', '/satellites'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-const buildSitemap = () => {
-  const placeUrls = PRESET_LOCATIONS.flatMap(location => [
-    '/' + location.id,
-    '/' + location.id + '/time',
-    '/' + location.id + '/weather',
-    '/' + location.id + '/sun',
-    '/' + location.id + '/moon',
-    '/' + location.id + '/tonight',
-    '/' + location.id + '/astronomy',
-    '/' + location.id + '/events',
-    '/' + location.id + '/stargazing',
-    '/' + location.id + '/eclipses',
-    '/' + location.id + '/satellites',
-  ]);
-  const urls = [...staticSitemapUrls, ...placeUrls];
-  const uniqueUrls = [...new Set(urls)];
-  const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n');
-  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>';
+const buildUrlSet = (paths: string[]) => {
+  const uniqueUrls = [...new Set(paths)];
+  const entries = uniqueUrls
+    .map(path => `  <url><loc>https://2piclock.com${escapeXml(path)}</loc></url>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</urlset>`;
 };
 
-app.get('/robots.txt', (_req, res) => {
-  res.type('text/plain').send('User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n');
+const buildSitemapIndex = (locationSitemapCount: number) => {
+  const sitemapUrls = [
+    'https://2piclock.com/sitemap-pages.xml',
+    ...Array.from(
+      { length: locationSitemapCount },
+      (_, index) => `https://2piclock.com/sitemap-locations-${index}.xml`
+    )
+  ];
+  const entries = sitemapUrls
+    .map(url => `  <sitemap><loc>${escapeXml(url)}</loc></sitemap>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</sitemapindex>`;
+};
+
+const locationSitemapChunkSize = 40000;
+
+
+const apiHeaders = (res: express.Response) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
+};
+
+const resolveApiDate = (value: unknown): Date | null => {
+  if (typeof value !== 'string' || !value) return new Date();
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : null;
+};
+
+const apiError = (res: express.Response, status: number, code: string, message: string) => {
+  res.status(status).json({ error: { code, message } });
+};
+interface CityRecord {
+  id?: number;
+  name?: string;
+  country_code?: string;
+  countryCode?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  timezone?: string | null;
+}
+
+interface CountryRecord {
+  name?: string;
+  iso2?: string;
+  emoji?: string;
+}
+
+let locationIndexPromise: Promise<GeoLocation[]> | undefined;
+const locationById = new Map<string, GeoLocation>();
+const locationBySlug = new Map<string, GeoLocation>();
+const locationSearchCache = new Map<string, GeoLocation[]>();
+
+const normalizeLocationText = (value: string) =>
+  value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+    .trim();
+
+const slugifyLocation = (value: string) =>
+  normalizeLocationText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const locationSlug = (location: GeoLocation): string =>
+  slugifyLocation(location.country) + '/' + slugifyLocation(location.name);
+
+const packageDataDirectory = (): string => {
+  const require = createRequire(import.meta.url);
+  const countriesFile = require.resolve('@countrystatecity/countries/data/countries.json');
+  return dirname(countriesFile);
+};
+
+const readJsonFile = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
+
+const buildLocationIndex = async (): Promise<GeoLocation[]> => {
+  const dataDirectory = packageDataDirectory();
+  const countries = readJsonFile<CountryRecord[]>(join(dataDirectory, 'countries.json'));
+  const countryByCode = new Map(
+    countries.map(country => [
+      String(country.iso2 ?? '').toUpperCase(),
+      { name: String(country.name ?? ''), flag: String(country.emoji ?? '') }
+    ])
+  );
+
+  const locations: GeoLocation[] = [];
+  const countryDirectories = readdirSync(dataDirectory, { withFileTypes: true })
+    .filter(entry => entry.isDirectory());
+
+  for (const countryDirectory of countryDirectories) {
+    const countryCode = countryDirectory.name.split('-').at(-1)?.toUpperCase() ?? '';
+    if (!countryByCode.has(countryCode)) continue;
+    const countryPath = join(dataDirectory, countryDirectory.name);
+    const stateDirectories = readdirSync(countryPath, { withFileTypes: true })
+      .filter(entry => entry.isDirectory());
+
+    for (const stateDirectory of stateDirectories) {
+      const citiesPath = join(countryPath, stateDirectory.name, 'cities.json');
+      try {
+        const cities = readJsonFile<CityRecord[]>(citiesPath);
+        for (const city of cities) {
+          const name = String(city.name ?? '').trim();
+          const cityCountryCode = String(city.country_code ?? city.countryCode ?? countryCode).toUpperCase();
+          const latitude = Number(city.latitude);
+          const longitude = Number(city.longitude);
+          if (!name || !cityCountryCode || !Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
+          const country = countryByCode.get(cityCountryCode);
+          const cityId = city.id != null ? String(city.id) : slugifyLocation(name) + '-' + latitude + '-' + longitude;
+          locations.push({
+            id: cityCountryCode.toLowerCase() + '-' + cityId,
+            name,
+            country: country?.name || cityCountryCode,
+            countryCode: cityCountryCode,
+            flag: country?.flag || '',
+            latitude,
+            longitude,
+            timezone: String(city.timezone || 'UTC'),
+            tier: 3
+          });
+        }
+      } catch {
+        // Administrative directories without city data are ignored.
+      }
+    }
+  }
+
+  if (!locations.length) throw new Error('The bundled country/city catalogue loaded but contained no cities.');
+
+  // The source dataset can contain the same city more than once under
+  // different administrative records. Keep one canonical record per
+  // city/country/coordinate combination so search never shows duplicates.
+  const uniqueLocations = new Map<string, GeoLocation>();
+  for (const location of locations) {
+    const key = [
+      normalizeLocationText(location.name),
+      normalizeLocationText(location.countryCode)
+    ].join('|');
+    if (!uniqueLocations.has(key)) uniqueLocations.set(key, location);
+  }
+
+  return [...uniqueLocations.values()];
+};
+const getLocationIndex = (): Promise<GeoLocation[]> => {
+  if (!locationIndexPromise) {
+    locationIndexPromise = buildLocationIndex().then(locations => {
+      locationById.clear();
+      locationBySlug.clear();
+      for (const location of locations) {
+        locationById.set(location.id.toLowerCase(), location);
+        locationBySlug.set(locationSlug(location), location);
+      }
+      locationSearchCache.clear();
+      return locations;
+    }).catch(error => {
+      locationIndexPromise = undefined;
+      locationById.clear();
+      locationBySlug.clear();
+      throw error;
+    });
+  }
+  return locationIndexPromise;
+};
+
+const resolveLocation = async (value: unknown): Promise<GeoLocation | undefined> => {
+  if (typeof value !== 'string') return undefined;
+  await getLocationIndex();
+  const normalized = value.trim().toLowerCase();
+  return locationById.get(normalized) ?? locationBySlug.get(normalized.replace(/^\/+|\/+$/g, ''));
+};
+
+const randomSample = <T>(items: T[], count: number): T[] => {
+  const sample = items.slice();
+  for (let i = sample.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sample[i], sample[j]] = [sample[j], sample[i]];
+  }
+  return sample.slice(0, count);
+};
+
+
+app.options('/api/v1/{*splat}', (_req, res) => res.sendStatus(204));
+
+app.get('/api/v1/assets/meteocon/:slug', async (req, res) => {
+  const slug = String(req.params['slug'] ?? '');
+  if (!/^[a-z0-9-]+$/.test(slug)) return apiError(res, 400, 'INVALID_ASSET', 'Invalid weather icon.');
+  try {
+    const upstream = await fetch(`https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/fill/${slug}.svg`);
+    if (!upstream.ok) return apiError(res, 404, 'ASSET_NOT_FOUND', 'Weather icon not found.');
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+    res.send(await upstream.text());
+  } catch {
+    apiError(res, 502, 'ASSET_UNAVAILABLE', 'Weather icon is temporarily unavailable.');
+  }
 });
 
-app.get('/sitemap.xml', (_req, res) => {
-  res.type('application/xml').send(buildSitemap());
+app.get('/api/v1/assets/flag/:countryCode', async (req, res) => {
+  const countryCode = String(req.params['countryCode'] ?? '').toLowerCase();
+  if (!/^[a-z]{2}$/.test(countryCode)) return apiError(res, 400, 'INVALID_ASSET', 'Invalid country flag.');
+  try {
+    const upstream = await fetch(`https://flagcdn.com/w160/${countryCode}.png`);
+    if (!upstream.ok) return apiError(res, 404, 'ASSET_NOT_FOUND', 'Country flag not found.');
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+    res.send(buffer);
+  } catch {
+    apiError(res, 502, 'ASSET_UNAVAILABLE', 'Country flag is temporarily unavailable.');
+  }
+});
+
+
+
+const weatherProxyCache = new Map<string, { expiresAt: number; data: unknown }>();
+const WEATHER_CACHE_MS = 10 * 60 * 1000;
+
+app.get('/api/v1/weather', async (req, res) => {
+  apiHeaders(res);
+
+  try {
+    let latitude = typeof req.query['latitude'] === 'string' ? req.query['latitude'] : '';
+    let longitude = typeof req.query['longitude'] === 'string' ? req.query['longitude'] : '';
+
+    if (typeof req.query['location'] === 'string') {
+      const location = await resolveLocation(req.query['location']);
+      if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid location id.');
+      latitude = String(location.latitude);
+      longitude = String(location.longitude);
+    }
+
+    if (!latitude || !longitude) {
+      return apiError(res, 400, 'MISSING_COORDINATES', 'Provide latitude and longitude, or a location id.');
+    }
+
+    const allowed = ['current', 'hourly', 'forecast_days', 'timezone'];
+    const search = new URLSearchParams();
+    search.set('latitude', latitude);
+    search.set('longitude', longitude);
+
+    for (const key of allowed) {
+      const value = req.query[key];
+      if (typeof value === 'string' && value) search.set(key, value);
+    }
+
+    const cacheKey = search.toString();
+    const cached = weatherProxyCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.setHeader('X-2piClock-Cache', 'HIT');
+      return res.json(cached.data);
+    }
+
+    const upstream = await fetch(`https://api.open-meteo.com/v1/forecast?${search.toString()}`, {
+      headers: { Accept: 'application/json' }
+    });
+
+    if (!upstream.ok) {
+      return apiError(res, 502, 'WEATHER_UPSTREAM_ERROR', `Weather provider returned HTTP ${upstream.status}.`);
+    }
+
+    const data = await upstream.json();
+    weatherProxyCache.set(cacheKey, { expiresAt: Date.now() + WEATHER_CACHE_MS, data });
+
+    if (weatherProxyCache.size > 200) {
+      const oldest = weatherProxyCache.keys().next().value;
+      if (oldest) weatherProxyCache.delete(oldest);
+    }
+
+    res.setHeader('X-2piClock-Cache', 'MISS');
+    res.json(data);
+  } catch {
+    apiError(res, 502, 'WEATHER_UNAVAILABLE', 'Weather data is temporarily unavailable.');
+  }
+});
+
+
+
+app.get('/api/v1', (_req, res) => {
+  apiHeaders(res);
+  res.json({
+    name: '2piClock API',
+    version: '1',
+    documentation: 'https://2piclock.com/api',
+    endpoints: [
+      '/api/v1/locations/search?q=casablanca',
+      '/api/v1/locations/random?count=50',
+      '/api/v1/locations/{id}',
+      '/api/v1/locations/search?q=paris',
+      '/api/v1/weather?location=paris&current=temperature_2m,weather_code&hourly=temperature_2m&forecast_days=7&timezone=UTC',
+      '/api/v1/solar?location=paris&at=2026-09-26T12:00:00Z',
+      '/api/v1/lunar?location=paris&at=2026-09-26T12:00:00Z',
+      '/api/v1/celestial?location=paris&at=2026-09-26T12:00:00Z',
+      '/api/v1/events?location=paris&date=2026-09-26'
+    ]
+  });
+});
+
+
+app.get('/api/v1/timezone', (req, res) => {
+  apiHeaders(res);
+
+  const timezone = typeof req.query['timezone'] === 'string' ? req.query['timezone'].trim() : '';
+  const rawAt = typeof req.query['at'] === 'string' ? req.query['at'] : '';
+  const date = rawAt ? new Date(rawAt) : new Date();
+
+  if (!timezone) return apiError(res, 400, 'MISSING_TIMEZONE', 'Provide an IANA timezone.');
+  if (!Number.isFinite(date.getTime())) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Provide a valid ISO-8601 timestamp.');
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'longOffset',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(date);
+
+    const offsetLabel = parts.find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
+    const match = offsetLabel.match(/^GMT(?:(\\+|-)\\d{2}:?\\d{2})?$/);
+    if (!match) return apiError(res, 422, 'TIMEZONE_OFFSET_UNAVAILABLE', 'The timezone offset could not be resolved.');
+
+    const signedOffset = match[1] ?? '';
+    const offsetMinutes = signedOffset
+      ? (signedOffset.startsWith('+') ? 1 : -1) * (
+          Number(signedOffset.slice(1, 3)) * 60 +
+          Number(signedOffset.slice(-2))
+        )
+      : 0;
+
+    res.json({
+      version: '1',
+      timezone,
+      instant: date.toISOString(),
+      offsetMinutes,
+      offset: offsetMinutes === 0
+        ? 'UTC+0'
+        : 'UTC' + (offsetMinutes > 0 ? '+' : '-') +
+          String(Math.floor(Math.abs(offsetMinutes) / 60)).padStart(2, '0') +
+          ':' + String(Math.abs(offsetMinutes) % 60).padStart(2, '0')
+    });
+  } catch {
+    apiError(res, 400, 'INVALID_TIMEZONE', 'Use a valid IANA timezone.');
+  }
+});
+
+app.get('/api/v1/locations/search', async (req, res) => {
+  apiHeaders(res);
+  const rawQuery = typeof req.query['q'] === 'string' ? req.query['q'].trim() : '';
+  const query = normalizeLocationText(rawQuery);
+  const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 12) || 12));
+  if (query.length < 2) { res.json({ version: '1', query, count: 0, locations: [] }); return; }
+  try {
+    let matches = locationSearchCache.get(query);
+    if (!matches) {
+      const locations = await getLocationIndex();
+      matches = locations.filter(location => [location.name, location.country, location.countryCode, location.id, location.timezone]
+        .some(value => normalizeLocationText(String(value)).includes(query)))
+        .sort((a, b) => {
+          const aName = normalizeLocationText(a.name), bName = normalizeLocationText(b.name);
+          const aCountry = normalizeLocationText(a.country), bCountry = normalizeLocationText(b.country);
+          const aExact = [aName, normalizeLocationText(a.id), normalizeLocationText(a.countryCode)].includes(query);
+          const bExact = [bName, normalizeLocationText(b.id), normalizeLocationText(b.countryCode)].includes(query);
+          const aPrefix = aName.startsWith(query), bPrefix = bName.startsWith(query);
+          const aWordPrefix = aName.split(/\\s+/).some(word => word.startsWith(query));
+          const bWordPrefix = bName.split(/\\s+/).some(word => word.startsWith(query));
+          const aCountryPrefix = aCountry.startsWith(query), bCountryPrefix = bCountry.startsWith(query);
+          return Number(bExact) - Number(aExact) || Number(bPrefix) - Number(aPrefix)
+            || Number(bWordPrefix) - Number(aWordPrefix) || Number(bCountryPrefix) - Number(aCountryPrefix)
+            || a.name.localeCompare(b.name);
+        });
+      locationSearchCache.set(query, matches);
+      if (locationSearchCache.size > 100) locationSearchCache.delete(locationSearchCache.keys().next().value as string);
+    }
+    const results = matches.slice(0, count);
+    res.json({ version: '1', query, count: results.length, locations: results });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/locations/random', async (req, res) => {
+  apiHeaders(res);
+  const count = Math.min(50, Math.max(1, Number(req.query['count'] ?? 50) || 50));
+  try {
+    const locations = await getLocationIndex();
+    const results = randomSample(locations, count);
+    res.json({ version: '1', count: results.length, locations: results });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/locations/map', async (req, res) => {
+  apiHeaders(res);
+  const count = Math.min(5000, Math.max(500, Number(req.query['count'] ?? 2500) || 2500));
+  try {
+    const locations = await getLocationIndex();
+    const grid = new Map<string, GeoLocation>();
+    const latStep = 180 / 90;
+    const lonStep = 360 / 120;
+    for (const location of locations) {
+      const latBucket = Math.floor((location.latitude + 90) / latStep);
+      const lonBucket = Math.floor((location.longitude + 180) / lonStep);
+      const key = latBucket + ':' + lonBucket;
+      if (!grid.has(key)) grid.set(key, location);
+    }
+    const results = [...grid.values()].slice(0, count);
+    res.json({ version: '1', count: results.length, locations: results });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/locations/nearest', async (req, res) => {
+  apiHeaders(res);
+  const latitude = Number(req.query['latitude']);
+  const longitude = Number(req.query['longitude']);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return apiError(res, 400, 'INVALID_COORDINATES', 'Provide valid latitude and longitude.');
+  }
+
+  try {
+    const locations = await getLocationIndex();
+    const toRadians = (value: number) => value * Math.PI / 180;
+    const earthRadiusKm = 6371;
+    let nearest: GeoLocation | undefined;
+    let nearestDistanceKm = Number.POSITIVE_INFINITY;
+
+    for (const location of locations) {
+      const dLat = toRadians(location.latitude - latitude);
+      const dLon = toRadians(location.longitude - longitude);
+      const lat1 = toRadians(latitude);
+      const lat2 = toRadians(location.latitude);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+      const distanceKm = 2 * earthRadiusKm * Math.asin(Math.sqrt(a));
+      if (distanceKm < nearestDistanceKm) {
+        nearest = location;
+        nearestDistanceKm = distanceKm;
+      }
+    }
+
+    if (!nearest) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'No nearby city was found.');
+    res.json({ version: '1', location: nearest, distanceKm: Math.round(nearestDistanceKm * 10) / 10 });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/locations/:id', async (req, res) => {
+  apiHeaders(res);
+  try {
+    const location = await resolveLocation(req.params['id']);
+    if (!location) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'The requested location was not found.');
+    res.json({ version: '1', location, slug: locationSlug(location) });
+  } catch {
+    apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
+  }
+});
+
+app.get('/api/v1/solar', async (req, res) => {
+  apiHeaders(res);
+  const location = await resolveLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const date = resolveApiDate(req.query['at']);
+  if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
+  const solar = calculateSolarPosition(date, location.latitude, location.longitude);
+  res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, solar });
+});
+
+app.get('/api/v1/lunar', async (req, res) => {
+  apiHeaders(res);
+  const location = await resolveLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const date = resolveApiDate(req.query['at']);
+  if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
+  const sun = calculateSolarPosition(date, location.latitude, location.longitude);
+  const lunar = calculateLunarPosition(date, location.latitude, location.longitude, sun);
+  res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, moon: lunar });
+});
+
+app.get('/api/v1/celestial', async (req, res) => {
+  apiHeaders(res);
+  const location = await resolveLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const date = resolveApiDate(req.query['at']);
+  if (!date) return apiError(res, 400, 'INVALID_TIMESTAMP', 'Use an ISO-8601 timestamp in the at parameter.');
+  const celestial = getCelestialState(date, location.latitude, location.longitude, location.timezone);
+  res.json({ version: '1', instant: date.toISOString(), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, celestial });
+});
+
+app.get('/api/v1/events', async (req, res) => {
+  apiHeaders(res);
+  const location = await resolveLocation(req.query['location']);
+  if (!location) return apiError(res, 400, 'INVALID_LOCATION', 'Use a valid preset location id.');
+  const rawDate = typeof req.query['date'] === 'string' ? req.query['date'] : '';
+  const date = rawDate ? new Date(rawDate + 'T12:00:00Z') : new Date();
+  if (!Number.isFinite(date.getTime())) return apiError(res, 400, 'INVALID_DATE', 'Use an ISO date such as 2026-09-26.');
+  const events = calculateSolarEvents(date, location.latitude, location.longitude, location.timezone);
+  res.json({ version: '1', date: rawDate || date.toISOString().slice(0, 10), location: { id: location.id, name: location.name, country: location.country, timezone: location.timezone }, events });
+});
+
+const redirectLegacyLocationUrl = async (req: express.Request, res: express.Response, section?: string) => {
+  const legacyParam = req.params['location'];
+  const legacyId = Array.isArray(legacyParam) ? legacyParam[0] : legacyParam;
+  if (!/^[a-z]{2}-\d+$/i.test(legacyId)) return false;
+  const location = await resolveLocation(legacyId);
+  if (!location) return false;
+  const canonical = '/' + locationSlug(location) + (section ? '/' + section : '');
+  res.redirect(301, canonical);
+  return true;
+};
+
+app.get(/^\/([a-z]{2}-\d+)$/, async (req, res, next) => {
+  try {
+    if (!(await redirectLegacyLocationUrl(req, res))) next();
+  } catch {
+    next();
+  }
+});
+
+app.get(/^\/([a-z]{2}-\d+)\/([a-z0-9-]+)$/, async (req, res, next) => {
+  try {
+    const section = req.path.split('/')[2];
+    if (!(await redirectLegacyLocationUrl(req, res, section))) next();
+  } catch {
+    next();
+  }
+});
+
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n`);
+});
+
+app.get('/sitemap.xml', async (_req, res) => {
+  try {
+    const locations = await getLocationIndex();
+    const locationSitemapCount = Math.ceil(locations.length * 4 / locationSitemapChunkSize);
+    res.type('application/xml').send(buildSitemapIndex(locationSitemapCount));
+  } catch {
+    res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
+  }
+});
+
+app.get('/sitemap-pages.xml', (_req, res) => {
+  res.type('application/xml').send(buildUrlSet(staticSitemapUrls));
+});
+
+app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
+  const chunkParam = String(req.params['chunk'] ?? '');
+  if (!/^\d+$/.test(chunkParam)) {
+    res.status(404).type('text/plain').send('Sitemap not found.');
+    return;
+  }
+
+  try {
+    const locations = await getLocationIndex();
+    const chunk = Number(chunkParam);
+    const pagesPerChunk = Math.floor(locationSitemapChunkSize / 4);
+    const start = chunk * pagesPerChunk;
+    const end = Math.min(locations.length, start + pagesPerChunk);
+    if (start >= locations.length) {
+      res.status(404).type('text/plain').send('Sitemap not found.');
+      return;
+    }
+
+    const paths: string[] = [];
+    for (const location of locations.slice(start, end)) {
+      const base = '/' + locationSlug(location);
+      paths.push(base, base + '/weather', base + '/astronomy', base + '/tonight');
+    }
+    res.type('application/xml').send(buildUrlSet(paths));
+  } catch {
+    res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
+  }
 });
 
 /**

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -26,12 +26,11 @@ export type TimeToolTab = 'converter' | 'difference' | 'duration' | 'date-differ
 export class TimeSuiteComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private locationService = inject(LocationService);
+  readonly locationService = inject(LocationService);
   private timeCalc = inject(TimeCalculationService);
   private title = inject(Title);
   private meta = inject(Meta);
 
-  readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<TimeToolTab>('converter');
   readonly copyNotification = signal<string | null>(null);
 
@@ -40,16 +39,10 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   private timerId: ReturnType<typeof setInterval> | null = null;
 
   // --- 1. TIME ZONE CONVERTER STATE ---
-  readonly converterSourceLoc = signal<GeoLocation>(this.allPresets[0]);
+  readonly converterSourceLoc = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly converterDate = signal<string>(new Date().toISOString().slice(0, 10));
   readonly converterTime = signal<string>('14:30');
-  readonly converterTargets = signal<GeoLocation[]>([
-    this.allPresets.find(p => p.id === 'london') || this.allPresets[2],
-    this.allPresets.find(p => p.id === 'new-york') || this.allPresets[1],
-    this.allPresets.find(p => p.id === 'tokyo') || this.allPresets[3],
-    this.allPresets.find(p => p.id === 'dubai') || this.allPresets[7] || this.allPresets[0],
-    this.allPresets.find(p => p.id === 'sydney') || this.allPresets[5] || this.allPresets[0]
-  ]);
+  readonly converterTargets = signal<GeoLocation[]>([this.locationService.selectedLocation()]);
 
   readonly conversionResults = computed<{ sourceInstant: Date; conversions: TimezoneConversionResult[] }>(() => {
     const src = this.converterSourceLoc();
@@ -59,8 +52,8 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   });
 
   // --- 2. TIME DIFFERENCE CALCULATOR STATE ---
-  readonly diffLocA = signal<GeoLocation>(this.allPresets[0]);
-  readonly diffLocB = signal<GeoLocation>(this.allPresets.find(p => p.id === 'tokyo') || this.allPresets[3]);
+  readonly diffLocA = signal<GeoLocation>(this.locationService.selectedLocation());
+  readonly diffLocB = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly diffDate = signal<string>(new Date().toISOString().slice(0, 10));
 
   readonly timeDifferenceResult = computed<TimeDifferenceResult>(() => {
@@ -142,8 +135,20 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   });
 
   // --- 8. WORLD TIME MATRIX STATE ---
-  readonly matrixReferenceCity = signal<GeoLocation>(this.allPresets[0]);
-  readonly matrixCities = signal<GeoLocation[]>([...this.allPresets.slice(0, 12)]);
+  readonly matrixReferenceCity = signal<GeoLocation>(this.locationService.selectedLocation());
+  readonly matrixCities = signal<GeoLocation[]>([this.locationService.selectedLocation()]);
+
+  private readonly selectedLocationSync = effect(() => {
+    const location = this.locationService.selectedLocation();
+    if (location.id === 'initializing') return;
+
+    if (this.converterSourceLoc().id === 'initializing') this.converterSourceLoc.set(location);
+    if (this.converterTargets().length === 1 && this.converterTargets()[0].id === 'initializing') this.converterTargets.set([location]);
+    if (this.diffLocA().id === 'initializing') this.diffLocA.set(location);
+    if (this.diffLocB().id === 'initializing') this.diffLocB.set(location);
+    if (this.matrixReferenceCity().id === 'initializing') this.matrixReferenceCity.set(location);
+    if (this.matrixCities().length === 1 && this.matrixCities()[0].id === 'initializing') this.matrixCities.set([location]);
+  });
 
   readonly worldMatrixRows = computed<WorldComparisonRow[]>(() => {
     this.liveTick();
@@ -171,7 +176,7 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
         this.activeTab.set(params['tab'] as TimeToolTab);
       }
       if (params['from']) {
-        const found = this.allPresets.find(p => p.id === params['from'] || p.name.toLowerCase() === params['from'].toLowerCase());
+        const found = this.locationService.locations().find(p => p.id === params['from'] || p.name.toLowerCase() === params['from'].toLowerCase());
         if (found) this.converterSourceLoc.set(found);
       }
       if (params['time']) {
@@ -268,22 +273,22 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   }
 
   setConverterSourceById(id: string): void {
-    const loc = this.allPresets.find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.converterSourceLoc.set(loc);
   }
 
   setDiffLocAById(id: string): void {
-    const loc = this.allPresets.find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.diffLocA.set(loc);
   }
 
   setDiffLocBById(id: string): void {
-    const loc = this.allPresets.find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.diffLocB.set(loc);
   }
 
   setMatrixReferenceCityById(id: string): void {
-    const loc = this.allPresets.find(p => p.id === id);
+    const loc = this.locationService.locations().find(p => p.id === id);
     if (loc) this.matrixReferenceCity.set(loc);
   }
 

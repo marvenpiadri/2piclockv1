@@ -309,7 +309,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--color-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   transition: border-color 0.2s;
@@ -457,7 +457,7 @@
 
 .diff-result-banner {
   padding: 24px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--color-surface-elevated);
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 16px;
   text-align: center;
@@ -489,7 +489,7 @@
 }
 
 .diff-clock-card {
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-surface-modal);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 16px;
   border-radius: 14px;
@@ -618,7 +618,7 @@
 /* Date Diff Banner */
 .date-diff-banner {
   padding: 24px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--color-surface-elevated);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   display: flex;
@@ -706,7 +706,7 @@
 /* Countdown Display */
 .countdown-hero-display, .countup-hero-display {
   padding: 24px;
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-surface-modal);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   text-align: center;
@@ -817,7 +817,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--color-surface-subtle);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
 }
@@ -934,4 +934,83 @@
   .matrix-tr {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* --------------------------------------------------------------------------
+   2pi visual language: transparent time workspace over the midnight substrate.
+   Keep the calculators functional; remove the old charcoal/black shell.
+   -------------------------------------------------------------------------- */
+.time-suite-container {
+  background: transparent;
+  color: var(--color-text-main);
+}
+
+.time-suite-container .suite-header,
+.time-suite-container .tool-card,
+.time-suite-container .diff-clock-card,
+.time-suite-container .result-target-card,
+.time-suite-container .unix-card,
+.time-suite-container .matrix-card {
+  background: color-mix(in srgb, var(--color-midnight-900) 34%, transparent);
+  border-color: color-mix(in srgb, var(--color-midnight-500) 52%, transparent);
+  box-shadow: none;
+}
+
+.time-suite-container .suite-header {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.time-suite-container .suite-title-group h1,
+.time-suite-container .tool-card h3,
+.time-suite-container .matrix-header-row h3 {
+  color: var(--color-text-main);
+}
+
+.time-suite-container .suite-title-group p,
+.time-suite-container .form-group label {
+  color: var(--color-text-secondary);
+}
+
+.time-suite-container .suite-tabs button,
+.time-suite-container .btn-share {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-midnight-500) 58%, transparent);
+  color: var(--color-text-secondary);
+}
+
+.time-suite-container .suite-tabs button:hover,
+.time-suite-container .btn-share:hover {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  border-color: var(--color-accent-border);
+  color: var(--color-text-main);
+}
+
+.time-suite-container .suite-tabs button.active {
+  background: var(--color-amber-gradient);
+  border-color: transparent;
+  color: var(--color-text-on-accent);
+  box-shadow: 0 5px 18px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.time-suite-container input,
+.time-suite-container select,
+.time-suite-container textarea {
+  background: color-mix(in srgb, var(--color-midnight-950) 48%, transparent);
+  border-color: color-mix(in srgb, var(--color-midnight-500) 58%, transparent);
+  color: var(--color-text-main);
+}
+
+.time-suite-container input:focus,
+.time-suite-container select:focus,
+.time-suite-container textarea:focus {
+  border-color: var(--color-accent-border);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.time-suite-container .suite-badge {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent-strong);
 }

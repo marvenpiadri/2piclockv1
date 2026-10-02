@@ -1,174 +1,173 @@
-import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, REQUEST, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { GeoLocation, PRESET_LOCATIONS } from '../models/location.model';
+import { GeoLocation } from '../models/location.model';
 import { WeatherService } from './weather.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class LocationService {
-  private platformId = inject(PLATFORM_ID);
-  private isBrowser = isPlatformBrowser(this.platformId);
-  private weatherService = inject(WeatherService);
-
-  readonly allPresets: GeoLocation[] = PRESET_LOCATIONS;
-  readonly selectedLocation = signal<GeoLocation>(PRESET_LOCATIONS[0]); // Default to Tokyo or local
-  readonly watchlist = signal<GeoLocation[]>([
-    PRESET_LOCATIONS[0], // Tokyo
-    PRESET_LOCATIONS[1], // London
-    PRESET_LOCATIONS[2], // New York
-    PRESET_LOCATIONS[3], // Paris
-    PRESET_LOCATIONS[4], // Casablanca
-    PRESET_LOCATIONS[7]  // Reykjavik
-  ]);
-
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly request = inject(REQUEST, { optional: true });
+  private readonly weatherService = inject(WeatherService);
+  private readonly randomLocationsUrl = '/api/v1/locations/random?count=50';
+  private readonly selectedLocationStore = 'selected-location';
+  private readonly savedLocationsStore = 'saved-locations';
+  private locationLoadPromise?: Promise<GeoLocation[]>;
+  readonly randomLocations = signal<GeoLocation[]>([]);
+  readonly locations = signal<GeoLocation[]>([]);
+  readonly selectedLocation = signal<GeoLocation>(this.createNeutralLocation());
+  readonly watchlist = signal<GeoLocation[]>([]);
   readonly isLocating = signal<boolean>(false);
   readonly locationError = signal<string | null>(null);
 
-  constructor() {
-    if (this.isBrowser) {
-      try {
-        const savedLocId = localStorage.getItem('2piclock_selected_location');
-        if (savedLocId) {
-          const found = this.allPresets.find(l => l.id === savedLocId);
-          if (found) {
-            this.selectedLocation.set(found);
-          } else {
-            const custom = JSON.parse(savedLocId);
-            if (custom && Number.isFinite(Number(custom.latitude)) && Number.isFinite(Number(custom.longitude))) {
-              this.selectedLocation.set(custom);
-            }
-          }
-        }
-      } catch {
-        // Fallback to default
-      }
+  constructor() { if (this.isBrowser) void this.restoreStoredLocations(); }
+
+  async loadLocations(): Promise<GeoLocation[]> {
+    if (this.locations().length > 0) return this.locations();
+    if (this.locationLoadPromise) return this.locationLoadPromise;
+    this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl)).then(async response => {
+      if (!response.ok) throw new Error('Location discovery unavailable');
+      const data = await response.json() as { locations?: GeoLocation[] };
+      const locations = Array.isArray(data.locations) ? data.locations : [];
+      if (!locations.length) throw new Error('Location discovery returned no cities');
+      this.locations.set(locations); this.randomLocations.set(locations); this.locationError.set(null); return locations;
+    }).catch(error => { this.locationLoadPromise = undefined; this.locationError.set(error instanceof Error ? error.message : 'Location discovery is temporarily unavailable.'); throw error; });
+    return this.locationLoadPromise;
+  }
+
+  async getLocation(identifier: string): Promise<GeoLocation | null> {
+    const normalized = identifier.trim();
+    if (!normalized) return null;
+    const local = this.locations().find(location =>
+      location.id === normalized || this.getLocationSlug(location) === normalized
+    );
+    if (local) return local;
+    try {
+      const response = await fetch(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalized)));
+      if (!response.ok) return null;
+      const data = await response.json() as { location?: GeoLocation };
+      return data.location ?? null;
+    } catch {
+      return null;
     }
   }
 
-  selectLocation(loc: GeoLocation): void {
-    // A manual atmosphere belongs to the previous location. Clear it here;
-    // CelestialService remains responsible for the single weather fetch trigger.
-    this.weatherService.clearOverride();
-    this.selectedLocation.set(loc);
-    this.locationError.set(null);
-    if (this.isBrowser) {
-      try {
-        if (loc.isCustom) {
-          localStorage.setItem('2piclock_selected_location', JSON.stringify(loc));
-        } else {
-          localStorage.setItem('2piclock_selected_location', loc.id);
-        }
-      } catch {
-        // Ignore storage error
-      }
-    }
+  getLocationSlug(location: GeoLocation): string {
+    return this.slugify(location.country) + '/' + this.slugify(location.name);
   }
+
+  getLocationPath(location: GeoLocation, section?: string): string[] {
+    const path = this.getLocationSlug(location).split('/');
+    return section ? [...path, section] : path;
+  }
+
+  private slugify(value: string): string {
+    return value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  async ensureInitialLocation(): Promise<GeoLocation> {
+    const current = this.selectedLocation();
+    if (this.isBrowser) { const saved = await this.readSelectedLocation(); if (saved) { this.selectedLocation.set(saved); return saved; } const detected = await this.detectUserLocation(); if (detected) return detected; }
+    const locations = await this.loadLocations();
+    const timezone = this.isBrowser ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+    const fallback = locations.find(location => location.timezone === timezone) ?? locations[0] ?? current;
+    this.selectedLocation.set(fallback); if (this.isBrowser) await this.persistSelectedLocation(fallback); return fallback;
+  }
+
+  selectLocation(loc: GeoLocation): void { this.weatherService.clearOverride(); this.selectedLocation.set(loc); this.locationError.set(null); if (this.isBrowser) void this.persistSelectedLocation(loc); }
 
   setCustomCoordinates(name: string, lat: number, lng: number, timezone?: string): void {
     const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    const customLoc: GeoLocation = {
-      id: `custom-${Date.now()}`,
-      name: name || `Custom (${lat.toFixed(2)}°, ${lng.toFixed(2)}°)`,
-      country: 'Coordinates',
-      countryCode: '🌐',
-      flag: '📍',
-      latitude: lat,
-      longitude: lng,
-      timezone: tz,
-      isCustom: true
-    };
-    this.selectLocation(customLoc);
+    this.selectLocation({ id: 'custom-' + Date.now(), name: name || 'Custom (' + lat.toFixed(2) + '°, ' + lng.toFixed(2) + '°)', country: 'Coordinates', countryCode: '🌐', flag: '📍', latitude: lat, longitude: lng, timezone: tz, isCustom: true });
   }
 
   detectUserLocation(): Promise<GeoLocation | null> {
-    if (!this.isBrowser || !navigator.geolocation) {
-      this.locationError.set('Geolocation is not supported by your browser.');
-      return Promise.resolve(null);
-    }
-
-    this.isLocating.set(true);
-    this.locationError.set(null);
-
+    if (!this.isBrowser || !navigator.geolocation) { this.locationError.set('Geolocation is not supported by your browser.'); return Promise.resolve(null); }
+    this.isLocating.set(true); this.locationError.set(null);
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.isLocating.set(false);
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      async pos => {
+        const latitude = Math.round(pos.coords.latitude * 10000) / 10000;
+        const longitude = Math.round(pos.coords.longitude * 10000) / 10000;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
+        try {
+          const response = await fetch(this.apiUrl('/api/v1/locations/nearest?latitude=' + latitude + '&longitude=' + longitude));
+          if (response.ok) {
+            const data = await response.json() as { location?: GeoLocation };
+            if (data.location) {
+              this.isLocating.set(false);
+              this.selectLocation(data.location);
+              resolve(data.location);
+              return;
+            }
+          }
+        } catch {
+          // Fall back to the exact GPS coordinates when the city catalogue is unavailable.
+        }
+
+        this.isLocating.set(false);
         const userLoc: GeoLocation = {
           id: 'current-location',
           name: 'Current Location',
           country: 'GPS Detected',
           countryCode: 'GPS',
           flag: '📍',
-          latitude: Math.round(lat * 10000) / 10000,
-          longitude: Math.round(lng * 10000) / 10000,
-          timezone: tz,
+          latitude,
+          longitude,
+          timezone,
           elevationMeters: pos.coords.altitude || 10,
           isCustom: true
         };
-
         this.selectLocation(userLoc);
         resolve(userLoc);
       },
-      (err) => {
-        this.isLocating.set(false);
-        this.locationError.set(err.message || 'Unable to retrieve location.');
-        resolve(null);
-      },
+      err => { this.isLocating.set(false); this.locationError.set(err.message || 'Unable to retrieve location.'); resolve(null); },
       { timeout: 5000, enableHighAccuracy: false }
     ));
   }
 
-  /**
-   * Resolve a usable location for the root experience. A saved choice wins;
-   * otherwise try browser GPS, then use a deterministic preset fallback.
-   */
-  async ensureInitialLocation(): Promise<GeoLocation> {
-    const current = this.selectedLocation();
-    if (this.isBrowser) {
-      try {
-        const saved = localStorage.getItem('2piclock_selected_location');
-        if (saved) return current;
-      } catch {
-        // Storage can be unavailable in private/restricted browser contexts.
-      }
-
-      const detected = await this.detectUserLocation();
-      if (detected) return detected;
-    }
-
-    // Keep the no-GPS fallback deterministic. The app must never change cities
-    // randomly between visits or renders.
-    const fallback = this.allPresets[0];
-    this.selectedLocation.set(fallback);
-    return fallback;
+  refreshRandomLocations(): void { this.locationLoadPromise = undefined; this.locations.set([]); void this.loadLocations().catch(() => undefined); }
+  addToWatchlist(loc: GeoLocation): void { if (!this.watchlist().some(item => item.id === loc.id)) { this.watchlist.update(list => [...list, loc]); void this.persistWatchlist(); } }
+  removeFromWatchlist(locId: string): void { this.watchlist.update(list => list.filter(item => item.id !== locId)); void this.persistWatchlist(); }
+  getCountryFlag(countryCode: string): string { if (!countryCode || countryCode.length !== 2) return countryCode === 'GPS' ? '📍' : '🌐'; try { return String.fromCodePoint(...countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0))); } catch { return '🏳️'; } }
+  private apiUrl(path: string): string {
+    if (this.isBrowser) return path;
+    const requestUrl = this.request?.url;
+    return requestUrl ? new URL(path, requestUrl).toString() : path;
   }
 
-  addToWatchlist(loc: GeoLocation): void {
-    if (!this.watchlist().some(l => l.id === loc.id)) {
-      this.watchlist.update(list => [...list, loc]);
-    }
-  }
+  private createNeutralLocation(): GeoLocation { return { id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true }; }
+  private async restoreStoredLocations(): Promise<void> {
+    const [selected, saved] = await Promise.all([
+      this.readSelectedLocation(),
+      this.readSavedLocations()
+    ]);
 
-  removeFromWatchlist(locId: string): void {
-    this.watchlist.update(list => list.filter(l => l.id !== locId));
-  }
+    if (selected) {
+      // Catalogue locations are re-resolved so persisted data cannot carry a
+      // stale timezone after the underlying city/timezone dataset changes.
+      const canonical = selected.isCustom ? null : await this.getLocation(selected.id);
+      const restored = canonical ?? selected;
+      this.selectedLocation.set(restored);
+      if (this.isBrowser) await this.persistSelectedLocation(restored);
+    }
 
-  getCountryFlag(countryCode: string): string {
-    if (!countryCode || countryCode.length !== 2) {
-      return countryCode === 'GPS' ? '📍' : '🌐';
-    }
-    try {
-      const codePoints = countryCode
-        .toUpperCase()
-        .split('')
-        .map(char => 127397 + char.charCodeAt(0));
-      return String.fromCodePoint(...codePoints);
-    } catch {
-      return '🏳️';
-    }
+    const canonicalWatchlist = await Promise.all(
+      saved.map(async location => {
+        if (location.isCustom) return location;
+        return (await this.getLocation(location.id)) ?? location;
+      })
+    );
+    this.watchlist.set(canonicalWatchlist);
   }
+  private openDatabase(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const request = indexedDB.open('2piClockLocations', 1); request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains(this.selectedLocationStore)) db.createObjectStore(this.selectedLocationStore); if (!db.objectStoreNames.contains(this.savedLocationsStore)) db.createObjectStore(this.savedLocationsStore, { keyPath: 'id' }); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error ?? new Error('IndexedDB unavailable')); }); }
+  private async readSelectedLocation(): Promise<GeoLocation | null> { try { const db = await this.openDatabase(); return await new Promise(resolve => { const request = db.transaction(this.selectedLocationStore, 'readonly').objectStore(this.selectedLocationStore).get('current'); request.onsuccess = () => resolve((request.result as GeoLocation | undefined) ?? null); request.onerror = () => resolve(null); }); } catch { return null; } }
+  private async persistSelectedLocation(location: GeoLocation): Promise<void> { try { const db = await this.openDatabase(); await new Promise<void>((resolve, reject) => { const request = db.transaction(this.selectedLocationStore, 'readwrite').objectStore(this.selectedLocationStore).put(location, 'current'); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); } catch { /* Optional local persistence. */ } }
+  private async readSavedLocations(): Promise<GeoLocation[]> { try { const db = await this.openDatabase(); return await new Promise(resolve => { const request = db.transaction(this.savedLocationsStore, 'readonly').objectStore(this.savedLocationsStore).getAll(); request.onsuccess = () => resolve(Array.isArray(request.result) ? request.result as GeoLocation[] : []); request.onerror = () => resolve([]); }); } catch { return []; } }
+  private async persistWatchlist(): Promise<void> { try { const db = await this.openDatabase(); const store = db.transaction(this.savedLocationsStore, 'readwrite').objectStore(this.savedLocationsStore); store.clear(); for (const location of this.watchlist()) if (!location.isCustom) store.put(location); } catch { /* Optional local persistence. */ } }
 }

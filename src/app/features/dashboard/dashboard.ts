@@ -132,20 +132,20 @@ import { getCelestialState } from '../../core/astronomy/astronomy-engine';
 export class DashboardComponent {
   private locationService = inject(LocationService);
 
-  readonly allPresets = this.locationService.allPresets;
+  readonly allLocations = this.locationService.locations;
   readonly pinnedIds = signal<string[]>(['tokyo', 'london', 'newyork', 'paris', 'reykjavik', 'casablanca']);
   readonly selectedAddId = signal<string>('');
 
   readonly availableToAdd = computed(() => {
     const pinned = new Set(this.pinnedIds());
-    return this.allPresets.filter(p => !pinned.has(p.id));
+    return this.allLocations().filter(p => !pinned.has(p.id));
   });
 
   readonly cityCards = computed(() => {
     const ids = this.pinnedIds();
     const now = new Date();
     return ids.map(id => {
-      const loc = this.allPresets.find(p => p.id === id) || this.allPresets[0];
+      const loc = this.allLocations().find(p => p.id === id) || this.allLocations()[0];
       const state = getCelestialState(now, loc.latitude, loc.longitude, loc.timezone);
       const isDay = state.sun.isAboveHorizon || state.twilightState === 'day' || state.twilightState === 'golden_hour';
       

@@ -1,0 +1,11 @@
+:host { display:block; width:100%; max-width:520px; margin:0 auto; }
+    .watch-viewport { width:100%; aspect-ratio:1; display:grid; place-items:center; position:relative; user-select:none; }
+    .watch-svg { width:100%; height:100%; display:block; overflow:visible; filter:drop-shadow(0 var(--space-5) var(--space-12) rgba(0,0,0,.42)); }
+    .watch-hands line { transform-origin:0 0; }
+    .watch-time { fill:var(--color-text-main); font:600 15px/1 "Dekatron", ui-monospace, monospace; letter-spacing:.04em; }
+    .watch-state { fill:var(--color-text-secondary); font:600 5.5px/1 ui-monospace, monospace; letter-spacing:.16em; text-transform:uppercase; }
+    .watch-mark { fill:var(--color-math-orange); font:600 9px/1 "Dekatron", ui-monospace, monospace; letter-spacing:-.08em; }
+    .watch-context { fill:var(--color-text-muted); font:500 5px/1 ui-monospace, monospace; letter-spacing:.08em; }
+    @media (prefers-reduced-motion: reduce) {
+      .watch-svg { filter:none; }
+    }

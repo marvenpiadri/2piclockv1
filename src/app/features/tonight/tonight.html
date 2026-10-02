@@ -1,0 +1,851 @@
+<div class="tonight-observatory">
+
+  <!-- Top Observatory Command Header -->
+  <header class="observatory-command-header">
+    <div class="command-brand-block">
+      <div class="observatory-title-row">
+        <div class="observatory-emblem">
+          <mat-icon>nights_stay</mat-icon>
+        </div>
+        <div>
+          <div class="observatory-kicker">OBSERVATORY ALMANAC · NOCTURNAL DISPATCH</div>
+          <h1 class="observatory-title">Tonight under the Sky</h1>
+        </div>
+      </div>
+      
+      <!-- Unboxed metadata with typographic separators -->
+      <div class="observatory-location-meta">
+        <button type="button" class="location-trigger-btn" (click)="showLocationPicker.set(!showLocationPicker())">
+          <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'flag-inline'"></app-country-flag>
+          <span class="location-name">{{ selectedLocation().name }}</span>
+          <span class="location-country">{{ selectedLocation().country }}</span>
+          <mat-icon class="chevron-sm">expand_more</mat-icon>
+        </button>
+        <span aria-hidden="true" class="meta-sep">·</span>
+        <span class="meta-item font-mono">{{ selectedLocation().latitude >= 0 ? selectedLocation().latitude.toFixed(2) + '°N' : Math.abs(selectedLocation().latitude).toFixed(2) + '°S' }}, {{ selectedLocation().longitude >= 0 ? selectedLocation().longitude.toFixed(2) + '°E' : Math.abs(selectedLocation().longitude).toFixed(2) + '°W' }}</span>
+        <span aria-hidden="true" class="meta-sep">·</span>
+        <span class="meta-item font-mono">{{ selectedLocation().timezone }}</span>
+      </div>
+
+      <!-- Quick Location Picker Modal / Dropdown -->
+      @if (showLocationPicker()) {
+        <div class="location-picker-overlay" (click)="showLocationPicker.set(false)">
+          <div class="location-picker-panel" (click)="$event.stopPropagation()">
+            <div class="picker-search-bar">
+              <mat-icon>search</mat-icon>
+              <input
+                type="search"
+                placeholder="Search global observatory or city..."
+                [value]="locationSearch()"
+                (input)="locationSearch.set($any($event.target).value)" />
+              <button type="button" class="picker-close-btn" (click)="showLocationPicker.set(false)"><mat-icon>close</mat-icon></button>
+            </div>
+            <div class="picker-results-grid">
+              @for (loc of filteredLocations(); track loc.id) {
+                <button type="button" class="picker-result-card" [class.selected]="loc.id === selectedLocation().id" (click)="selectLocation(loc)">
+                  <app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag-picker'"></app-country-flag>
+                  <div class="picker-loc-info">
+                    <strong>{{ loc.name }}</strong>
+                    <span>{{ loc.country }} · {{ loc.timezone }}</span>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Right Header Actions & Live Telemetry Clock -->
+    <div class="command-right-block">
+      <div class="twilight-stage-badge" [attr.data-stage]="currentTwilightStage().code">
+        <span class="stage-dot"></span>
+        <span class="stage-name">{{ currentTwilightStage().name }}</span>
+        <span class="stage-alt font-mono">{{ currentTwilightStage().sunAltRange }}</span>
+      </div>
+
+      <div class="live-clock-card">
+        <div class="live-clock-time font-mono tabular-nums">{{ formattedLocalTime() }}</div>
+        <div class="live-clock-date">{{ formattedLocalDate() }}</div>
+      </div>
+
+      <div class="command-actions">
+        @if (!isLiveMode()) {
+          <button type="button" class="action-btn-live-reset" (click)="resetToLive()">
+            <mat-icon>restart_alt</mat-icon>
+            <span>Reset to Live</span>
+          </button>
+        }
+        <button type="button" class="action-btn-share" (click)="showShareModal.set(true)" title="Share Tonight Almanac">
+          <mat-icon>ios_share</mat-icon>
+          <span class="hidden sm:inline">Share</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Photometric Twilight & Darkness Spectrum Ribbon -->
+  <section class="twilight-spectrum-ribbon" aria-label="Twilight and darkness progression">
+    <div class="spectrum-header">
+      <div class="spectrum-label-group">
+        <span class="spectrum-kicker">PHOTOMETRIC TWILIGHT SPECTRUM</span>
+        <span class="spectrum-duration font-mono">{{ tonightSolarMilestones().darkHoursFormatted }} of true darkness · {{ tonightSolarMilestones().totalNightFormatted }} total night</span>
+      </div>
+      <div class="spectrum-legend">
+        <span class="legend-step"><span class="legend-color color-day"></span>Daylight</span>
+        <span class="legend-step"><span class="legend-color color-civil"></span>Civil (−6°)</span>
+        <span class="legend-step"><span class="legend-color color-nautical"></span>Nautical (−12°)</span>
+        <span class="legend-step"><span class="legend-color color-astro"></span>Astro (−18°)</span>
+        <span class="legend-step"><span class="legend-color color-dark"></span>Dark Sky (<−18°)</span>
+      </div>
+    </div>
+
+    <!-- Continuous Visual Color Ramp Ribbon -->
+    <div class="spectrum-track">
+      <div class="track-segment seg-day" title="Daylight / Golden Hour"></div>
+      <div class="track-segment seg-civil" title="Civil Dusk: Sun between 0° and −6°"></div>
+      <div class="track-segment seg-nautical" title="Nautical Dusk: Sun between −6° and −12°"></div>
+      <div class="track-segment seg-astro" title="Astronomical Dusk: Sun between −12° and −18°"></div>
+      <div class="track-segment seg-dark" title="Astronomical Darkness: Sun below −18°">
+        <span class="dark-window-label"><mat-icon>bedtime</mat-icon> TRUE DARK SKY WINDOW</span>
+      </div>
+      <div class="track-segment seg-astro-dawn" title="Astronomical Dawn: Sun between −18° and −12°"></div>
+      <div class="track-segment seg-nautical-dawn" title="Nautical Dawn: Sun between −12° and −6°"></div>
+      <div class="track-segment seg-civil-dawn" title="Civil Dawn: Sun between −6° and 0°"></div>
+      <div class="track-segment seg-day-end" title="Daylight"></div>
+    </div>
+
+    <!-- Milestones Readout Row -->
+    <div class="milestones-row font-mono tabular-nums">
+      <div class="milestone-col">
+        <span class="ms-name">Sunset</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().sunsetFormatted }}</strong>
+      </div>
+      <div class="milestone-col">
+        <span class="ms-name">Civil Dusk</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().civilDuskFormatted }}</strong>
+      </div>
+      <div class="milestone-col">
+        <span class="ms-name">Nautical</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().nauticalDuskFormatted }}</strong>
+      </div>
+      <div class="milestone-col ms-prime">
+        <span class="ms-name">Full Dark</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().astroDuskFormatted }}</strong>
+      </div>
+      <div class="milestone-col">
+        <span class="ms-name">Nadir</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().solarMidnightFormatted }}</strong>
+      </div>
+      <div class="milestone-col ms-prime">
+        <span class="ms-name">Dark Ends</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().astroDawnFormatted }}</strong>
+      </div>
+      <div class="milestone-col">
+        <span class="ms-name">Nautical</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().nauticalDawnFormatted }}</strong>
+      </div>
+      <div class="milestone-col">
+        <span class="ms-name">Civil Dawn</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().civilDawnFormatted }}</strong>
+      </div>
+      <div class="milestone-col">
+        <span class="ms-name">Sunrise</span>
+        <strong class="ms-time">{{ tonightSolarMilestones().sunriseFormatted }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Night Simulator & Time Machine Slider -->
+  <section class="tonight-scrubber-deck">
+    <div class="scrubber-header">
+      <div class="scrubber-status">
+        <span class="status-indicator" [class.live]="isLiveMode()"></span>
+        <span class="status-text">{{ isLiveMode() ? 'LIVE REAL-TIME OBSERVATION' : 'SIMULATED NIGHTTIME POSITION' }}</span>
+      </div>
+      <div class="scrubber-quick-jumps">
+        <button type="button" class="quick-jump-btn" (click)="jumpToMilestone(0)">Sunset</button>
+        <button type="button" class="quick-jump-btn" (click)="jumpToMilestone(45)">Civil Dusk</button>
+        <button type="button" class="quick-jump-btn" (click)="jumpToMilestone(90)">Full Dark</button>
+        <button type="button" class="quick-jump-btn" (click)="jumpToMilestone(240)">Midnight</button>
+        <button type="button" class="quick-jump-btn" (click)="jumpToMilestone(420)">Pre-Dawn</button>
+        <button type="button" class="quick-jump-btn live-btn" (click)="resetToLive()">Live Now</button>
+      </div>
+    </div>
+    
+    <div class="scrubber-slider-wrap">
+      <span class="scrubber-bound font-mono">Sunset</span>
+      <input
+        type="range"
+        class="nocturnal-slider"
+        min="-60"
+        max="600"
+        step="5"
+        [value]="manualTimeOffsetMinutes()"
+        (input)="onScrubberInput($event)"
+        aria-label="Scrub through tonight's timeline" />
+      <span class="scrubber-bound font-mono">Sunrise</span>
+    </div>
+  </section>
+
+  <!-- Main Observatory Workspace: 2-Column Split (Dome & Seeing HUD) -->
+  <div class="observatory-split-stage">
+
+    <!-- Left / Primary Canvas: Interactive Nocturnal Sky Planisphere Dome -->
+    <section class="sky-planisphere-card">
+      <div class="card-head">
+        <div>
+          <span class="card-kicker">LOCAL SKY PLANISPHERE · STEREOGRAPHIC PROJECTION</span>
+          <h2 class="card-title">All-Sky Nocturnal Dome</h2>
+        </div>
+        <div class="planisphere-controls">
+          <span class="text-xs text-slate-400 font-mono">Click any body to inspect telemetry</span>
+        </div>
+      </div>
+
+      <!-- Planisphere Interactive SVG Dome -->
+      <div class="planisphere-viewport">
+        <svg class="planisphere-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="skyGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#070c18" />
+              <stop offset="65%" stop-color="#050811" />
+              <stop offset="100%" stop-color="#020409" />
+            </radialGradient>
+            <!-- Glowing Moon Filter -->
+            <filter id="moonGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <!-- Glowing Planet Filter -->
+            <filter id="planetGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Outer Celestial Background Dome -->
+          <circle cx="200" cy="200" r="185" fill="url(#skyGrad)" stroke="#1e293b" stroke-width="1.5" />
+
+          <!-- Altitude Reference Rings -->
+          <!-- 0° Horizon boundary -->
+          <circle cx="200" cy="200" r="185" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="3,3" />
+          <!-- 30° Optimal Observing / Low-Airmass Boundary -->
+          <circle cx="200" cy="200" r="123" fill="none" stroke="rgba(37, 99, 235, 0.4)" stroke-width="1" stroke-dasharray="4,4" />
+          <text x="205" y="78" fill="rgba(147, 197, 253, 0.65)" font-size="9" font-family="monospace">30° ALT</text>
+          <!-- 60° Altitude Ring -->
+          <circle cx="200" cy="200" r="61" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,3" />
+          <text x="205" y="140" fill="#475569" font-size="9" font-family="monospace">60° ALT</text>
+          <!-- Zenith Crosshair -->
+          <line x1="194" y1="200" x2="206" y2="200" stroke="#64748b" stroke-width="1" />
+          <line x1="200" y1="194" x2="200" y2="206" stroke="#64748b" stroke-width="1" />
+          <text x="204" y="212" fill="#64748b" font-size="9" font-family="monospace">ZENITH</text>
+
+          <!-- Azimuth Cardinal Rays & Labels -->
+          <line x1="200" y1="15" x2="200" y2="385" stroke="#1e293b" stroke-width="0.8" />
+          <line x1="15" y1="200" x2="385" y2="200" stroke="#1e293b" stroke-width="0.8" />
+
+          <text x="200" y="28" fill="#f8fafc" font-size="12" font-weight="bold" font-family="sans-serif" text-anchor="middle">N</text>
+          <text x="375" y="204" fill="#94a3b8" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">E</text>
+          <text x="200" y="378" fill="#94a3b8" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">S</text>
+          <text x="25" y="204" fill="#94a3b8" font-size="11" font-weight="bold" font-family="sans-serif" text-anchor="middle">W</text>
+
+          <!-- Prominent Navigational Stars -->
+          @for (star of prominentStars(); track star.name) {
+            <g class="star-group" (click)="selectPlanisphereObject(star.name)">
+              <circle
+                [attr.cx]="star.xPct * 4"
+                [attr.cy]="star.yPct * 4"
+                [attr.r]="star.mag < 0 ? 3.2 : star.mag < 1 ? 2.5 : 1.8"
+                fill="#ffffff"
+                opacity="0.85" />
+              <text
+                [attr.x]="star.xPct * 4 + 5"
+                [attr.y]="star.yPct * 4 + 3"
+                fill="#94a3b8"
+                font-size="8.5"
+                font-family="sans-serif"
+                class="star-label">
+                {{ star.name }}
+              </text>
+            </g>
+          }
+
+          <!-- Visible Planets -->
+          @for (planet of planetsTonight(); track planet.name) {
+            @if (planet.isVisibleNow) {
+              <g class="planet-dome-group" (click)="selectPlanisphereObject(planet.name)">
+                <!-- Ambient Glow Ring -->
+                <circle
+                  [attr.cx]="planet.xPct * 4"
+                  [attr.cy]="planet.yPct * 4"
+                  r="9"
+                  [attr.fill]="planet.color"
+                  fill-opacity="0.2"
+                  filter="url(#planetGlow)" />
+                <!-- Center Planet Marker -->
+                <circle
+                  [attr.cx]="planet.xPct * 4"
+                  [attr.cy]="planet.yPct * 4"
+                  r="4.5"
+                  [attr.fill]="planet.color"
+                  stroke="#ffffff"
+                  stroke-width="1" />
+                <!-- Text Label -->
+                <text
+                  [attr.x]="planet.xPct * 4 + 7"
+                  [attr.y]="planet.yPct * 4 - 3"
+                  [attr.fill]="planet.color"
+                  font-size="10"
+                  font-weight="bold"
+                  font-family="sans-serif">
+                  {{ planet.name }} ({{ planet.magnitude.toFixed(1) }})
+                </text>
+              </g>
+            }
+          }
+
+          <!-- The Moon (when above horizon) -->
+          @if (moonDetail().isAboveHorizon) {
+            @let mAlt = moonDetail().altitudeDeg;
+            @let mAz = moonDetail().azimuthDeg;
+            @let mRad = Math.max(0, Math.min(185, ((90 - mAlt) / 90) * 180));
+            @let mAngleRad = (mAz - 90) * (Math.PI / 180);
+            @let mX = 200 + Math.cos(mAngleRad) * mRad;
+            @let mY = 200 + Math.sin(mAngleRad) * mRad;
+
+            <g class="moon-dome-group" (click)="selectPlanisphereObject('moon')">
+              <circle [attr.cx]="mX" [attr.cy]="mY" r="18" fill="rgba(255, 255, 255, 0.12)" filter="url(#moonGlow)" />
+              <circle [attr.cx]="mX" [attr.cy]="mY" r="9" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2" />
+              <text [attr.x]="mX + 13" [attr.y]="mY + 4" fill="#ffffff" font-size="11" font-weight="bold" font-family="sans-serif">
+                Moon ({{ moonDetail().illuminationPct }}%)
+              </text>
+            </g>
+          }
+        </svg>
+
+        <!-- Selected Body Telemetry HUD Card -->
+        @if (selectedBodyInfo()) {
+          <div class="body-telemetry-hud">
+            <div class="hud-top">
+              <div>
+                <span class="hud-cat font-mono">{{ selectedBodyInfo()?.category }}</span>
+                <h3 class="hud-name">{{ selectedBodyInfo()?.name }}</h3>
+              </div>
+              <button type="button" class="hud-close-btn" (click)="selectedPlanisphereObject.set(null)" aria-label="Close telemetry HUD">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="hud-coords font-mono tabular-nums">
+              <span><b>ALT</b> {{ selectedBodyInfo()?.altitude }}</span>
+              <span><b>AZ</b> {{ selectedBodyInfo()?.azimuth }}</span>
+              <span><b>MAG</b> {{ selectedBodyInfo()?.magnitude }}</span>
+            </div>
+            <p class="hud-detail">{{ selectedBodyInfo()?.detail }}</p>
+            <div class="hud-riseset font-mono">{{ selectedBodyInfo()?.riseSet }}</div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Right Column: Moon Conditions & Seeing Score Deck -->
+    <div class="seeing-and-moon-column">
+
+      <!-- Moon Detail & Luminance Card -->
+      <article class="observatory-panel moon-panel">
+        <div class="panel-header">
+          <span class="panel-kicker">LUNAR EPHEMERIS</span>
+          <span class="font-mono text-xs text-amber-400 font-semibold">{{ moonDetail().phaseName }}</span>
+        </div>
+
+        <div class="moon-showcase-row">
+          <div class="moon-render-orb">
+            <svg viewBox="0 0 100 100" class="moon-svg">
+              <circle cx="50" cy="50" r="46" fill="#1e293b" />
+              <circle cx="50" cy="50" r="46" fill="#f8fafc" />
+              @if (moonDetail().illuminationFraction < 0.5) {
+                <path
+                  [attr.d]="'M 50 4 A 46 46 0 0 1 50 96 A ' + (46 * Math.abs(1 - 2 * moonDetail().illuminationFraction)) + ' 46 0 0 ' + (moonDetail().phaseAngleDeg < 90 ? '1' : '0') + ' 50 4'"
+                  fill="#0b0f19" />
+              } @else {
+                <path
+                  [attr.d]="'M 50 4 A 46 46 0 0 0 50 96 A ' + (46 * Math.abs(2 * moonDetail().illuminationFraction - 1)) + ' 46 0 0 ' + (moonDetail().phaseAngleDeg < 90 ? '0' : '1') + ' 50 4'"
+                  fill="#f8fafc" />
+                <path
+                  [attr.d]="'M 50 4 A 46 46 0 0 1 50 96 A 46 46 0 0 1 50 4'"
+                  fill="#0b0f19" />
+                <circle cx="50" cy="50" r="46" fill="#f8fafc" fill-opacity="0.95" />
+              }
+            </svg>
+          </div>
+          
+          <div class="moon-metrics-col font-mono tabular-nums">
+            <div class="metric-item">
+              <span class="lbl">ILLUMINATION</span>
+              <strong class="val text-xl">{{ moonDetail().illuminationPct }}%</strong>
+            </div>
+            <div class="metric-item">
+              <span class="lbl">ALTITUDE</span>
+              <strong class="val">{{ moonDetail().altitudeDeg.toFixed(1) }}°</strong>
+            </div>
+            <div class="metric-item">
+              <span class="lbl">DISTANCE</span>
+              <strong class="val">{{ moonDetail().distanceKm.toLocaleString() }} km</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="lunar-riseset-strip font-mono tabular-nums">
+          <div><span>Moonrise</span><b>{{ moonDetail().riseFormatted }}</b></div>
+          <div><span>Moonset</span><b>{{ moonDetail().setFormatted }}</b></div>
+          <div><span>Horizon</span><b>{{ moonDetail().isAboveHorizon ? 'Above' : 'Below' }}</b></div>
+        </div>
+
+        <!-- Lunar Sky Glare & Interference Meter -->
+        <div class="lunar-glare-card">
+          <div class="glare-header">
+            <span class="glare-title">LUNAR INTERFERENCE INDEX</span>
+            <span class="glare-pct font-mono">{{ moonDetail().interferencePct }}% · {{ moonDetail().interferenceRating }}</span>
+          </div>
+          <div class="glare-bar-bg">
+            <div class="glare-bar-fill" [style.width.%]="moonDetail().interferencePct"></div>
+          </div>
+          <p class="glare-desc">{{ moonDetail().interferenceAdvice }}</p>
+        </div>
+      </article>
+
+      <!-- Stargazing Seeing & Transparency Score Card -->
+      <article class="observatory-panel seeing-panel">
+        <div class="panel-header">
+          <span class="panel-kicker">ATMOSPHERIC SEEING & CLOUD PROFILE</span>
+          <span class="font-mono text-xs text-slate-400">Tonight's Index</span>
+        </div>
+
+        <div class="score-display-row">
+          <div class="score-circle-badge" [class]="stargazingQuality().badgeClass">
+            <span class="score-num font-mono tabular-nums">{{ stargazingQuality().score }}</span>
+            <span class="score-den font-mono">/100</span>
+          </div>
+          <div class="score-copy">
+            <div class="score-rating-title">{{ stargazingQuality().rating }} Stargazing</div>
+            <p class="score-summary">{{ stargazingQuality().summary }}</p>
+          </div>
+        </div>
+
+        <!-- Atmospheric Metrics Grid -->
+        <div class="seeing-metrics-grid font-mono tabular-nums">
+          <div class="seeing-stat">
+            <span class="stat-lbl">CLOUD COVER</span>
+            <strong class="stat-val">{{ stargazingQuality().cloudCoverPct }}%</strong>
+          </div>
+          <div class="seeing-stat">
+            <span class="stat-lbl">HUMIDITY</span>
+            <strong class="stat-val">{{ stargazingQuality().humidityPct }}%</strong>
+          </div>
+          <div class="seeing-stat">
+            <span class="stat-lbl">VISIBILITY</span>
+            <strong class="stat-val">{{ stargazingQuality().visibilityKm }} km</strong>
+          </div>
+          <div class="seeing-stat">
+            <span class="stat-lbl">DEW POINT</span>
+            <strong class="stat-val">{{ stargazingQuality().dewPointC }}°C</strong>
+          </div>
+        </div>
+
+        @if (stargazingQuality().dewWarning) {
+          <div class="dew-warning-callout">
+            <mat-icon>warning</mat-icon>
+            <span>Dew Point Alert: Ambient temperature is close to dew point. Condensation may form on telescope objective optics.</span>
+          </div>
+        }
+      </article>
+    </div>
+  </div>
+
+  <!-- Planetary Ephemeris & Stargazing Almanac Table -->
+  <section class="tonight-table-section">
+    <div class="section-head-bar">
+      <div>
+        <span class="section-kicker">PLANETARY EPHEMERIS & ALMANAC</span>
+        <h2 class="section-title">Visible Planets Tonight</h2>
+      </div>
+      <div class="section-meta-text font-mono">
+        All times calibrated to {{ selectedLocation().timezone }}
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="planetary-table">
+        <thead>
+          <tr>
+            <th>PLANET</th>
+            <th>STATUS</th>
+            <th>MAGNITUDE</th>
+            <th>ALTITUDE</th>
+            <th>AZIMUTH</th>
+            <th>CONSTELLATION</th>
+            <th>RISE</th>
+            <th>TRANSIT</th>
+            <th>SET</th>
+            <th>EQUIPMENT</th>
+          </tr>
+        </thead>
+        <tbody class="font-mono tabular-nums">
+          @for (planet of planetsTonight(); track planet.name) {
+            <tr [class.highlighted]="planet.isVisibleNow" (click)="selectPlanisphereObject(planet.name)">
+              <td class="td-planet font-sans">
+                <span class="planet-dot" [style.backgroundColor]="planet.color"></span>
+                <strong>{{ planet.name }}</strong>
+                <span class="planet-glyph">{{ planet.symbol }}</span>
+              </td>
+              <td>
+                <span class="status-indicator-tag" [class.optimal]="planet.viewingStatus === 'Optimal Visibility'" [class.visible]="planet.viewingStatus === 'Visible Low'" [class.below]="planet.viewingStatus === 'Below Horizon'">
+                  {{ planet.viewingStatus }}
+                </span>
+              </td>
+              <td>{{ planet.magnitude.toFixed(1) }}</td>
+              <td [class.text-emerald-400]="planet.altitudeDeg > 30">{{ planet.altitudeDeg.toFixed(1) }}°</td>
+              <td>{{ planet.azimuthDeg.toFixed(0) }}°</td>
+              <td class="font-sans">{{ planet.constellation }}</td>
+              <td>{{ planet.riseTime }}</td>
+              <td>{{ planet.transitTime }}</td>
+              <td>{{ planet.setTime }}</td>
+              <td class="font-sans text-xs text-slate-300">{{ planet.equipment }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Visual 12-Hour Multi-Object Altitude Curve & Night Sky Trajectory -->
+  <section class="tonight-altitude-chart-card">
+    <div class="chart-header-row">
+      <div>
+        <div class="section-kicker">VISUAL NIGHT SKY JOURNEY</div>
+        <h2 class="section-title">When & Where to Look Tonight</h2>
+        <p class="section-subtitle">Visual celestial path across your local nocturnal sky dome from sunset to sunrise</p>
+      </div>
+      <div class="curve-toggles">
+        <button type="button" class="toggle-pill pill-moon" [class.active]="showCurveMoon()" (click)="showCurveMoon.set(!showCurveMoon())">
+          <span class="pill-dot"></span>Moon
+        </button>
+        <button type="button" class="toggle-pill pill-jupiter" [class.active]="showCurveJupiter()" (click)="showCurveJupiter.set(!showCurveJupiter())">
+          <span class="pill-dot"></span>Jupiter
+        </button>
+        <button type="button" class="toggle-pill pill-saturn" [class.active]="showCurveSaturn()" (click)="showCurveSaturn.set(!showCurveSaturn())">
+          <span class="pill-dot"></span>Saturn
+        </button>
+        <button type="button" class="toggle-pill pill-venus" [class.active]="showCurveVenus()" (click)="showCurveVenus.set(!showCurveVenus())">
+          <span class="pill-dot"></span>Venus
+        </button>
+        <button type="button" class="toggle-pill pill-mars" [class.active]="showCurveMars()" (click)="showCurveMars.set(!showCurveMars())">
+          <span class="pill-dot"></span>Mars
+        </button>
+      </div>
+    </div>
+
+    <div class="altitude-svg-wrapper">
+      <svg class="altitude-svg" viewBox="0 0 800 240" preserveAspectRatio="none">
+        <defs>
+          <!-- Dark Midnight Blue Sky Gradient -->
+          <linearGradient id="midnightSkyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#040b1e" />
+            <stop offset="35%" stop-color="#081436" />
+            <stop offset="70%" stop-color="#0a1a44" />
+            <stop offset="100%" stop-color="#030818" />
+          </linearGradient>
+
+          <!-- Area Fills with Gentle Dark Midnight Luminous Gradients -->
+          <linearGradient id="moonAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
+          </linearGradient>
+          <linearGradient id="jupiterAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fed7aa" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#fed7aa" stop-opacity="0.0" />
+          </linearGradient>
+          <linearGradient id="saturnAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fde047" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#fde047" stop-opacity="0.0" />
+          </linearGradient>
+          <linearGradient id="venusAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fef08a" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#fef08a" stop-opacity="0.0" />
+          </linearGradient>
+          <linearGradient id="marsAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f87171" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#f87171" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        <!-- Dark Midnight Sky Canvas -->
+        <rect width="800" height="240" fill="url(#midnightSkyGrad)" />
+
+        <!-- Starfield Pinpricks in Dark Sky -->
+        <g class="night-stars" opacity="0.65">
+          <circle cx="65" cy="35" r="1" fill="#ffffff" opacity="0.8" />
+          <circle cx="112" cy="72" r="0.8" fill="#ffffff" opacity="0.5" />
+          <circle cx="178" cy="28" r="1.2" fill="#ffffff" opacity="0.9" />
+          <circle cx="245" cy="54" r="0.9" fill="#ffffff" opacity="0.6" />
+          <circle cx="310" cy="22" r="1.1" fill="#ffffff" opacity="0.7" />
+          <circle cx="380" cy="46" r="0.8" fill="#ffffff" opacity="0.5" />
+          <circle cx="435" cy="18" r="1.3" fill="#ffffff" opacity="0.9" />
+          <circle cx="510" cy="62" r="0.9" fill="#ffffff" opacity="0.6" />
+          <circle cx="578" cy="32" r="1.1" fill="#ffffff" opacity="0.8" />
+          <circle cx="642" cy="58" r="0.8" fill="#ffffff" opacity="0.5" />
+          <circle cx="705" cy="24" r="1.2" fill="#ffffff" opacity="0.75" />
+          <circle cx="752" cy="68" r="0.9" fill="#ffffff" opacity="0.6" />
+          <circle cx="140" cy="110" r="0.8" fill="#ffffff" opacity="0.4" />
+          <circle cx="280" cy="98" r="1" fill="#ffffff" opacity="0.5" />
+          <circle cx="490" cy="105" r="0.9" fill="#ffffff" opacity="0.5" />
+          <circle cx="620" cy="92" r="0.8" fill="#ffffff" opacity="0.4" />
+        </g>
+
+        <!-- Ground Zone (Below Horizon) -->
+        <rect x="0" [attr.y]="svgCurvePaths().zeroAltY" width="800" [attr.height]="240 - svgCurvePaths().zeroAltY" fill="#02040a" fill-opacity="0.85" />
+        <text x="45" [attr.y]="svgCurvePaths().zeroAltY + 24" fill="#475569" font-size="9.5" font-family="monospace">▼ BELOW HORIZON (NOT VISIBLE YET)</text>
+
+        <!-- 60° Overhead Reference Line -->
+        <line x1="40" [attr.y1]="svgCurvePaths().sixtyAltY" x2="760" [attr.y2]="svgCurvePaths().sixtyAltY" stroke="rgba(30, 58, 138, 0.4)" stroke-width="1" stroke-dasharray="2,3" />
+        <text x="45" [attr.y]="svgCurvePaths().sixtyAltY - 4" fill="#64748b" font-size="9" font-family="monospace">+60° HIGH OVERHEAD (CLEAREST VIEWS)</text>
+
+        <!-- 30° Prime Visibility Reference Line -->
+        <line x1="40" [attr.y1]="svgCurvePaths().thirtyAltY" x2="760" [attr.y2]="svgCurvePaths().thirtyAltY" stroke="rgba(37, 99, 235, 0.45)" stroke-width="1" stroke-dasharray="3,3" />
+        <text x="45" [attr.y]="svgCurvePaths().thirtyAltY - 4" fill="#93c5fd" font-size="9" font-family="monospace">+30° PRIME VISIBILITY (ABOVE HORIZON HAZE)</text>
+
+        <!-- 0° Horizon Line -->
+        <line x1="40" [attr.y1]="svgCurvePaths().zeroAltY" x2="760" [attr.y2]="svgCurvePaths().zeroAltY" stroke="#334155" stroke-width="1.2" stroke-dasharray="4,4" />
+        <text x="755" [attr.y]="svgCurvePaths().zeroAltY - 5" fill="#94a3b8" font-size="9.5" font-family="monospace" text-anchor="end">0° HORIZON</text>
+
+        <!-- Sun Altitude Curve (Sun dipping down to Nadir and back) -->
+        <path [attr.d]="svgCurvePaths().sun" fill="none" stroke="#ea580c" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="3,3" />
+
+        <!-- Area Fills & Smooth Visual Arcs for Planets & Moon -->
+        @if (showCurveMoon()) {
+          <path [attr.d]="svgCurvePaths().moonArea" fill="url(#moonAreaGrad)" />
+          <path [attr.d]="svgCurvePaths().moon" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" />
+        }
+
+        @if (showCurveJupiter()) {
+          <path [attr.d]="svgCurvePaths().jupiterArea" fill="url(#jupiterAreaGrad)" />
+          <path [attr.d]="svgCurvePaths().jupiter" fill="none" stroke="#fed7aa" stroke-width="2" stroke-linecap="round" />
+        }
+
+        @if (showCurveSaturn()) {
+          <path [attr.d]="svgCurvePaths().saturnArea" fill="url(#saturnAreaGrad)" />
+          <path [attr.d]="svgCurvePaths().saturn" fill="none" stroke="#fde047" stroke-width="2" stroke-linecap="round" />
+        }
+
+        @if (showCurveVenus()) {
+          <path [attr.d]="svgCurvePaths().venusArea" fill="url(#venusAreaGrad)" />
+          <path [attr.d]="svgCurvePaths().venus" fill="none" stroke="#fef08a" stroke-width="2" stroke-linecap="round" />
+        }
+
+        @if (showCurveMars()) {
+          <path [attr.d]="svgCurvePaths().marsArea" fill="url(#marsAreaGrad)" />
+          <path [attr.d]="svgCurvePaths().mars" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" />
+        }
+
+        <!-- Interactive Visual Peak Badges on Celestial Arcs -->
+        @for (peak of svgCurvePaths().peaks; track peak.id) {
+          @if (isCurveActive(peak.id) && peak.isVisible) {
+            <g class="peak-badge-group">
+              <circle [attr.cx]="peak.x" [attr.cy]="peak.y" r="8" [attr.fill]="peak.color" fill-opacity="0.25" />
+              <circle [attr.cx]="peak.x" [attr.cy]="peak.y" r="4" [attr.fill]="peak.color" stroke="#040b1e" stroke-width="1.5" />
+              <!-- Floating Midnight Pill Label -->
+              <rect
+                [attr.x]="Math.min(640, Math.max(50, peak.x - 65))"
+                [attr.y]="peak.y > 45 ? peak.y - 30 : peak.y + 12"
+                width="130"
+                height="22"
+                rx="11"
+                fill="#050e26"
+                stroke="#1e3a8a"
+                stroke-width="1" />
+              <text
+                [attr.x]="Math.min(640, Math.max(50, peak.x - 65)) + 65"
+                [attr.y]="peak.y > 45 ? peak.y - 15 : peak.y + 27"
+                fill="#f8fafc"
+                font-size="9"
+                font-weight="bold"
+                font-family="sans-serif"
+                text-anchor="middle">
+                {{ peak.name }} · Peak {{ peak.timeLabel }} ({{ peak.alt }}°)
+              </text>
+            </g>
+          }
+        }
+
+        <!-- Current Observation Time Indicator Needle -->
+        @if (svgCurvePaths().currentTimeX !== null) {
+          <g class="current-time-marker">
+            <line [attr.x1]="svgCurvePaths().currentTimeX" y1="12" [attr.x2]="svgCurvePaths().currentTimeX" y2="225" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3" />
+            <rect [attr.x]="(svgCurvePaths().currentTimeX ?? 0) - 22" y="6" width="44" height="15" rx="3" fill="#0c1d47" stroke="#2563eb" stroke-width="0.8" />
+            <text [attr.x]="svgCurvePaths().currentTimeX" y="17" fill="#93c5fd" font-size="8.5" font-weight="bold" font-family="monospace" text-anchor="middle">NOW</text>
+          </g>
+        }
+      </svg>
+
+      <!-- Time Axis Labels Row -->
+      <div class="altitude-time-axis font-mono tabular-nums">
+        @for (pt of altitudeCurves(); track pt.hourLabel) {
+          <span>{{ pt.hourLabel }}</span>
+        }
+      </div>
+
+      <!-- Intuitive Visual "When to Spot Them Tonight" Guide Cards Deck -->
+      <div class="visual-sky-guide-deck">
+        <div class="guide-deck-header">
+          <span class="guide-kicker font-mono">VISUAL TIMELINE · WHEN TO LOOK OUTSIDE</span>
+          <span class="guide-hint">Click any body to toggle its path above</span>
+        </div>
+
+        <div class="guide-cards-grid">
+          @for (guide of celestialVisibilityGuides(); track guide.id) {
+            <div
+              class="celestial-guide-card"
+              [class.active]="isCurveActive(guide.id)"
+              (click)="toggleCurve(guide.id)"
+              [attr.title]="'Click to toggle ' + guide.name + ' sky path'">
+              <div class="guide-card-top">
+                <div class="guide-planet-badge">
+                  <span class="guide-orb" [style.backgroundColor]="guide.color"></span>
+                  <strong>{{ guide.name }}</strong>
+                  <span class="guide-symbol">{{ guide.symbol }}</span>
+                </div>
+                <span
+                  class="guide-status-tag"
+                  [class.optimal]="guide.peakAlt > 45"
+                  [class.visible]="guide.peakAlt > 20 && guide.peakAlt <= 45"
+                  [class.low]="guide.peakAlt > 0 && guide.peakAlt <= 20"
+                  [class.below]="!guide.isVisibleTonight">
+                  {{ guide.statusBadge }}
+                </span>
+              </div>
+
+              <div class="guide-card-peak font-mono">
+                @if (guide.isVisibleTonight) {
+                  <div class="peak-time-row">
+                    <span class="lbl">BEST TIME:</span>
+                    <strong class="val">{{ guide.peakTime }}</strong>
+                    <span class="alt-val">({{ guide.peakAlt }}° high)</span>
+                  </div>
+                } @else {
+                  <div class="peak-time-row text-slate-500">
+                    <span>Below horizon tonight</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Visual Mini-Timeline Track -->
+              <div class="guide-timeline-bar-wrap">
+                <div class="guide-timeline-track">
+                  @if (guide.isVisibleTonight) {
+                    <div
+                      class="guide-timeline-fill"
+                      [style.left.%]="guide.timelineStartPct"
+                      [style.width.%]="Math.max(6, guide.timelineEndPct - guide.timelineStartPct)"
+                      [style.backgroundColor]="guide.color">
+                    </div>
+                  }
+                </div>
+                <div class="guide-timeline-labels font-mono">
+                  <span>Dusk</span>
+                  <span>Midnight</span>
+                  <span>Dawn</span>
+                </div>
+              </div>
+
+              <p class="guide-tip">{{ guide.viewingTip }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tonight's Deep-Sky Targets & Observing Checklist -->
+  <section class="targets-checklist-section">
+    <div class="section-head-bar">
+      <div>
+        <span class="section-kicker">OBSERVING LOG & TARGET LIST</span>
+        <h2 class="section-title">Tonight's Prime Deep-Sky Targets</h2>
+      </div>
+      <div class="section-meta-text font-mono">
+        {{ checkedTargetIds().size }} / {{ deepSkyTargets().length }} targets logged tonight
+      </div>
+    </div>
+
+    <div class="targets-cards-grid">
+      @for (target of deepSkyTargets(); track target.id) {
+        <article class="target-card" [class.is-observed]="target.observed" (click)="toggleTarget(target.id)">
+          <div class="target-card-top">
+            <div class="checkbox-circle" [class.checked]="target.observed">
+              @if (target.observed) {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </div>
+            <div class="target-heading">
+              <span class="target-catalog font-mono">{{ target.catalog }} · {{ target.constellation }}</span>
+              <h3 class="target-name">{{ target.name }}</h3>
+            </div>
+            <span class="target-type-badge">{{ target.type }}</span>
+          </div>
+
+          <p class="target-desc">{{ target.description }}</p>
+
+          <div class="target-footer-meta font-mono">
+            <span><b>MAG</b> {{ target.magnitude }}</span>
+            <span aria-hidden="true">·</span>
+            <span><b>OPTICS</b> {{ target.optics }}</span>
+            <span aria-hidden="true">·</span>
+            <span class="text-amber-400"><b>WINDOW</b> {{ target.bestTime }}</span>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- Bottom Navigation & Stargazing Tools Link Out -->
+  <footer class="tonight-footer-nav">
+    <div class="footer-links-group">
+      <a [routerLink]="['/', selectedLocation().id, 'stargazing']" class="footer-link-card">
+        <mat-icon>flare</mat-icon>
+        <div>
+          <strong>Stargazing Planner</strong>
+          <span>Calculate Bortle scale, moonless hours & gear planning</span>
+        </div>
+        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+      </a>
+
+      <a [routerLink]="['/', selectedLocation().id, 'astronomy']" class="footer-link-card">
+        <mat-icon>auto_awesome</mat-icon>
+        <div>
+          <strong>Astronomy Suite</strong>
+          <span>Full solar & lunar calculators, ephemeris curves & solstices</span>
+        </div>
+        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+      </a>
+
+      <a [routerLink]="['/', selectedLocation().id, 'satellites']" class="footer-link-card">
+        <mat-icon>satellite_alt</mat-icon>
+        <div>
+          <strong>Satellite Tracker</strong>
+          <span>Track ISS passes, Tiangong & Starlink trains tonight</span>
+        </div>
+        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+      </a>
+    </div>
+  </footer>
+
+  @if (showShareModal()) {
+    <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal>
+  }
+</div>

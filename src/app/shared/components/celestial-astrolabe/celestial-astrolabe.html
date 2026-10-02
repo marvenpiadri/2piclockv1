@@ -1,0 +1,104 @@
+<div class="watch-viewport" role="img" aria-label="2piClock celestial watch">
+      <svg class="watch-svg" viewBox="-160 -160 320 320" aria-hidden="true">
+        <defs>
+          <radialGradient id="watchFace" cx="50%" cy="42%" r="68%">
+            <stop offset="0%" [attr.stop-color]="skyGradientColors().inner" />
+            <stop offset="68%" [attr.stop-color]="skyGradientColors().mid" />
+            <stop offset="100%" [attr.stop-color]="skyGradientColors().outer" />
+          </radialGradient>
+          <radialGradient id="watchSun" cx="32%" cy="28%" r="70%">
+            <stop offset="0%" stop-color="#fff8cf" />
+            <stop offset="35%" stop-color="#ffd86a" />
+            <stop offset="72%" stop-color="#f4a51c" />
+            <stop offset="100%" stop-color="#c97812" />
+          </radialGradient>
+          <radialGradient id="watchMoon" cx="27%" cy="24%" r="76%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="22%" stop-color="#ffffff" />
+            <stop offset="55%" stop-color="#f8fafc" />
+            <stop offset="82%" stop-color="#e2e8f0" />
+            <stop offset="100%" stop-color="#cbd5e1" />
+          </radialGradient>
+          <filter id="watchGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        <!-- One clean celestial bezel -->
+        <circle r="153" fill="rgba(5,8,13,.78)" stroke="rgba(245,158,11,.32)" stroke-width="1.5" />
+        <circle r="148" fill="url(#watchFace)" stroke="rgba(255,255,255,.10)" stroke-width="1" />
+        <circle r="126" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8" />
+        <circle r="101" fill="none" stroke="rgba(255,255,255,.055)" stroke-width=".7" />
+
+        <!-- 24-hour celestial ring: small, quiet, useful -->
+        @for (hour of hourTicks; track hour.index) {
+          <g [attr.transform]="'rotate(' + hour.angle + ')'">
+            <line x1="0" [attr.y1]="hour.isMajor ? '-148' : '-145'" x2="0" y2="-140"
+              [attr.stroke]="hour.isQuarter ? 'rgba(245,158,11,.75)' : 'rgba(255,255,255,.24)'"
+              [attr.stroke-width]="hour.isQuarter ? '1.4' : '.8'" />
+          </g>
+        }
+
+        <!-- Cardinal time anchors -->
+        <text x="0" y="-132" fill="rgba(255,220,130,.82)" font-size="7" font-family="monospace" text-anchor="middle">12</text>
+        <text x="132" y="2.5" fill="rgba(255,220,130,.65)" font-size="7" font-family="monospace" text-anchor="middle">18</text>
+        <text x="0" y="137" fill="rgba(255,220,130,.65)" font-size="7" font-family="monospace" text-anchor="middle">00</text>
+        <text x="-132" y="2.5" fill="rgba(255,220,130,.65)" font-size="7" font-family="monospace" text-anchor="middle">06</text>
+
+        <!-- V2.0: real bright-star field projected from RA/Dec into the local sky. -->
+        @for (star of visibleStars(); track star.name) {
+          <circle
+            [attr.cx]="star.x"
+            [attr.cy]="star.y"
+            [attr.r]="star.radius"
+            [attr.opacity]="star.opacity"
+            fill="#f8fafc" />
+        }
+
+        <!-- Actual celestial positions -->
+        <line x1="0" y1="0" [attr.x2]="sunCoords().x" [attr.y2]="sunCoords().y"
+          stroke="rgba(245,158,11,.16)" stroke-width="1" />
+        <line x1="0" y1="0" [attr.x2]="moonCoords().x" [attr.y2]="moonCoords().y"
+          stroke="rgba(226,232,240,.12)" stroke-width="1" />
+
+        <g [attr.transform]="'translate(' + sunCoords().x + ',' + sunCoords().y + ')'">
+          <circle r="13" fill="rgba(245,158,11,.16)" filter="url(#watchGlow)" />
+          <circle r="6.5" fill="url(#watchSun)" stroke="rgba(255,232,160,.9)" stroke-width=".8" />
+        </g>
+
+        <g [attr.transform]="'translate(' + moonCoords().x + ',' + moonCoords().y + ')'">
+          <circle r="11" fill="rgba(248,250,252,.14)" filter="url(#watchGlow)" />
+          <circle r="6.2" fill="url(#watchMoon)" stroke="rgba(255,255,255,.85)" stroke-width=".7" />
+          <ellipse cx="-1.8" cy="-2.1" rx="2.2" ry="1.3" fill="rgba(255,255,255,.34)" />
+          <path [attr.d]="moonTerminatorPath()" fill="rgba(15,23,42,.82)" />
+        </g>
+
+        <!-- Actual watch hands -->
+        <g class="watch-hands">
+          <line x1="0" y1="7" x2="0" y2="-57"
+            [attr.transform]="'rotate(' + (localDayFraction() * 720) + ')'"
+            stroke="#fffdf5" stroke-width="3.2" stroke-linecap="round" />
+          <line x1="0" y1="8" x2="0" y2="-82"
+            [attr.transform]="'rotate(' + (localDayFraction() * 8640) + ')'"
+            stroke="#f4b52b" stroke-width="2" stroke-linecap="round" />
+          <line x1="0" y1="10" x2="0" y2="-91"
+            [attr.transform]="'rotate(' + secondHandAngle() + ')'"
+            stroke="rgba(255,255,255,.7)" stroke-width=".8" stroke-linecap="round" />
+          <circle r="4.5" fill="#f5ad20" stroke="#fff4c4" stroke-width=".8" />
+          <circle r="1.6" fill="#1b1408" />
+        </g>
+
+        <!-- Quiet center readout -->
+        <text x="0" y="28" class="watch-time" text-anchor="middle">{{ localTimeLabel() }}</text>
+        <text x="0" y="40" class="watch-state" text-anchor="middle">{{ twilightStateLabel() }}</text>
+
+        <!-- 2pi identity, integrated rather than branded as a telemetry label -->
+        <text x="0" y="-27" class="watch-mark" text-anchor="middle">2π</text>
+
+        <!-- Small astronomical context -->
+        <text x="-92" y="116" class="watch-context" text-anchor="middle">SUN {{ sunAltitude().toFixed(0) }}°</text>
+        <text x="92" y="116" class="watch-context" text-anchor="middle">MOON {{ moonAltitude().toFixed(0) }}°</text>
+      </svg>
+    </div>
+  `

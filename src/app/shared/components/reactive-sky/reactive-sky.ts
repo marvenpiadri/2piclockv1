@@ -6,12 +6,13 @@ import {
   OnInit,
   PLATFORM_ID,
   ViewChild,
-  inject
+  inject, Input
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CelestialService } from '../../../core/services/celestial.service';
 import { CelestialState } from '../../../core/models/celestial.model';
 import { WeatherData, AtmosphericState } from '../../../core/models/weather.model';
+import { PlanetaryPosition } from '../../../core/services/precision-astronomy.service';
 
 interface Star {
   x: number; // 0 to 1 normalized
@@ -21,6 +22,9 @@ interface Star {
   flickerSpeed: number;
   flickerPhase: number;
   color: string;
+  raDeg?: number;
+  decDeg?: number;
+  magnitude?: number;
 }
 
 interface CloudParticle {
@@ -76,6 +80,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
   readonly atmosphericState = this.celestialService.atmosphericState;
+
+  @Input() sleepMode = false;
 
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrameId: number | null = null;
@@ -164,8 +170,41 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     window.addEventListener('resize', this.resizeHandler, { passive: true });
   }
 
+  private readonly brightStarCatalog: { name: string; raDeg: number; decDeg: number; magnitude: number; color: string }[] = [
+    { name: 'Sirius', raDeg: 101.287, decDeg: -16.716, magnitude: -1.46, color: 'rgba(235,245,255,' },
+    { name: 'Canopus', raDeg: 95.988, decDeg: -52.696, magnitude: -0.74, color: 'rgba(255,245,225,' },
+    { name: 'Arcturus', raDeg: 213.915, decDeg: 19.182, magnitude: -0.05, color: 'rgba(255,225,190,' },
+    { name: 'Vega', raDeg: 279.235, decDeg: 38.784, magnitude: 0.03, color: 'rgba(225,240,255,' },
+    { name: 'Capella', raDeg: 79.172, decDeg: 45.998, magnitude: 0.08, color: 'rgba(255,245,215,' },
+    { name: 'Rigel', raDeg: 78.634, decDeg: -8.202, magnitude: 0.13, color: 'rgba(215,235,255,' },
+    { name: 'Procyon', raDeg: 114.826, decDeg: 5.225, magnitude: 0.34, color: 'rgba(245,245,255,' },
+    { name: 'Achernar', raDeg: 24.429, decDeg: -57.237, magnitude: 0.46, color: 'rgba(225,240,255,' },
+    { name: 'Betelgeuse', raDeg: 88.793, decDeg: 7.407, magnitude: 0.50, color: 'rgba(255,205,175,' },
+    { name: 'Hadar', raDeg: 210.956, decDeg: -60.373, magnitude: 0.61, color: 'rgba(220,235,255,' },
+    { name: 'Altair', raDeg: 297.696, decDeg: 8.868, magnitude: 0.77, color: 'rgba(235,245,255,' },
+    { name: 'Aldebaran', raDeg: 69.996, decDeg: 16.509, magnitude: 0.85, color: 'rgba(255,220,185,' },
+    { name: 'Spica', raDeg: 201.298, decDeg: -11.161, magnitude: 0.97, color: 'rgba(220,235,255,' },
+    { name: 'Antares', raDeg: 247.352, decDeg: -26.432, magnitude: 1.06, color: 'rgba(255,205,180,' },
+    { name: 'Pollux', raDeg: 116.329, decDeg: 28.026, magnitude: 1.14, color: 'rgba(255,240,205,' },
+    { name: 'Fomalhaut', raDeg: 344.413, decDeg: -29.622, magnitude: 1.16, color: 'rgba(225,240,255,' },
+    { name: 'Deneb', raDeg: 310.358, decDeg: 45.280, magnitude: 1.25, color: 'rgba(225,240,255,' },
+    { name: 'Regulus', raDeg: 152.093, decDeg: 11.967, magnitude: 1.35, color: 'rgba(245,245,255,' },
+    { name: 'Castor', raDeg: 113.650, decDeg: 31.888, magnitude: 1.58, color: 'rgba(230,240,255,' },
+    { name: 'Bellatrix', raDeg: 81.283, decDeg: 6.350, magnitude: 1.64, color: 'rgba(220,235,255,' },
+    { name: 'Alnilam', raDeg: 84.053, decDeg: -1.202, magnitude: 1.69, color: 'rgba(220,235,255,' },
+    { name: 'Alnitak', raDeg: 85.190, decDeg: -1.943, magnitude: 1.74, color: 'rgba(220,235,255,' },
+    { name: 'Mirfak', raDeg: 51.080, decDeg: 49.861, magnitude: 1.79, color: 'rgba(245,235,215,' },
+    { name: 'Dubhe', raDeg: 165.932, decDeg: 61.751, magnitude: 1.79, color: 'rgba(255,235,205,' },
+    { name: 'Kochab', raDeg: 222.676, decDeg: 74.155, magnitude: 2.08, color: 'rgba(255,220,185,' },
+    { name: 'Denebola', raDeg: 177.265, decDeg: 14.572, magnitude: 2.14, color: 'rgba(235,245,255,' },
+    { name: 'Mintaka', raDeg: 83.001, decDeg: -0.299, magnitude: 2.23, color: 'rgba(225,240,255,' },
+    { name: 'Merak', raDeg: 165.460, decDeg: 56.382, magnitude: 2.37, color: 'rgba(225,240,255,' },
+    { name: 'Alnair', raDeg: 332.058, decDeg: -46.961, magnitude: 1.74, color: 'rgba(225,240,255,' }
+  ];
+
   private initStars(): void {
-    const starCount = 320;
+    // Keep the procedural field sparse; the real catalogue supplies the astronomical identity.
+    const starCount = 180;
     this.stars = [];
 
     let seed = 42;
@@ -185,8 +224,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     for (let i = 0; i < starCount; i++) {
       const x = rnd();
       const y = Math.pow(rnd(), 1.35) * 0.88;
-      const radius = 0.5 + rnd() * 1.5;
-      const baseBrightness = 0.35 + rnd() * 0.65;
+      const radius = 0.45 + rnd() * 1.05;
+      const baseBrightness = 0.28 + rnd() * 0.55;
       const flickerSpeed = 0.001 + rnd() * 0.004;
       const flickerPhase = rnd() * Math.PI * 2;
       const color = colors[Math.floor(rnd() * colors.length)];
@@ -201,11 +240,29 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         color
       });
     }
+
+    // Overlay real bright-star references. Their screen positions are resolved
+    // every frame from the selected observer/date, while the procedural field
+    // preserves the quiet density of a natural night sky.
+    for (const star of this.brightStarCatalog) {
+      this.stars.push({
+        x: 0,
+        y: 0,
+        radius: Math.max(0.8, Math.min(2.2, 1.85 - star.magnitude * 0.24)),
+        baseBrightness: 0.95,
+        flickerSpeed: 0.0015,
+        flickerPhase: Math.random() * Math.PI * 2,
+        color: star.color,
+        raDeg: star.raDeg,
+        decDeg: star.decDeg,
+        magnitude: star.magnitude
+      });
+    }
   }
 
   private initClouds(): void {
     this.clouds = [];
-    const count = 55;
+    const count = 42;
     for (let i = 0; i < count; i++) {
       const layer = Math.floor(Math.random() * 3);
       // layer 0: low stratus, layer 1: mid cumulus, layer 2: high cirrus
@@ -218,7 +275,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         y: baseY,
         radiusX: rx,
         radiusY: ry,
-        opacity: 0.12 + Math.random() * 0.38,
+        opacity: 0.08 + Math.random() * 0.24,
         speed: (layer === 2 ? 0.00002 : (layer === 0 ? 0.00007 : 0.00004)) + Math.random() * 0.00005,
         layer
       });
@@ -259,23 +316,13 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   private startRenderLoop(): void {
     let lastTime = performance.now();
-    let renderAccumulator = 0;
-    // The sky is a background layer, so 30 FPS is enough for smooth celestial
-    // motion while avoiding unnecessary full-canvas work on every browser frame.
-    const targetFrameMs = 1000 / 30;
 
     const render = (time: number) => {
-      const frameDelta = Math.min(Math.max(0, time - lastTime), 100);
+      const delta = Math.min(time - lastTime, 100);
       lastTime = time;
-      renderAccumulator += frameDelta;
 
-      if (renderAccumulator >= targetFrameMs) {
-        const delta = renderAccumulator;
-        renderAccumulator = 0;
-        this.updateInterpolation(delta);
-        this.drawScene(time, delta);
-      }
-
+      this.updateInterpolation(delta);
+      this.drawScene(time, delta);
       this.animFrameId = requestAnimationFrame(render);
     };
 
@@ -311,23 +358,23 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const atmos = this.atmosphericState();
     const isSouthern = this.celestialService.selectedLocation().latitude < 0;
 
-    const sunAlt = celestial.sun.altitudeDeg;
+    const sunAlt = this.sleepMode ? Math.min(celestial.sun.altitudeDeg, -12) : celestial.sun.altitudeDeg;
     const sunAz = celestial.sun.azimuthDeg;
     const moonAlt = celestial.moon.altitudeDeg;
 
     // 1. Draw Layered Atmospheric Sky Gradient
     this.drawSkyGradient(ctx, w, h, sunAlt, sunAz, weather, atmos);
 
-    // 2. Astrolabe & Equinoctial Coordinate Datum Grid
-    this.drawAstrolabeGrid(ctx, w, h, sunAlt, celestial, isSouthern);
-
-    // 3. Draw Aurora Borealis / Australis Curtains (when active or polar night)
+    // 2. Draw Aurora Borealis / Australis Curtains (when active or polar night)
     if (this.interp.auroraActivity > 0.02 && sunAlt < -6) {
       this.drawAurora(ctx, w, h, sunAlt, this.interp.auroraActivity, time);
     }
 
     // 4. Draw Stars with Astronomical Extinction, Lunar Washout & Winter Crispness
     this.drawStars(ctx, w, h, sunAlt, celestial, weather, atmos, time);
+
+    // 4b. V2.0 constellation geometry — subtle lines only, never a chart overlay.
+    this.drawConstellations(ctx, w, h, celestial, sunAlt);
 
     // 5. Draw Solar Horizon Flare / Twilight Scattering Arch
     this.drawSolarGlow(ctx, w, h, sunAlt, sunAz, weather, isSouthern);
@@ -336,6 +383,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     if (moonAlt > -8) {
       this.drawMoon(ctx, w, h, celestial, weather, atmos, isSouthern);
     }
+
+    // 6b. V2.0 real planetary positions from the shared precision astronomy engine.
+    this.drawPlanets(ctx, w, h, sunAlt, this.celestialService.planetaryPositions());
 
     // 7. Draw Sun Disc, Refraction Oblateness, UV Corona & Solar Eclipse
     if (sunAlt > -10) {
@@ -348,8 +398,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     // 9. Draw Weather Precipitation, Storms, Fog, Frost & Dust Haze Particles
     this.drawWeatherEffects(ctx, w, h, weather, atmos, delta, time);
 
-    // 10. Draw Horizon Baseline with Compass Bearings & Heat Shimmer
-    this.drawHorizonLine(ctx, w, h, sunAlt, weather, atmos, isSouthern, time);
+    // Keep the horizon visually clean; the astronomical details belong to the UI surfaces, not the atmosphere.
   }
 
   /**
@@ -365,7 +414,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   ): void {
     const horizonY = h * 0.90;
     const isNight = sunAlt < -6;
-    const gridAlpha = isNight ? 0.07 : 0.035;
+    const gridAlpha = isNight ? 0.018 : 0.008;
 
     ctx.save();
     ctx.strokeStyle = `rgba(245, 158, 11, ${gridAlpha})`;
@@ -543,7 +592,30 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       hRGB = lerpColor(hRGB, grayHorizon, overcastFactor);
     }
 
-    // 5. Solar Eclipse Darkening
+    // 5. Natural moonlight wash: a restrained cool lift on clear dark nights.
+    // It is intentionally subtle; the Moon should shape the atmosphere, not paint it.
+    if (sunAlt < -6) {
+      const moon = this.celestialService.celestialState().moon;
+      const moonAltitude = Math.max(0, Math.min(1, moon.altitudeDeg / 45));
+      const moonlight = Math.min(0.08, moon.illuminationFraction * moonAltitude * 0.08);
+      if (moonlight > 0.002) {
+        zRGB = lerpColor(zRGB, [14, 20, 36], moonlight);
+        mRGB = lerpColor(mRGB, [24, 34, 54], moonlight);
+        hRGB = lerpColor(hRGB, [38, 50, 70], moonlight * 0.9);
+      }
+    }
+
+    // 5. Storm-light response: deep convective cloud cover suppresses
+    // direct sky brightness while retaining the underlying solar/twilight hue.
+    if (this.interp.stormActivity > 0.05) {
+      const stormDarkness = Math.min(0.34, this.interp.stormActivity * 0.34);
+      const stormTarget = sunAlt > -6 ? [28, 38, 54] : [6, 10, 20];
+      zRGB = lerpColor(zRGB, stormTarget, stormDarkness);
+      mRGB = lerpColor(mRGB, stormTarget, stormDarkness * 0.82);
+      hRGB = lerpColor(hRGB, [48, 55, 68], stormDarkness * 0.68);
+    }
+
+    // 6. Solar Eclipse Darkening
     if (this.interp.eclipseObscuration > 0.1) {
       const eclipseDarkness = this.interp.eclipseObscuration;
       const twilightDark = [8, 12, 28];
@@ -664,15 +736,194 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     for (const star of this.stars) {
       if (star.baseBrightness < extinctionThreshold) continue;
 
-      const sx = star.x * w;
-      const sy = star.y * horizonY;
-      const twinkle = 0.82 + Math.sin(time * star.flickerSpeed * windTurbulence + star.flickerPhase) * 0.18;
-      const alpha = star.baseBrightness * finalStarAlpha * twinkle;
+      let sx = star.x * w;
+      let sy = star.y * horizonY;
+
+      // Bright reference stars use their actual equatorial coordinates.
+      let projectedAltitude = 90;
+      if (star.raDeg !== undefined && star.decDeg !== undefined) {
+        const projected = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
+        if (!projected || projected.altitude < -8) continue;
+        sx = projected.x;
+        sy = projected.y;
+        projectedAltitude = projected.altitude;
+      }
+      // Atmospheric extinction: stars near the horizon are naturally dimmer.
+      // This keeps the upper sky readable while preserving a believable horizon fade.
+      const horizonExtinction = Math.max(0, Math.min(1, (projectedAltitude - 2) / 18));
+      const twinkle = 0.88 + Math.sin(time * star.flickerSpeed * windTurbulence + star.flickerPhase) * 0.12;
+      const alpha = star.baseBrightness * finalStarAlpha * horizonExtinction * twinkle;
       if (alpha <= 0.01) continue;
 
       ctx.beginPath();
       ctx.arc(sx, sy, star.radius, 0, Math.PI * 2);
       ctx.fillStyle = `${star.color} ${alpha.toFixed(3)})`;
+      ctx.fill();
+    }
+  }
+
+  private drawConstellations(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    celestial: CelestialState,
+    sunAlt: number
+  ): void {
+    if (sunAlt > -6) return;
+
+    const horizonY = h * 0.90;
+    const starByName = new Map(this.brightStarCatalog.map(star => [star.name, star]));
+    const groups: { stars: string[] }[] = [
+      { stars: ['Betelgeuse', 'Bellatrix', 'Rigel', 'Procyon'] },
+      { stars: ['Vega', 'Deneb', 'Altair'] },
+      { stars: ['Aldebaran', 'Capella', 'Pollux', 'Castor'] },
+      { stars: ['Antares', 'Spica', 'Arcturus'] }
+    ];
+
+    const points = new Map<string, { x: number; y: number; altitude: number }>();
+    for (const group of groups) {
+      for (const name of group.stars) {
+        const star = starByName.get(name);
+        if (!star) continue;
+        const p = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
+        if (p && p.altitude > 8) points.set(name, p);
+      }
+      if (group.stars.some(name => !points.has(name))) continue;
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(226,232,240,0.065)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+
+      for (let i = 1; i < group.stars.length; i++) {
+        const a = points.get(group.stars[i - 1])!;
+        const b = points.get(group.stars[i])!;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  private projectStarToSky(
+    raDeg: number,
+    decDeg: number,
+    w: number,
+    horizonY: number
+  ): { x: number; y: number; altitude: number } | null {
+    const date = this.celestialService.activeDate();
+    const location = this.celestialService.selectedLocation();
+    const jd = date.getTime() / 86400000 + 2440587.5;
+    const t = (jd - 2451545.0) / 36525;
+    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)
+      + 0.000387933 * t * t - (t * t * t) / 38710000) % 360;
+    const lst = (gmst + location.longitude + 360) % 360;
+
+    const lat = location.latitude * Math.PI / 180;
+    const dec = decDeg * Math.PI / 180;
+    const hourAngle = (((lst - raDeg) + 540) % 360) - 180;
+    const ha = hourAngle * Math.PI / 180;
+
+    const sinAlt = Math.sin(lat) * Math.sin(dec)
+      + Math.cos(lat) * Math.cos(dec) * Math.cos(ha);
+    const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * 180 / Math.PI;
+    if (altitude < -8) return null;
+
+    const azimuth = (Math.atan2(
+      Math.sin(ha),
+      Math.cos(ha) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+    ) * 180 / Math.PI + 180 + 360) % 360;
+
+    // Use the same wide azimuth/altitude projection as the Sun, Moon and planets.
+    // Stars should inhabit the whole visible dome, not cluster around the center.
+    const isSouthern = location.latitude < 0;
+    const x = this.projectAzimuthToScreenX(azimuth, w, isSouthern);
+    const maxZenithY = horizonY * 0.05;
+    const normalizedAltitude = Math.max(-8, Math.min(90, altitude)) / 90;
+    const y = horizonY - normalizedAltitude * (horizonY - maxZenithY);
+    return { x, y, altitude };
+  }
+
+  /**
+   * V2.0 planetary projection.
+   * Uses the same altitude/azimuth values exposed by CelestialService so the
+   * Living Sky and Tonight/astronomy views share one astronomical source.
+   */
+  private drawPlanets(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    sunAlt: number,
+    planets: PlanetaryPosition[]
+  ): void {
+    // Planets are a night-sky feature. Keep them out of daylight and deep
+    // atmospheric wash so they never compete with the Sun.
+    if (sunAlt > -3) return;
+
+    const horizonY = h * 0.90;
+    const visibility = Math.max(0, Math.min(1, (Math.min(-sunAlt, 18) - 3) / 15));
+    const weatherOcclusion = Math.max(
+      0.04,
+      1 - this.interp.cloudCoverage * 0.82 - this.interp.haze * 0.45 - this.interp.dustAerosols * 0.35
+    );
+
+    const radiusByName: Record<string, number> = {
+      Mercury: 2.0,
+      Venus: 3.2,
+      Mars: 2.4,
+      Jupiter: 3.0,
+      Saturn: 2.6,
+      Uranus: 1.55,
+      Neptune: 1.35
+    };
+
+    const colorByName: Record<string, string> = {
+      Mercury: 'rgba(210, 215, 220,',
+      Venus: 'rgba(255, 244, 205,',
+      Mars: 'rgba(245, 155, 120,',
+      Jupiter: 'rgba(245, 225, 190,',
+      Saturn: 'rgba(235, 220, 175,',
+      Uranus: 'rgba(180, 225, 235,',
+      Neptune: 'rgba(150, 185, 255,'
+    };
+
+    for (const planet of planets) {
+      // Keep the Living Sky to naked-eye planets. Fainter outer planets belong in Astronomy.
+      if (!planet.visible || planet.altitudeDeg <= 4 || planet.magnitude > 5.2) continue;
+      // Uranus/Neptune are kept extremely subtle in the naked-eye atmosphere;
+      // their presence is still tied to the real ephemeris.
+      const magnitudeVisibility = Math.max(0.16, Math.min(1, 1.15 - planet.magnitude / 4));
+      const alpha = visibility * weatherOcclusion * magnitudeVisibility;
+      if (alpha < 0.035) continue;
+
+      const pos = this.projectCelestialToScreen(
+        planet.altitudeDeg,
+        planet.azimuthDeg,
+        w,
+        horizonY,
+        this.celestialService.selectedLocation().latitude < 0
+      );
+      if (pos.y > h + 20 || pos.y < -20) continue;
+
+      const baseRadius = radiusByName[planet.name] ?? 1.8;
+      const radius = baseRadius * (planet.magnitude < 0 ? 1.12 : 1);
+      const color = colorByName[planet.name] ?? 'rgba(235, 240, 250,';
+
+      // A restrained glow gives bright planets a physical presence without
+      // turning the sky into a UI decoration.
+      const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, radius * 4.5);
+      glow.addColorStop(0, `${color} ${(alpha * 0.30).toFixed(3)})`);
+      glow.addColorStop(1, `${color} 0)`);
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, radius * 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = `${color} ${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -930,11 +1181,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
       if (!this.reducedMotion) {
         const windFactor = 0.4 + Math.min(3.0, weather.windSpeedKmh / 12);
-        // Weather APIs report wind direction as the direction the wind comes
-        // FROM, clockwise from north. Clouds move in the opposite direction.
-        const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
-        const horizontalWind = -Math.sin(windRadians);
-        cloud.x += cloud.speed * delta * windFactor * horizontalWind;
+        const windDirection = Math.cos((weather.windDirectionDeg * Math.PI) / 180);
+        cloud.x += cloud.speed * delta * windFactor * (windDirection >= 0 ? 1 : -1);
         if (cloud.x > 1.25) cloud.x = -0.25;
         if (cloud.x < -0.25) cloud.x = 1.25;
       }
@@ -953,7 +1201,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       const ry = atmos.cloudType === 'cirrus' ? cloud.radiusY * 0.5 : cloud.radiusY;
 
       const grad = ctx.createRadialGradient(cx, cy, ry * 0.2, cx, cy, rx);
-      const alpha = cloud.opacity * (0.4 + cloudCover * 0.6);
+      // Humid air softens and slightly thickens the visible cloud field without turning it opaque.
+      const humiditySoftness = 0.82 + Math.min(1, atmos.humidity) * 0.28;
+      const alpha = cloud.opacity * (0.4 + cloudCover * 0.6) * humiditySoftness;
 
       grad.addColorStop(0, `rgba(${cloudRGB.join(',')}, ${alpha.toFixed(3)})`);
       grad.addColorStop(0.6, `rgba(${cloudRGB.join(',')}, ${(alpha * 0.5).toFixed(3)})`);
@@ -1062,9 +1312,16 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const isDrizzle = precipType === 'drizzle';
     const isSleet = precipType === 'sleet';
 
-    const particleCount = isBlizzard
+    const intensity = Math.max(0, Math.min(1, this.interp.precipIntensity));
+    const baseParticleCount = isBlizzard
       ? 260
       : (precipType === 'downpour' ? 240 : (isDrizzle ? 180 : 120));
+    // Particle density follows measured precipitation intensity rather than
+    // making light rain look as dense as a downpour.
+    const particleCount = Math.max(
+      precipType === 'drizzle' || precipType === 'flurries' ? 8 : 12,
+      Math.floor(baseParticleCount * (0.22 + intensity * 0.78))
+    );
 
     for (let i = 0; i < particleCount; i++) {
       const p = this.precipParticles[i];
@@ -1073,27 +1330,22 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         if (isSnowLike) {
           if (isBlizzard) {
             p.y += p.speedY * 0.9;
-            const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
-            const horizontalWind = -Math.sin(windRadians);
-            p.x += horizontalWind * (0.004 + (weather.windSpeedKmh / 80) * 0.012);
+            p.x += -0.012 - (weather.windSpeedKmh / 80) * 0.015;
           } else {
             p.y += p.speedY * (precipType === 'flurries' ? 0.3 : 0.5);
             p.x += Math.sin(time * 0.002 + p.wobblePhase) * 0.001;
           }
         } else if (isDrizzle) {
           p.y += p.speedY * 0.55;
-          const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
-          p.x += -Math.sin(windRadians) * (0.0008 + weather.windSpeedKmh / 25000);
+          p.x += p.speedX * 0.3;
         } else if (isSleet) {
           p.y += p.speedY * 1.8;
-          const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
-          p.x += -Math.sin(windRadians) * (0.002 + weather.windSpeedKmh / 9000);
+          p.x += p.speedX * 1.2;
         } else {
           // Rain or Downpour
           const rainSpeedMult = precipType === 'downpour' ? 2.4 : 1.4;
           p.y += p.speedY * rainSpeedMult;
-          const windRadians = (weather.windDirectionDeg * Math.PI) / 180;
-          p.x += -Math.sin(windRadians) * (0.002 + weather.windSpeedKmh / 7000);
+          p.x += p.speedX * (weather.windSpeedKmh / 20);
         }
 
         if (p.y > 1) {

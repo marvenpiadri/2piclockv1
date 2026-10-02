@@ -1,4 +1,5 @@
 .astro-suite-container {
+  background: transparent;
   max-width: 1240px;
   margin: 0 auto;
   padding: 24px 16px 80px;
@@ -11,10 +12,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(10, 10, 12, 0.72);
-  backdrop-filter: blur(20px);
+  background: rgba(2, 6, 23, 0.18);
+  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 20px 24px;
 }
@@ -36,7 +37,7 @@
   padding: 4px 10px;
   border-radius: 99px;
   font: 700 10px/1 monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
   letter-spacing: 0.08em;
 }
 
@@ -49,13 +50,13 @@
 .suite-title-group h1 {
   margin: 8px 0 4px;
   font: 800 24px/1.2 system-ui, sans-serif;
-  color: #f8fafc;
+  color: var(--color-text-main);
   letter-spacing: -0.02em;
 }
 
 .suite-title-group p {
   margin: 0;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font: 12px/1.4 monospace;
 }
 
@@ -65,7 +66,7 @@
   gap: 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #f8fafc;
+  color: var(--color-text-main);
   padding: 8px 14px;
   border-radius: 12px;
   font: 700 11px monospace;
@@ -76,7 +77,7 @@
 .btn-share:hover {
   background: rgba(245, 158, 11, 0.2);
   border-color: rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .btn-share mat-icon {
@@ -91,7 +92,7 @@
   gap: 8px;
   background: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34d399;
+  color: var(--color-positive);
   padding: 8px 14px;
   border-radius: 10px;
   font: 700 11px monospace;
@@ -120,14 +121,14 @@
 
 .param-item label {
   font: 700 9px monospace;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   text-transform: uppercase;
 }
 
 .param-item select, .param-item input {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   padding: 8px 10px;
   border-radius: 8px;
   font: 600 12px monospace;
@@ -147,8 +148,8 @@
   align-items: center;
   gap: 8px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   padding: 8px 14px;
   border-radius: 12px;
   font: 700 11px monospace;
@@ -165,18 +166,18 @@
 
 .suite-tabs button:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
+  color: var(--color-text-main);
 }
 
 .suite-tabs button.active {
-  background: #f59e0b;
-  border-color: #f59e0b;
-  color: #09090b;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-neutral-950);
   box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
 }
 
 .suite-tabs button.active mat-icon {
-  color: #09090b;
+  color: var(--color-neutral-950);
 }
 
 /* Tool Cards */
@@ -193,10 +194,10 @@
 }
 
 .tool-card {
-  background: rgba(10, 10, 12, 0.70);
+  background: var(--color-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 22px;
   display: flex;
@@ -210,13 +211,13 @@
   align-items: center;
   gap: 8px;
   font: 700 13px monospace;
-  color: #f8fafc;
+  color: var(--color-text-main);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .tool-card h3 mat-icon {
-  color: #f59e0b;
+  color: var(--color-accent);
   font-size: 18px;
   width: 18px;
   height: 18px;
@@ -230,8 +231,8 @@
 }
 
 .stat-cell {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 12px;
   border-radius: 12px;
   text-align: center;
@@ -240,7 +241,7 @@
 .stat-cell span {
   display: block;
   font: 700 9px monospace;
-  color: #64748b;
+  color: var(--color-text-muted);
   letter-spacing: 0.06em;
 }
 
@@ -248,13 +249,13 @@
   display: block;
   margin: 4px 0 2px;
   font: 800 16px monospace;
-  color: #f8fafc;
+  color: var(--color-text-main);
 }
 
 .stat-cell small {
   display: block;
   font: 8px monospace;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .subsolar-banner {
@@ -269,19 +270,19 @@
 
 .subsolar-banner strong {
   font: 700 12px system-ui, sans-serif;
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .subsolar-banner small {
   font: 10px monospace;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .subsolar-badge {
   padding: 4px 8px;
   border-radius: 6px;
-  background: #f59e0b;
-  color: #09090b;
+  background: var(--color-accent);
+  color: var(--color-neutral-950);
   font: 700 9px monospace;
 }
 
@@ -293,8 +294,8 @@
 }
 
 .event-pill {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 10px;
   border-radius: 10px;
   text-align: center;
@@ -308,27 +309,27 @@
 .event-pill span {
   display: block;
   font: 700 9px monospace;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .event-pill b {
   display: block;
   margin-top: 2px;
   font: 800 15px monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .event-pill small {
   display: block;
   font: 8px monospace;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   margin-top: 2px;
 }
 
 .trajectory-chart-wrap {
   padding: 16px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -339,7 +340,7 @@
   display: flex;
   justify-content: space-between;
   font: 700 10px monospace;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .trajectory-bars {
@@ -360,7 +361,7 @@
 
 .bar-top {
   width: 100%;
-  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  background: linear-gradient(180deg, var(--color-accent), var(--color-accent));
   border-radius: 2px 2px 0 0;
   align-self: flex-end;
 }
@@ -382,21 +383,21 @@
   position: absolute;
   bottom: -16px;
   font: 700 7px monospace;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 /* Visual solar path */
 .solar-arc-visual{padding:16px;background:rgba(10,10,12,.86);border:1px solid rgba(255,255,255,.08);border-radius:14px;display:flex;flex-direction:column;gap:10px}
-.arc-header{display:flex;justify-content:space-between;font:700 10px monospace;color:#94a3b8;letter-spacing:.05em}
+.arc-header{display:flex;justify-content:space-between;font:700 10px monospace;color:var(--color-text-muted);letter-spacing:.05em}
 .solar-arc-stage{height:190px;position:relative;overflow:hidden}
 .arc-dome{position:absolute;left:8%;right:8%;top:10%;height:150%;border:1px solid rgba(245,158,11,.22);border-bottom:0;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 50% 100%,rgba(245,158,11,.08),transparent 58%)}
 .arc-horizon{position:absolute;left:4%;right:4%;top:72%;height:1px;background:rgba(255,255,255,.25)}
-.arc-label{position:absolute;top:76%;font:700 8px monospace;color:#64748b;letter-spacing:.08em}
+.arc-label{position:absolute;top:76%;font:700 8px monospace;color:var(--color-text-muted);letter-spacing:.08em}
 .arc-east{left:4%}.arc-west{right:4%}
 .sun-path-dot{position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(245,158,11,.22);transition:transform .2s}
 .sun-path-dot.above{background:rgba(251,191,36,.6);box-shadow:0 0 8px rgba(245,158,11,.3)}
-.sun-current{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#ffd76a;box-shadow:0 0 18px rgba(255,215,106,.8),0 0 42px rgba(245,158,11,.35);transition:left .3s,top .3s}
-.arc-hours{display:flex;justify-content:space-between;padding:0 4%;font:700 8px monospace;color:#64748b}
+.sun-current{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--color-star);box-shadow:0 0 18px rgba(255,215,106,.8),0 0 42px rgba(245,158,11,.35);transition:left .3s,top .3s}
+.arc-hours{display:flex;justify-content:space-between;padding:0 4%;font:700 8px monospace;color:var(--color-text-muted)}
 
 /* Daylight Hero */
 .daylight-hero-row {
@@ -406,8 +407,8 @@
 }
 
 .daylight-hero-card {
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 16px;
   border-radius: 14px;
   text-align: center;
@@ -416,7 +417,7 @@
 .daylight-hero-card span {
   display: block;
   font: 700 9px monospace;
-  color: #64748b;
+  color: var(--color-text-muted);
   letter-spacing: 0.06em;
 }
 
@@ -424,20 +425,20 @@
   display: block;
   margin: 6px 0 4px;
   font: 900 24px/1 monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .daylight-hero-card small {
   display: block;
   font: 9px monospace;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 /* Visual Timeline */
 .visual-timeline-box {
   padding: 16px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   display: flex;
   flex-direction: column;
@@ -456,7 +457,7 @@
   align-items: center;
   gap: 6px;
   font: 700 9px monospace;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .leg-item i {
@@ -473,11 +474,11 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.tl-segment.night-pre, .tl-segment.night-post { background: #030712; }
-.tl-segment.astro-dawn, .tl-segment.astro-dusk { background: #1e1b4b; }
-.tl-segment.naut-dawn, .tl-segment.naut-dusk { background: #2563eb; }
-.tl-segment.civil-dawn, .tl-segment.civil-dusk { background: #d97706; }
-.tl-segment.daylight { background: #fbbf24; }
+.tl-segment.night-pre, .tl-segment.night-post { background: var(--color-neutral-950); }
+.tl-segment.astro-dawn, .tl-segment.astro-dusk { background: var(--color-neutral-800); }
+.tl-segment.naut-dawn, .tl-segment.naut-dusk { background: var(--color-neutral-600); }
+.tl-segment.civil-dawn, .tl-segment.civil-dusk { background: var(--color-accent-deep); }
+.tl-segment.daylight { background: var(--color-accent); }
 
 .twilight-table-grid {
   display: grid;
@@ -486,8 +487,8 @@
 }
 
 .tw-col {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 14px;
   display: flex;
@@ -498,7 +499,7 @@
 .tw-col h4 {
   margin: 0 0 6px;
   font: 700 10px monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
   letter-spacing: 0.08em;
 }
 
@@ -507,15 +508,15 @@
   justify-content: space-between;
   padding: 6px 10px;
   border-radius: 6px;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--color-surface-subtle);
   font: 11px monospace;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .tw-row.highlight-row {
   background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #fbbf24;
+  color: var(--color-accent);
   font-weight: 700;
 }
 
@@ -525,8 +526,8 @@
   align-items: center;
   gap: 20px;
   padding: 18px 20px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   position: relative;
   overflow: hidden;
@@ -541,8 +542,8 @@
   justify-content: center;
   position: relative;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle, rgba(2, 6, 23, 0.9) 0%, rgba(2, 6, 23, 0.95) 100%);
+  border: 1px solid var(--color-border);
   box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 }
@@ -556,17 +557,17 @@
 .phase-name-badge {
   display: inline-block;
   padding: 2px 8px;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 99px;
-  color: #38bdf8;
+  color: var(--color-text-secondary);
   font: 700 10px monospace;
   width: fit-content;
 }
 
 .illumination-number {
   font: 900 32px/1 monospace;
-  color: #f8fafc;
+  color: var(--color-text-main);
 }
 
 .phases-timeline-list {
@@ -580,8 +581,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(10, 10, 12, 0.70);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
 }
 
@@ -589,7 +590,7 @@
   font-size: 20px;
   width: 20px;
   height: 20px;
-  color: #38bdf8;
+  color: var(--color-text-secondary);
 }
 
 .phase-details {
@@ -599,23 +600,23 @@
 .phase-details strong {
   display: block;
   font: 700 12px system-ui, sans-serif;
-  color: #f8fafc;
+  color: var(--color-text-main);
 }
 
 .phase-details span {
   display: block;
   font: 9px monospace;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .phase-countdown-tag {
   font: 700 10px monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 /* "When Is?" Engine */
 .when-is-card {
-  background: rgba(10, 10, 12, 0.86);
+  background: var(--color-surface-elevated);
   border-color: rgba(245, 158, 11, 0.35);
 }
 
@@ -626,9 +627,9 @@
 }
 
 .query-select-group select {
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-input-bg);
   border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
+  color: var(--color-accent);
   padding: 12px;
   border-radius: 12px;
   font: 700 14px monospace;
@@ -648,24 +649,24 @@
 
 .when-is-title {
   font: 700 14px monospace;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .when-is-time-hero {
   font: 900 clamp(24px, 4vw, 36px) monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .when-is-relative {
   font: 700 12px monospace;
-  color: #34d399;
+  color: var(--color-positive);
 }
 
 .when-is-desc {
   max-width: 600px;
   margin: 8px 0 0;
   font: 11px/1.5 system-ui, sans-serif;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 /* Annual Events Grid */
@@ -680,14 +681,14 @@
   align-items: center;
   gap: 8px;
   font: 700 11px monospace;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .year-picker input {
   width: 80px;
-  background: rgba(10, 10, 12, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   padding: 6px 10px;
   border-radius: 8px;
   font: 700 12px monospace;
@@ -700,8 +701,8 @@
 }
 
 .event-card-item {
-  background: rgba(10, 10, 12, 0.70);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -724,30 +725,30 @@
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
   font: 700 8px monospace;
   text-transform: uppercase;
 }
 
 .event-card-header small {
   font: 9px monospace;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .event-card-item strong {
   font: 700 13px system-ui, sans-serif;
-  color: #f8fafc;
+  color: var(--color-text-main);
 }
 
 .event-time-val {
   font: 800 14px monospace;
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .event-card-item p {
   margin: 0;
   font: 10px/1.4 system-ui, sans-serif;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .event-significance {
@@ -758,14 +759,14 @@
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font: 9px/1.3 monospace;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .event-significance mat-icon {
   font-size: 13px;
   width: 13px;
   height: 13px;
-  color: #f59e0b;
+  color: var(--color-accent);
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -792,40 +793,147 @@
 /* Live observatory overview */
 .observatory-overview{display:flex;flex-direction:column;gap:16px}
 .observatory-hero{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:24px 26px;border:1px solid rgba(245,158,11,.24);border-radius:20px;background:radial-gradient(circle at 15% 10%,rgba(245,158,11,.13),transparent 42%),rgba(8,10,14,.82);backdrop-filter:blur(18px)}
-.observatory-kicker{font:700 9px monospace;letter-spacing:.16em;color:#fbbf24}
-.observatory-copy h2{margin:7px 0 5px;font:800 clamp(22px,3vw,34px)/1.1 system-ui,sans-serif;color:#f8fafc;letter-spacing:-.03em}
-.observatory-copy p{margin:0;font:11px/1.5 monospace;color:#94a3b8}
+.observatory-kicker{font:700 9px monospace;letter-spacing:.16em;color:var(--color-accent)}
+.observatory-copy h2{margin:7px 0 5px;font:800 clamp(22px,3vw,34px)/1.1 system-ui,sans-serif;color:var(--color-text-main);letter-spacing:-.03em}
+.observatory-copy p{margin:0;font:11px/1.5 monospace;color:var(--color-text-muted)}
 .observatory-time{min-width:170px;text-align:right}
-.observatory-time span,.observatory-time small{display:block;font:700 8px monospace;color:#64748b;letter-spacing:.08em}
-.observatory-time strong{display:block;margin:4px 0;font:900 30px/1 monospace;color:#fbbf24}
+.observatory-time span,.observatory-time small{display:block;font:700 8px monospace;color:var(--color-text-muted);letter-spacing:.08em}
+.observatory-time strong{display:block;margin:4px 0;font:900 30px/1 monospace;color:var(--color-accent)}
 .observatory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .observatory-card{min-height:145px;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(10,10,12,.72);display:flex;flex-direction:column;gap:7px}
-.obs-card-head{display:flex;justify-content:space-between;align-items:center;font:700 9px monospace;color:#64748b;letter-spacing:.1em}
-.obs-card-head mat-icon{font-size:17px;width:17px;height:17px;color:#fbbf24}
-.observatory-card>strong{font:900 21px/1.15 monospace;color:#f8fafc}
-.observatory-card>small{min-height:30px;font:9px/1.45 monospace;color:#94a3b8}
+.obs-card-head{display:flex;justify-content:space-between;align-items:center;font:700 9px monospace;color:var(--color-text-muted);letter-spacing:.1em}
+.obs-card-head mat-icon{font-size:17px;width:17px;height:17px;color:var(--color-accent)}
+.observatory-card>strong{font:900 21px/1.15 monospace;color:var(--color-text-main)}
+.observatory-card>small{min-height:30px;font:9px/1.45 monospace;color:var(--color-text-muted)}
 .obs-meter{height:5px;margin-top:auto;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
-.obs-meter i{display:block;height:100%;border-radius:inherit;background:#f59e0b}
-.moon-meter i{background:#38bdf8}
+.obs-meter i{display:block;height:100%;border-radius:inherit;background:var(--color-accent)}
+.moon-meter i{background:var(--color-text-secondary)}
 .obs-times{display:flex;gap:14px;margin-top:auto}
-.obs-times span{font:700 8px monospace;color:#64748b}
-.obs-times b{display:block;margin-top:3px;color:#cbd5e1}
+.obs-times span{font:700 8px monospace;color:var(--color-text-muted)}
+.obs-times b{display:block;margin-top:3px;color:var(--color-text-secondary)}
 .sky-horizon-panel{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(7,9,13,.82)}
-.sky-horizon-head{display:flex;justify-content:space-between;margin-bottom:8px;font:700 9px monospace;color:#94a3b8;letter-spacing:.1em}
-.sky-horizon-head small{font-weight:400;color:#64748b}
-.sky-horizon{height:270px;position:relative;overflow:hidden;border-radius:14px;background:radial-gradient(ellipse at 50% 105%,rgba(245,158,11,.14),transparent 52%),linear-gradient(180deg,rgba(30,41,59,.28),rgba(2,6,23,.75))}
+.sky-horizon-head{display:flex;justify-content:space-between;margin-bottom:8px;font:700 9px monospace;color:var(--color-text-muted);letter-spacing:.1em}
+.sky-horizon-head small{font-weight:400;color:var(--color-text-muted)}
+.sky-horizon{height:270px;position:relative;overflow:hidden;border-radius:14px;background:radial-gradient(ellipse at 50% 105%,rgba(245,158,11,.14),transparent 52%),linear-gradient(180deg,rgba(71,85,105,.28),rgba(2,6,23,.75))}
 .sky-horizon:before{content:"";position:absolute;left:8%;right:8%;bottom:-72%;height:160%;border:1px solid rgba(255,255,255,.08);border-radius:50% 50% 0 0}
 .horizon-line{position:absolute;left:3%;right:3%;bottom:12%;height:1px;background:rgba(255,255,255,.2)}
-.horizon-label{position:absolute;font:700 8px monospace;color:#64748b}
+.horizon-label{position:absolute;font:700 8px monospace;color:var(--color-text-muted)}
 .horizon-n{left:50%;top:8%}.horizon-e{right:3%;bottom:10%}.horizon-s{left:50%;bottom:3%}.horizon-w{left:3%;bottom:10%}
 .celestial-marker{position:absolute;transform:translate(-50%,50%);display:flex;flex-direction:column;align-items:center;gap:5px;font:700 8px monospace}
 .celestial-marker i{display:block;width:13px;height:13px;border-radius:50%;box-shadow:0 0 20px currentColor}
-.sun-marker{color:#fbbf24}.sun-marker i{background:#ffd76a}
-.moon-marker{color:#7dd3fc}.moon-marker i{background:#e2e8f0}
-.horizon-scale{display:flex;justify-content:space-between;padding:7px 2px 0;font:8px monospace;color:#64748b}
+.sun-marker{color:var(--color-accent)}.sun-marker i{background:var(--color-star)}
+.moon-marker{color:var(--color-text-main)}.moon-marker i{background:var(--color-text-secondary)}
+.horizon-scale{display:flex;justify-content:space-between;padding:7px 2px 0;font:8px monospace;color:var(--color-text-muted)}
 .observatory-actions{display:flex;flex-wrap:wrap;gap:8px}
-.observatory-actions button{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.04);color:#cbd5e1;font:700 9px monospace;cursor:pointer}
-.observatory-actions button:hover{border-color:rgba(245,158,11,.35);color:#fbbf24;background:rgba(245,158,11,.08)}
+.observatory-actions button{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.04);color:var(--color-text-secondary);font:700 9px monospace;cursor:pointer}
+.observatory-actions button:hover{border-color:rgba(245,158,11,.35);color:var(--color-accent);background:rgba(245,158,11,.08)}
 .observatory-actions mat-icon{font-size:15px;width:15px;height:15px}
 @media (max-width:900px){.observatory-grid{grid-template-columns:1fr 1fr}.observatory-hero{grid-template-columns:1fr}.observatory-time{text-align:left}}
 @media (max-width:560px){.observatory-grid{grid-template-columns:1fr}.sky-horizon{height:220px}}
+
+
+.planetary-observatory {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(8,10,14,.72);
+  overflow: hidden;
+}
+.planetary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+.planetary-header h3 {
+  margin: 5px 0 3px;
+  color: var(--color-text-main);
+  font: 800 18px/1.2 system-ui,sans-serif;
+}
+.planetary-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font: 10px/1.5 monospace;
+}
+.planetary-count {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.18);
+  color: var(--color-accent);
+  font: 700 9px monospace;
+}
+.planetary-table-wrap { overflow-x: auto; }
+.planetary-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-family: monospace;
+}
+.planetary-table th {
+  padding: 8px 9px;
+  text-align: left;
+  color: var(--color-text-muted);
+  font-size: 8px;
+  letter-spacing: .08em;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.planetary-table td {
+  padding: 10px 9px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+  white-space: nowrap;
+}
+.planetary-table tr.is-visible td { color: var(--color-text-secondary); }
+.planetary-table td:first-child strong {
+  display: block;
+  color: var(--color-text-main);
+  font-size: 11px;
+}
+.planetary-table td:first-child small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 7px;
+}
+.planetary-table tr.is-visible td:first-child small { color: var(--color-accent); }
+@media (max-width: 700px) {
+  .planetary-header { flex-direction: column; }
+}
+
+.solar-system-explorer{display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:var(--color-surface-elevated);overflow:hidden}.solar-system-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.solar-system-header h3{margin:5px 0 3px;color:var(--color-text-main);font:800 18px/1.2 system-ui,sans-serif}.solar-system-header p{margin:0;max-width:700px;color:var(--color-text-muted);font:10px/1.5 monospace}.planet-selector{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px}.planet-selector button{border:1px solid rgba(255,255,255,.08);border-radius:7px;background:rgba(255,255,255,.035);color:var(--color-text-muted);padding:5px 7px;font:700 8px monospace;cursor:pointer}.planet-selector button:hover,.planet-selector button.active{color:var(--color-accent);border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)}.solar-system-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:stretch}.solar-system-stage{position:relative;min-height:420px;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 50%,rgba(245,158,11,.08),transparent 35%),radial-gradient(circle at 50% 50%,rgba(2,6,23,.8),rgba(2,6,23,.98) 72%);border:1px solid rgba(255,255,255,.06)}.solar-system-stage svg{width:100%;height:100%;display:block}.orbit-line{fill:none;stroke:rgba(148,163,184,.18);stroke-width:.16;vector-effect:non-scaling-stroke}.orbit-line.selected-orbit{stroke:rgba(245,158,11,.55);stroke-width:.35}.planet-node{cursor:pointer}.planet-node circle:first-child{stroke:rgba(255,255,255,.7);stroke-width:.12;vector-effect:non-scaling-stroke}.planet-node .planet-hit{fill:transparent;stroke:transparent}.planet-node text{font-size:2.3px;text-anchor:middle;fill:var(--color-text-secondary);pointer-events:none}.planet-node.selected-node circle:first-child{stroke:var(--color-accent);stroke-width:.3}.planet-node.selected-node text{fill:var(--color-accent);font-weight:700}.sun-core{filter:drop-shadow(0 0 3px rgba(251,191,36,.65))}.solar-system-center{position:absolute;left:50%;top:50%;transform:translate(-50%,20px);font:700 7px monospace;letter-spacing:.12em;color:rgba(251,191,36,.65);pointer-events:none}.solar-system-detail{padding:18px;border-radius:14px;background:var(--color-surface-elevated);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column}.detail-kicker{color:var(--color-accent);font:700 10px monospace;letter-spacing:.08em}.solar-system-detail>strong{margin-top:8px;color:var(--color-text-main);font:900 26px monospace}.solar-system-detail>span{color:var(--color-text-muted);font:8px monospace}.solar-system-detail dl{margin:18px 0 0;display:flex;flex-direction:column;gap:8px}.solar-system-detail dl div{display:flex;justify-content:space-between;gap:8px;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.05)}.solar-system-detail dt{color:var(--color-text-muted);font:700 7px monospace}.solar-system-detail dd{margin:0;color:var(--color-text-secondary);font:700 8px monospace;text-align:right}@media(max-width:900px){.solar-system-header{flex-direction:column}.planet-selector{justify-content:flex-start}.solar-system-layout{grid-template-columns:1fr}.solar-system-stage{min-height:360px}}
+
+
+/* V2.6 — Earth / Moon / Sun relationship */
+.earth-moon-sun,.constellation-atlas{margin-top:28px;padding:22px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(8,10,16,.58)}
+.relationship-readout{min-width:110px;text-align:right}.relationship-readout span{display:block;color:var(--color-text-muted);font:700 8px monospace;letter-spacing:.1em}.relationship-readout strong{display:block;margin-top:4px;color:var(--color-accent);font:800 24px monospace}
+.earth-moon-sun-layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;align-items:stretch}
+.earth-moon-sun-stage{position:relative;min-height:320px;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;background:radial-gradient(circle at center,rgba(20,25,38,.95),rgba(4,6,12,.98) 72%)}
+.sky-ring{position:absolute;left:50%;top:50%;width:230px;height:230px;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.09);border-radius:50%;box-shadow:0 0 0 36px rgba(255,255,255,.012),0 0 0 72px rgba(255,255,255,.008)}
+.earth-core{position:absolute;left:50%;top:50%;width:62px;height:62px;transform:translate(-50%,-50%);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,var(--color-text-main),var(--color-neutral-600) 65%,var(--color-neutral-900));box-shadow:0 0 28px rgba(148,163,184,.22);font:700 8px monospace;color:var(--color-text-main)}
+.relationship-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;font:700 8px monospace;letter-spacing:.08em}.relationship-node i{display:block;width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,.55)}.relationship-node span{color:var(--color-text-secondary)}.sun-node i{background:var(--color-accent);box-shadow:0 0 18px rgba(251,191,36,.6)}.moon-node i{background:var(--color-text-secondary);box-shadow:0 0 14px rgba(203,213,225,.4)}
+.relationship-axis{position:absolute;left:50%;top:50%;height:1px;width:35%;transform-origin:left center;opacity:.22;border-top:1px dashed rgba(255,255,255,.7);pointer-events:none}.sun-axis{transform:rotate(-12deg)}.moon-axis{transform:rotate(42deg)}
+.relationship-detail{padding:16px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:10px}.relationship-detail div{display:flex;justify-content:space-between;gap:12px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.05)}.relationship-detail span{color:var(--color-text-muted);font:700 7px monospace}.relationship-detail strong{color:var(--color-text-secondary);font:700 9px monospace;text-align:right}
+
+.constellation-selector{max-width:620px}.constellation-map-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px}.constellation-map{position:relative;min-height:390px;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;background:radial-gradient(circle at center,rgba(15,20,32,.96),rgba(3,5,10,.99))}.map-grid{position:absolute;inset:0;pointer-events:none}.map-grid-ra{background:repeating-linear-gradient(90deg,transparent 0,transparent calc(16.666% - 1px),rgba(255,255,255,.045) 16.666%,transparent calc(16.666% + 1px))}.map-grid-dec{background:repeating-linear-gradient(0deg,transparent 0,transparent calc(20% - 1px),rgba(255,255,255,.04) 20%,transparent calc(20% + 1px))}.constellation-line{position:absolute;height:1px;transform-origin:left center;background:rgba(251,191,36,.42);box-shadow:0 0 5px rgba(251,191,36,.08);pointer-events:none}.atlas-star{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:var(--color-text-main);box-shadow:0 0 8px rgba(255,255,255,.45);z-index:2}.atlas-star span{position:absolute;left:9px;top:-5px;white-space:nowrap;color:var(--color-text-muted);font:600 7px monospace}.atlas-axis-label{position:absolute;color:var(--color-neutral-500);font:700 7px monospace;letter-spacing:.08em}.atlas-ra-label{right:12px;bottom:10px}.atlas-dec-label{left:10px;top:10px;writing-mode:vertical-rl}.atlas-info{padding:16px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06)}.atlas-info>strong{display:block;margin-top:7px;color:var(--color-text-main);font:800 18px monospace}.atlas-info>p{color:var(--color-text-muted);font-size:12px;line-height:1.5}.atlas-info dl{display:flex;flex-direction:column;gap:7px;margin-top:14px}.atlas-info dl div{display:flex;justify-content:space-between;gap:8px;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.05)}.atlas-info dt{color:var(--color-text-muted);font:600 8px monospace}.atlas-info dd{margin:0;color:var(--color-text-secondary);font:600 7px monospace;text-align:right}
+@media(max-width:900px){.earth-moon-sun-layout,.constellation-map-layout{grid-template-columns:1fr}.earth-moon-sun-stage{min-height:300px}.constellation-map{min-height:330px}.relationship-readout{text-align:left}}
+
+
+/* V2.6 — Deep Sky Atlas */
+.deep-sky-atlas{margin-top:28px;padding:22px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(8,10,16,.58)}
+.deep-sky-selector{max-width:520px}
+.deep-sky-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px}
+.deep-sky-field{position:relative;min-height:360px;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 50%,rgba(20,25,38,.96),rgba(3,5,10,.99))}
+.deep-sky-grid{position:absolute;inset:0;pointer-events:none}
+.deep-sky-grid-ra{background:repeating-linear-gradient(90deg,transparent 0,transparent calc(12.5% - 1px),rgba(255,255,255,.04) 12.5%,transparent calc(12.5% + 1px))}
+.deep-sky-grid-dec{background:repeating-linear-gradient(0deg,transparent 0,transparent calc(20% - 1px),rgba(255,255,255,.035) 20%,transparent calc(20% + 1px))}
+.deep-sky-crosshair{position:absolute;left:50%;top:50%;width:1px;height:100%;background:rgba(255,255,255,.05)}.deep-sky-crosshair:after{content:"";position:absolute;left:-50%;top:50%;width:100vw;height:1px;background:rgba(255,255,255,.05)}
+.deep-sky-object-point{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;color:var(--color-accent);font:700 9px monospace;white-space:nowrap}.deep-sky-object-point i{display:block;width:13px;height:13px;border-radius:50%;background:var(--color-text-main);border:1px solid rgba(255,255,255,.7);box-shadow:0 0 18px rgba(251,191,36,.7),0 0 35px rgba(251,191,36,.2)}
+.deep-sky-axis{position:absolute;color:var(--color-neutral-500);font:700 7px monospace;letter-spacing:.08em}.deep-sky-axis-top{left:50%;top:9px;transform:translateX(-50%)}.deep-sky-axis-bottom{left:50%;bottom:9px;transform:translateX(-50%)}.deep-sky-axis-left{left:10px;top:50%;transform:translateY(-50%)}.deep-sky-axis-right{right:10px;top:50%;transform:translateY(-50%)}
+.deep-sky-detail{padding:16px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column}.deep-sky-detail>strong{margin-top:7px;color:var(--color-text-main);font:800 20px/1.2 monospace}.deep-sky-detail>small{margin-top:5px;color:var(--color-text-muted);font:9px/1.4 monospace}.deep-sky-detail dl{display:flex;flex-direction:column;gap:7px;margin:16px 0}.deep-sky-detail dl div{display:flex;justify-content:space-between;gap:8px;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.05)}.deep-sky-detail dt{color:var(--color-text-muted);font:600 8px monospace}.deep-sky-detail dd{margin:0;color:var(--color-text-secondary);font:600 8px monospace;text-align:right}.deep-sky-visibility{margin-top:auto;padding:7px 9px;border-radius:7px;background:rgba(148,163,184,.06);color:var(--color-text-muted);font:700 8px monospace;text-align:center}.deep-sky-visibility.visible{background:rgba(245,158,11,.08);color:var(--color-accent)}
+@media(max-width:900px){.deep-sky-layout{grid-template-columns:1fr}.deep-sky-field{min-height:300px}}

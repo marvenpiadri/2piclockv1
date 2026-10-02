@@ -5,12 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-sky';
 import { DeepSpaceBackdropComponent } from './shared/components/deep-space-backdrop/deep-space-backdrop';
-import { CountryFlagComponent, MiniRadioPlayerComponent, CelestialLogoComponent } from './shared/components';
+import { CountryFlagComponent, MiniRadioPlayerComponent } from './shared/components';
 import { PwaInstallComponent } from './shared/components/pwa-install/pwa-install';
 import { GlassThemeService } from './core/services/glass-theme.service';
 import { LocationService } from './core/services/location.service';
 import { CelestialService } from './core/services/celestial.service';
-import { SeoService } from './core/services/seo.service';
 import { ErrorHandlerService } from './core/services/error-handler.service';
 import { ObservatoryViewService, ObservatoryView } from './core/services/observatory-view.service';
 import { GeoLocation } from './core/models/location.model';
@@ -43,8 +42,7 @@ export interface NavCategory {
     DeepSpaceBackdropComponent,
     CountryFlagComponent,
     MiniRadioPlayerComponent,
-    PwaInstallComponent,
-    CelestialLogoComponent
+    PwaInstallComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -55,14 +53,13 @@ export class App {
   private celestialService = inject(CelestialService);
   private geocodingService = inject(GeocodingService);
   private observatoryViewService = inject(ObservatoryViewService);
-  private seoService = inject(SeoService);
   readonly errorHandler = inject(ErrorHandlerService);
   readonly glassThemeService = inject(GlassThemeService);
   readonly router = inject(Router);
 
   readonly activeView = this.observatoryViewService.activeView;
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allLocations = this.locationService.allPresets;
+  readonly randomLocations = this.locationService.randomLocations;
   readonly isLocating = this.locationService.isLocating;
   readonly locationError = this.locationService.locationError;
 
@@ -70,9 +67,12 @@ export class App {
   // This prevents the 60fps sky renderer from consuming CPU on calculators,
   // maps and other product routes.
   readonly currentRoute = signal<string>('/');
+  readonly sleepMode = computed(() => this.currentRoute().split('?')[0] === '/sleep-calculator');
+
   readonly showDeepSpace = computed(() => {
     const url = this.currentRoute().toLowerCase();
     return (
+      url.includes('tonight') ||
       url.includes('astronomy') ||
       url.includes('stargazing') ||
       url.includes('eclipses') ||
@@ -88,11 +88,10 @@ export class App {
     if (this.showDeepSpace()) return false;
     const url = this.currentRoute();
     return (
-      url === '/' ||
       url === '/now' ||
       url === '/weather' ||
-      url === '/tonight' ||
-      /^\/[a-z0-9-]+(?:\/(?:weather|time|tonight|sun|moon))?(?:\?.*)?$/.test(url) ||
+      url === '/sleep-calculator' ||
+      /^\/[a-z0-9-]+(?:\/(?:weather|time|sun|moon))?(?:\?.*)?$/.test(url) ||
       url.startsWith('/sky')
     );
   });
@@ -102,10 +101,66 @@ export class App {
   readonly celestial = this.celestialService.celestialState;
   readonly currentWeather = this.celestialService.currentWeather;
 
+  readonly isDaytime = computed(() => {
+    const state = this.celestial();
+    return state.sun.isAboveHorizon || state.twilightState === 'day' || state.twilightState === 'golden_hour';
+  });
 
+  readonly weatherClass = computed(() => {
+    const w = this.currentWeather();
+    const cond = w?.condition || 'clear';
+    if (
+      cond === 'thunderstorm' ||
+      cond === 'severe_storm' ||
+      cond === 'severe_thunderstorm' ||
+      cond === 'monsoon' ||
+      cond === 'tropical_storm'
+    ) return 'weather-storm';
+    if (
+      cond === 'rain' ||
+      cond === 'heavy_rain' ||
+      cond === 'heavy_downpour' ||
+      cond === 'drizzle' ||
+      cond === 'freezing_rain' ||
+      cond === 'hail' ||
+      cond === 'sleet'
+    ) return 'weather-rain';
+    if (
+      cond === 'snow' ||
+      cond === 'snow_flurries' ||
+      cond === 'heavy_snow' ||
+      cond === 'blizzard'
+    ) return 'weather-snow';
+    if (
+      cond === 'fog' ||
+      cond === 'freezing_fog' ||
+      cond === 'haze' ||
+      cond === 'dust_haze' ||
+      cond === 'spring_mist' ||
+      cond === 'autumn_haze'
+    ) return 'weather-fog';
+    if (
+      cond === 'cloudy' ||
+      cond === 'overcast' ||
+      cond === 'partly_cloudy' ||
+      cond === 'broken_clouds' ||
+      cond === 'low_clouds' ||
+      cond === 'winter_overcast'
+    ) return 'weather-cloudy';
+    return 'weather-clear';
+  });
+
+  readonly badgeTooltip = computed(() => {
+    const isDay = this.isDaytime();
+    const w = this.currentWeather();
+    const loc = this.selectedLocation();
+    const phase = isDay ? 'Sun (Solar Day)' : 'Moon (Lunar Night)';
+    const temp = w?.temperatureC !== undefined ? `${w.temperatureC}°C` : '';
+    const cond = w?.conditionLabel || '';
+    return `2piClock · ${phase} · ${loc.name}${temp ? ' · ' + temp : ''}${cond ? ' · ' + cond : ''}`;
+  });
 
   constructor() {
-    this.seoService.init();
     this.currentRoute.set(this.router.url || '/');
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -146,16 +201,40 @@ export class App {
           tag: 'Product'
         },
         {
-          label: 'Time & Date Differences',
-          path: '/time',
-          desc: 'Precise time difference solver, calendar date arithmetic, and business days.',
+          label: 'Time Difference',
+          path: '/time/difference',
+          desc: 'Compare the local time offset between two cities and time zones.',
           icon: 'compare_arrows'
         },
         {
-          label: 'Countdowns & Unix Epoch',
-          path: '/time',
-          desc: 'Live high-precision target event countdowns, count-ups, and Unix timestamp engine.',
+          label: 'Duration Calculator',
+          path: '/time/duration',
+          desc: 'Measure the exact elapsed time between two instants.',
+          icon: 'timelapse'
+        },
+        {
+          label: 'Date Difference',
+          path: '/time/date-difference',
+          desc: 'Calculate calendar days, weeks and business-day differences.',
+          icon: 'date_range'
+        },
+        {
+          label: 'Add / Subtract Time',
+          path: '/time/add-subtract',
+          desc: 'Move an exact date and time forward or backward by any interval.',
+          icon: 'add_circle_outline'
+        },
+        {
+          label: 'Countdown',
+          path: '/time/countdown',
+          desc: 'Create a live countdown or count-up for an event.',
           icon: 'hourglass_bottom'
+        },
+        {
+          label: 'Unix Timestamp',
+          path: '/time/unix-timestamp',
+          desc: 'Convert Unix seconds and milliseconds to readable dates and back.',
+          icon: 'terminal'
         }
       ]
     },
@@ -170,6 +249,13 @@ export class App {
           desc: 'Living horizon simulation, diurnal radian vector, and optical twilight gradient.',
           icon: 'radio_button_checked',
           tag: 'Real-Time'
+        },
+        {
+          label: 'Tonight · Night Sky',
+          path: '/tonight',
+          desc: 'A focused view of sunset, darkness, Moon conditions, twilight and visible bright planets.',
+          icon: 'dark_mode',
+          tag: 'Night'
         },
         {
           label: 'Solar & Daylight Calculator',
@@ -284,31 +370,51 @@ export class App {
       icon: 'air',
       items: [
         {
+          label: 'Weather',
+          path: '/weather',
+          desc: 'Current conditions, hourly outlook and local weather context.',
+          icon: 'cloud',
+          tag: 'Live'
+        },
+        {
+          label: 'Sleep Calculator',
+          path: '/sleep-calculator',
+          desc: 'Plan bedtime and wake time with sleep-cycle math, local night context, and private on-device history.',
+          icon: 'bedtime',
+          tag: 'Sleep'
+        },
+        {
+          label: 'Real-Time Severe & Astronomical Alerts',
+          path: '/alerts',
+          desc: 'Live severe weather warnings, geomagnetic storms, eclipses, and visibility alerts.',
+          icon: 'warning',
+          tag: 'Live'
+        },
+        {
           label: 'Atmosphere & Storm Severity',
           path: '/atmosphere',
-          desc: 'Weather Aggressiveness Index, winter frost, barometric pressure, and visibility.',
+          desc: 'Weather severity, visibility, pressure and atmospheric conditions.',
           icon: 'thunderstorm'
         },
         {
-          label: 'Wind & Weather Map',
-          path: '/weather',
-          desc: 'Global meteorological maps and live weather observations.',
-          icon: 'air'
-        }
+          label: 'Astronomical Events',
+          path: '/events',
+          desc: 'A location-aware calendar of celestial and world-time events.',
+          icon: 'event'
+        },
       ]
     }
   ];
 
-  readonly filteredLocations = computed(() => {
-    const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.allLocations;
-    return this.allLocations.filter(
-      l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
-    );
-  });
+  readonly filteredLocations = computed(() => this.searchQuery().trim() ? this.remoteLocations() : this.randomLocations());
 
   toggleLocationDropdown(): void {
     this.showLocationDropdown.update(v => !v);
+    if (this.showLocationDropdown() && this.locationService.locations().length === 0) {
+      void this.locationService.loadLocations().then(() => {
+        if (this.locationService.randomLocations().length === 0) this.locationService.refreshRandomLocations();
+      });
+    }
     if (this.showLocationDropdown()) {
       this.showNavMenu.set(false);
     }
@@ -328,12 +434,22 @@ export class App {
     this.isSearchFocused.set(false);
   }
 
+  locationPath(section?: string): string[] {
+    return this.locationService.getLocationPath(this.selectedLocation(), section);
+  }
+
   navigateMenu(item: { path?: string; view?: ObservatoryView }): void {
     if (item.view) {
       this.observatoryViewService.setView(item.view);
     }
     if (item.path) {
-      this.router.navigate([item.path]);
+      const locationAwareSections = new Set(['weather', 'tonight']);
+      const section = item.path.replace(/^\//, '');
+      if (locationAwareSections.has(section)) {
+        this.router.navigate(this.locationService.getLocationPath(this.selectedLocation(), section));
+      } else {
+        this.router.navigate([item.path]);
+      }
     }
     this.closeMenus();
   }
@@ -362,7 +478,7 @@ export class App {
     this.remoteSearchTimer = setTimeout(() => {
       this.remoteSearchSubscription?.unsubscribe();
       this.isRemoteSearching.set(true);
-      this.remoteSearchSubscription = this.geocodingService.search(query, 6).subscribe(results => {
+      this.remoteSearchSubscription = this.geocodingService.search(query, 50).subscribe(results => {
         this.remoteLocations.set(results);
         this.isRemoteSearching.set(false);
       });
@@ -376,20 +492,20 @@ export class App {
     const path = this.router.url.split('?')[0].replace(/^\//, '');
     const parts = path.split('/').filter(Boolean);
     const focusedExperiences = new Set(['time', 'weather', 'sun', 'moon', 'tonight', 'astronomy']);
-    let target: string[] = [loc.id];
+    let section: string | undefined;
 
     if (parts.length === 1 && focusedExperiences.has(parts[0])) {
-      target = [loc.id, parts[0]];
+      section = parts[0];
     } else if (parts.length >= 2 && focusedExperiences.has(parts[1])) {
-      target = [loc.id, parts[1]];
+      section = parts[1];
     }
 
-    this.router.navigate(target);
+    this.router.navigate(this.locationService.getLocationPath(loc, section));
   }
 
   async detectGPS(): Promise<void> {
     const loc = await this.locationService.detectUserLocation();
     this.closeMenus();
-    if (loc) this.router.navigate(['/', loc.id]);
+    if (loc) this.router.navigate(this.locationService.getLocationPath(loc));
   }
 }

@@ -26,12 +26,6 @@
         }
       </div>
 
-      <button type="button" class="world-tool" [class.active]="showNightTerminator()" (click)="toggleTerminator()" title="Day and night boundary">
-        <mat-icon>brightness_medium</mat-icon><span>Day / Night</span>
-      </button>
-      <button type="button" class="world-tool" [class.active]="showTwilightBands()" (click)="toggleTwilight()" title="Twilight bands">
-        <mat-icon>gradient</mat-icon><span>Twilight</span>
-      </button>
       <button type="button" class="world-tool" [class.active]="showCelestialGrid()" (click)="toggleCelestialGrid()" title="Latitude lines">
         <mat-icon>language</mat-icon><span>Grid</span>
       </button>
@@ -44,8 +38,8 @@
       <button type="button" class="world-tool" [class.active]="showTimezoneGrid()" (click)="toggleTimezoneGrid()" title="UTC grid">
         <mat-icon>grid_on</mat-icon><span>UTC</span>
       </button>
-      <button type="button" class="world-tool" [class.active]="showWindVectors()" (click)="toggleWindVectors()" title="Wind vectors">
-        <mat-icon>air</mat-icon><span>Wind</span>
+      <button type="button" class="world-tool" [class.active]="showWorldWeather()" (click)="toggleWorldWeather()" title="Live weather at world locations">
+        <mat-icon>cloud</mat-icon><span>Weather</span>
       </button>
       <button type="button" class="world-tool" (click)="flyToSubsolar()" title="Center on subsolar point">
         <mat-icon class="sun-tool">wb_sunny</mat-icon><span>Sun point</span>
@@ -90,13 +84,6 @@
     <!-- MapLibre Map Viewport Container -->
     <div #globeContainer class="globe-viewport w-full h-[540px] md:h-[640px] lg:h-[720px] relative z-10"></div>
 
-    <!-- Real-Time Wind Speed & Direction Streamline Canvas Overlay -->
-    <canvas 
-      #windCanvas 
-      class="pointer-events-none absolute inset-0 z-15 w-full h-full transition-opacity duration-300"
-      [class.opacity-0]="!showWindVectors()"
-      [class.opacity-95]="showWindVectors()">
-    </canvas>
   </div>
 
 </div>

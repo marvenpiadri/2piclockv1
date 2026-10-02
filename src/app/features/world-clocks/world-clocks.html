@@ -9,9 +9,16 @@
   <div class="clock-count">{{clockCount()}} clocks</div>
  </div>
 </header>
-<section class="clock-toolbar">
- <div class="clock-search"><mat-icon>search</mat-icon><input [value]="locationSearch()" (input)="onLocationSearch($any($event.target).value)" placeholder="Search a city or country to pin" aria-label="Search a city or country">@if(isSearching()){<span>Searching…</span>}</div>
- <small>Drag a clock to reorder</small>
+<section class="location-zone" aria-label="World clock locations">
+ <div>
+  <span class="eyebrow">LOCATIONS</span>
+  <div class="location-zone-copy">Choose the cities that stay on your clock wall. Your order is saved on this device.</div>
+ </div>
+ <div class="clock-search">
+  <mat-icon>search</mat-icon>
+  <input [value]="locationSearch()" (input)="onLocationSearch($any($event.target).value)" placeholder="Search a city or country" aria-label="Search a city or country">
+  @if(isSearching()){<span>Searching…</span>}
+ </div>
 </section>
 @if(locationSearch().trim().length>=2){<div class="location-results">
  @for(loc of locationResults();track loc.id){<div class="location-result"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag'"></app-country-flag><span><b>{{loc.name}}</b><small>{{loc.country}} · {{loc.timezone}}</small></span>@if(isPinned(loc.id)){<button type="button" class="pin-action pinned" (click)="removeLocation(loc.id)" aria-label="Remove pinned clock"><mat-icon>check</mat-icon></button>}@else{<button type="button" class="pin-action" (click)="pinLocation(loc)" aria-label="Pin clock"><mat-icon>add</mat-icon></button>}</div>}
@@ -40,9 +47,7 @@
     </div>
    </div>
   } @else {
-   <div class="analog-clock-wrapper" [attr.aria-label]="clock.location.name+' '+clock.time">
-    <app-analog-clock [timezone]="clock.location.timezone" [activeDate]="activeDate()"></app-analog-clock>
-   </div>
+   <app-analog-clock [timezone]="clock.location.timezone" [activeDate]="activeDate()" [size]="150" [showSeconds]="true" [ariaLabel]="clock.location.name+' '+clock.time"></app-analog-clock>
    <div class="analog-readout">{{clock.time}}:{{clock.second.toString().padStart(2,'0')}} <span>{{clock.date}}</span></div>
   }
  </article>

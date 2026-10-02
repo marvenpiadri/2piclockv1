@@ -4,8 +4,8 @@
   height:100vh;
   overflow:hidden;
   position:relative;
-  background:#050505;
-  color:#f5f5f5;
+  background:var(--color-canvas);
+  color:var(--color-text-main);
   font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","SF Pro Display",system-ui,sans-serif;
 }
 .app-layout { position:relative; width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; z-index:20; }
@@ -15,11 +15,11 @@
   z-index: 50;
   width: 100%;
   height: 56px;
-  background: rgba(0, 0, 0, 0.9);
+  background: var(--color-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -43,13 +43,106 @@
   text-decoration: none;
 }
 
-/* The celestial logo owns the complete reactive 2pi identity mark. */
-.brand-link app-celestial-logo {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+.brand-badge {
+  width: 38px;
+  height: 38px;
+  min-width: 34px;
+  min-height: 34px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  overflow: hidden;
+  user-select: none;
+  isolation: isolate;
+  transition: transform .45s cubic-bezier(.22,.61,.36,1), box-shadow .6s ease;
 }
 
+.brand-badge .celestial-disc {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 50%;
+  transition: background 1.2s cubic-bezier(.22,.61,.36,1), box-shadow 1.2s ease, border-color 1.2s ease;
+}
+
+.brand-logo-image {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Morning / Daytime: Radiant Sun with solar corona */
+.brand-badge-sun .celestial-disc {
+  background: radial-gradient(circle at 35% 30%, var(--color-sky-highlight) 0%, #fef08a 22%, var(--color-accent) 58%, var(--color-accent-deep) 88%, var(--color-accent-deep) 100%);
+  border: 1px solid rgba(254, 240, 138, 0.8);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.65), 0 0 32px rgba(251, 191, 36, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 5px rgba(194, 65, 12, 0.55);
+}
+
+.brand-badge-sun .celestial-disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.85) 0%, rgba(254, 240, 138, 0.4) 30%, transparent 65%);
+  pointer-events: none;
+}
+
+/* Lunar Night: Silver Shining Moon with luminous specular luster */
+.brand-badge-moon .celestial-disc {
+  background: radial-gradient(circle at 30% 26%, var(--color-text-on-accent) 0%, #f8fafc 18%, #e2e8f0 42%, #cbd5e1 70%, #94a3b8 92%, #64748b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.8), 0 0 32px rgba(226, 232, 240, 0.55), 0 0 48px rgba(148, 163, 184, 0.3), inset 0 1.5px 3px rgba(255, 255, 255, 0.95), inset 0 -2px 5px rgba(51, 65, 85, 0.5);
+}
+
+.brand-badge-moon .celestial-disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 26% 24%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 28%, transparent 65%);
+  pointer-events: none;
+}
+
+.brand-badge-moon .celestial-disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.95), inset -3px -3px 6px rgba(15, 23, 42, 0.4);
+  pointer-events: none;
+}
+
+.brand-link:hover .brand-badge {
+  transform: scale(1.05);
+}
+
+.brand-link:hover .brand-badge-sun .celestial-disc {
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.85), 0 0 40px rgba(251, 191, 36, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.95), inset 0 -2px 6px rgba(194, 65, 12, 0.65);
+}
+
+.brand-link:hover .brand-badge-moon .celestial-disc {
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.95), 0 0 42px rgba(226, 232, 240, 0.75), 0 0 60px rgba(203, 213, 225, 0.45), inset 0 1.5px 4px rgba(255, 255, 255, 1), inset 0 -2px 6px rgba(51, 65, 85, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-badge,
+  .brand-badge .celestial-disc,
+  .brand-logo-image {
+    transition: none !important;
+  }
+}
 .brand-text-col {
   display: flex;
   flex-direction: column;
@@ -58,7 +151,7 @@
 
 .brand-title {
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-text-main);
   letter-spacing: -0.02em;
   font-size: 14px;
   line-height: 1.2;
@@ -70,7 +163,7 @@
 
 .brand-sub {
   font-size: 9px;
-  color: #fbbf24;
+  color: var(--color-accent-deep);
   font-family: var(--font-mono);
   line-height: 1;
   letter-spacing: 0.08em;
@@ -91,32 +184,33 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  padding: 6px 11px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
 }
 
 .btn-observatories:hover,
 .btn-observatories.menu-open {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.10);
+  color: var(--color-text-main);
 }
 
 .btn-observatories .obs-icon {
-  color: #fbbf24;
+  color: var(--color-sky-shadow);
   font-size: 18px;
   width: 18px;
   height: 18px;
 }
 
 .btn-observatories .chevron-icon {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-size: 16px;
   width: 16px;
   height: 16px;
@@ -136,7 +230,7 @@
   max-height: 85vh;
   overflow-y: auto;
   border-radius: 18px;
-  background: rgba(5, 7, 12, 0.96);
+  background: rgba(2, 6, 23, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -156,7 +250,7 @@
 
 .nav-cat-title {
   font-size: 10px;
-  color: #fbbf24;
+  color: var(--color-accent);
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -198,7 +292,7 @@
 }
 
 .nav-cat-btn .item-icon {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-size: 16px;
   width: 16px;
   height: 16px;
@@ -208,18 +302,18 @@
 }
 
 .nav-cat-btn:hover .item-icon {
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .nav-cat-btn .item-label {
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-text-main);
   transition: color 0.15s ease;
 }
 
 .nav-cat-btn:hover .item-label {
-  color: #fde68a;
+  color: var(--color-accent);
 }
 
 .nav-cat-btn .item-tag {
@@ -231,7 +325,7 @@
 
 .nav-cat-btn .item-desc {
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -251,26 +345,26 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
 }
 
 .location-pill-btn:hover,
 .location-pill-btn.menu-open {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.10);
 }
 
 .loc-name-label {
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-secondary);
   max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
@@ -279,12 +373,12 @@
 }
 
 .location-pill-btn:hover .loc-name-label {
-  color: #fde68a;
+  color: var(--color-text-main);
 }
 
 .loc-country-label {
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -296,7 +390,7 @@
   gap: 6px;
   font-size: 9px;
   font-family: var(--font-mono);
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .location-dropdown-menu {
@@ -306,7 +400,7 @@
   margin-top: 8px;
   width: 320px;
   border-radius: 18px;
-  background: rgba(5, 7, 12, 0.96);
+  background: rgba(2, 6, 23, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -337,16 +431,16 @@
   background: transparent;
   border: none;
   font-size: 12px;
-  color: #ffffff;
+  color: var(--color-text-main);
   outline: none;
 }
 
 .search-input-wrap input::placeholder {
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .search-icon-dim {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-size: 16px;
   width: 16px;
   height: 16px;
@@ -361,7 +455,7 @@
   border-radius: 12px;
   background: rgba(245, 158, 11, 0.08);
   border: 1px solid rgba(245, 158, 11, 0.18);
-  color: #fde68a;
+  color: var(--color-accent);
   font-size: 12px;
   font-weight: 600;
   text-align: left;
@@ -397,22 +491,23 @@
 }
 
 .btn-gps-action {
-  padding: 8px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
+  padding: 7px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 
 .btn-gps-action:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fbbf24;
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.10);
+  color: var(--color-text-main);
 }
 
 .btn-gps-action mat-icon {
@@ -421,10 +516,10 @@
   height: 16px;
 }
 
-.full-page-glass-substrate.glass-active {
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  background-color: rgba(2, 6, 23, 0.4);
+ .full-page-glass-substrate.glass-active {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  background-color: rgba(2, 6, 23, 0.16);
 }
 
 .full-page-glass-substrate.glass-inactive {
@@ -448,7 +543,7 @@
 
 .search-section-label {
   font-size: 9px;
-  color: #fbbf24;
+  color: var(--color-accent);
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -459,7 +554,7 @@
 .search-loading-row {
   padding: 8px;
   font-size: 12px;
-  color: #fbbf24;
+  color: var(--color-accent);
   font-family: var(--font-mono);
   display: flex;
   align-items: center;
@@ -482,7 +577,7 @@
 }
 
 .btn-clear-search {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   border: none;
   background: transparent;
   padding: 2px;
@@ -490,11 +585,11 @@
 }
 
 .btn-clear-search:hover {
-  color: #ffffff;
+  color: var(--color-text-main);
 }
 
 .btn-gps-trigger {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   border: none;
   background: transparent;
   margin-left: 4px;
@@ -504,13 +599,13 @@
 }
 
 .btn-gps-trigger:hover {
-  color: #fbbf24;
+  color: var(--color-accent);
 }
 
 .loc-item-title {
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -518,7 +613,7 @@
 
 .loc-item-meta {
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -532,7 +627,7 @@
 /* Windy-inspired control language: compact, dark, layered, with one clear active accent. */
 .search-capsule > div:first-child { min-height:42px; background:rgba(255,255,255,.055)!important; border-color:rgba(255,255,255,.10)!important; }
 .search-capsule > div:first-child:focus-within { border-color:rgba(245,158,11,.65)!important; box-shadow:0 0 0 3px rgba(245,158,11,.10); }
-.search-dropdown-menu { background:rgba(10,10,10,.96)!important; border-color:rgba(255,255,255,.12)!important; }
+.search-dropdown-menu { background:rgba(2, 6, 23,.96)!important; border-color:rgba(255,255,255,.12)!important; }
 .nav-vertical-item[routerlinkactive] { border-radius:14px; }
 .nav-vertical-item:hover { background:rgba(255,255,255,.055)!important; }
 .glass-panel { border-radius:16px; }
@@ -542,7 +637,7 @@
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.14); border-radius:9999px; }
 ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.26); }
-.nav-main-link{display:inline-flex;align-items:center;height:32px;padding:0 9px;border-radius:7px;color:#a1a1aa;transition:background-color .15s ease,color .15s ease}.nav-main-link:hover{color:#f5f5f5;background:#151517}.nav-main-active{color:#f5f5f5!important;background:#1b1b1e;box-shadow:inset 0 -1px 0 rgba(245,158,11,.55)}
+.nav-main-link{display:inline-flex;align-items:center;height:32px;padding:0 9px;border-radius:7px;color:#a1a1aa;transition:background-color .15s ease,color .15s ease}.nav-main-link:hover{color:var(--color-text-main);background:#020617}.nav-main-active{color:var(--color-text-main)!important;background:#020617;box-shadow:inset 0 -1px 0 rgba(245,158,11,.55)}
 
 /* Shared shell contrast: content remains readable over living substrates. */
 .main-content-viewport {
@@ -551,3 +646,276 @@
 .sky-background-active .main-content-viewport {
   color: var(--2pi-text-on-sky);
 }
+
+/*
+ * Sky-native shell
+ * The living sky is the surface. Do not introduce a second opaque dark app shell
+ * over it. These overrides are intentionally scoped to Sky routes so /now keeps
+ * its existing watch treatment unchanged.
+ */
+.sky-background-active .universal-top-header {
+  background: rgba(2, 6, 23, 0.94);
+  border-bottom-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.sky-background-active .brand-title,
+.sky-background-active .nav-main-link,
+.sky-background-active .loc-name-label,
+.sky-background-active .btn-observatories,
+.sky-background-active .location-pill-btn {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.18);
+}
+
+.sky-background-active .nav-main-link:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.sky-background-active .nav-main-active {
+  background: rgba(2, 6, 23, 0.94);
+}
+
+.sky-background-active .nav-directory-menu,
+.sky-background-active .location-dropdown-menu,
+.sky-background-active .search-dropdown-menu {
+  background: rgba(2, 6, 23, 0.97) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.sky-background-active .search-input-wrap {
+  background: rgba(2, 6, 23, 0.94);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.sky-background-active .btn-observatories,
+.sky-background-active .location-pill-btn,
+.sky-background-active .btn-gps-action {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #020617;
+}
+
+.sky-background-active .search-input-wrap input,
+.sky-background-active .nav-cat-btn .item-label,
+.sky-background-active .loc-item-title {
+  color: var(--color-text-main);
+}
+
+.sky-background-active .nav-cat-btn:hover,
+.sky-background-active .location-item-row:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.sky-background-active .full-page-glass-substrate.glass-active {
+  background-color: rgba(2, 6, 23, 0.62);
+}
+
+
+/* Final launch shell: DooMath dark glass, never midnight-blue. */
+.app-layout.sky-background-active .universal-top-header,
+.app-layout.sky-background-active .nav-directory-menu,
+.app-layout.sky-background-active .location-dropdown-menu,
+.app-layout.sky-background-active .search-dropdown-menu {
+  background: rgba(2, 6, 23, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.app-layout.sky-background-active .universal-top-header {
+  backdrop-filter: blur(20px) saturate(115%);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+}
+
+.app-layout.sky-background-active .btn-observatories,
+.app-layout.sky-background-active .location-pill-btn,
+.app-layout.sky-background-active .btn-gps-action {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #020617;
+}
+
+.app-layout.sky-background-active .btn-observatories:hover,
+.app-layout.sky-background-active .location-pill-btn:hover,
+.app-layout.sky-background-active .btn-gps-action:hover,
+.app-layout.sky-background-active .btn-observatories.menu-open,
+.app-layout.sky-background-active .location-pill-btn.menu-open {
+  background: var(--color-accent-deep);
+  border-color: var(--color-accent-deep);
+}
+
+
+/* V2.0 header — intentionally follows DooMath's quiet navigation language.
+   Amber belongs to the living sky, not to every header control. */
+.universal-top-header {
+  height: 56px;
+  padding: 0 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.header-left {
+  gap: 12px;
+}
+
+.btn-observatories,
+.location-pill-btn,
+.btn-gps-action {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--color-text-secondary) !important;
+  box-shadow: none !important;
+  border-radius: 6px;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.btn-observatories {
+  height: 32px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-observatories .obs-icon,
+.btn-observatories .chevron-icon {
+  color: var(--color-text-secondary) !important;
+}
+
+.btn-observatories:hover,
+.btn-observatories.menu-open,
+.location-pill-btn:hover,
+.location-pill-btn.menu-open,
+.btn-gps-action:hover,
+.btn-gps-action:focus-visible {
+  background: rgba(255,255,255,.05) !important;
+  border-color: transparent !important;
+  color: var(--color-text-main) !important;
+}
+
+.btn-observatories:hover .obs-icon,
+.btn-observatories:hover .chevron-icon,
+.btn-observatories.menu-open .obs-icon,
+.btn-observatories.menu-open .chevron-icon,
+.location-pill-btn:hover .chevron-icon,
+.location-pill-btn.menu-open .chevron-icon,
+.btn-gps-action:hover mat-icon {
+  color: var(--color-text-main) !important;
+}
+
+.location-pill-btn {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--color-text-secondary) !important;
+}
+
+.location-pill-btn .loc-name-label {
+  color: var(--color-text-secondary) !important;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.location-pill-btn .loc-country-label,
+.location-pill-btn .loc-time-row {
+  color: var(--color-text-secondary) !important;
+}
+
+.location-pill-btn:hover .loc-name-label,
+.location-pill-btn.menu-open .loc-name-label {
+  color: var(--color-text-main) !important;
+}
+
+.btn-gps-action {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+}
+
+.nav-main-link {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none !important;
+}
+
+.nav-main-link:hover,
+.nav-main-active,
+.nav-main-active:hover {
+  color: var(--color-text-main) !important;
+  background: rgba(255,255,255,.05) !important;
+  box-shadow: none !important;
+}
+
+.nav-main-active {
+  border-bottom: 0 !important;
+}
+
+.brand-title {
+  color: var(--color-text-main);
+}
+
+.brand-sub {
+  color: var(--color-text-secondary);
+}
+
+.header-divider {
+  background: var(--color-border);
+}
+
+.app-layout.sky-background-active .universal-top-header {
+  background: var(--color-surface) !important;
+  border-bottom-color: var(--color-border) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.app-layout.sky-background-active .btn-observatories,
+.app-layout.sky-background-active .location-pill-btn,
+.app-layout.sky-background-active .btn-gps-action {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.app-layout.sky-background-active .btn-observatories:hover,
+.app-layout.sky-background-active .btn-observatories.menu-open,
+.app-layout.sky-background-active .location-pill-btn:hover,
+.app-layout.sky-background-active .location-pill-btn.menu-open,
+.app-layout.sky-background-active .btn-gps-action:hover,
+.app-layout.sky-background-active .btn-gps-action:focus-visible {
+  background: rgba(255,255,255,.05) !important;
+  color: var(--color-text-main) !important;
+}
+
+.app-layout.sky-background-active .nav-main-active {
+  background: rgba(255,255,255,.05) !important;
+  color: var(--color-text-main) !important;
+  box-shadow: none !important;
+}
+
+/* Neutralize legacy amber header accents without changing the sky's amber identity. */
+.app-layout.sky-background-active .search-input-wrap:focus-within {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+.app-layout.sky-background-active .btn-explore-current {
+  background: rgba(255,255,255,.05);
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+.app-layout.sky-background-active .btn-explore-current:hover {
+  background: rgba(255,255,255,.09);
+}
+.app-layout.sky-background-active .btn-gps-trigger:hover {
+  color: var(--color-text-main);
+}
+
+
+/* Deep-space routes must let the astronomical substrate remain visible behind the UI. */
+:host:has(.deep-space-active) { background: transparent; }
+.deep-space-active .main-content-viewport { background: transparent; }

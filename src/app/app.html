@@ -1,7 +1,7 @@
 <!-- Living substrates are route-scoped so heavy canvas animation never runs
      behind calculators, maps or other non-visual product pages. -->
 @if (showReactiveSky()) {
-  <app-reactive-sky></app-reactive-sky>
+  <app-reactive-sky [sleepMode]="sleepMode()"></app-reactive-sky>
 } @else if (showDeepSpace()) {
   <app-deep-space-backdrop></app-deep-space-backdrop>
 }
@@ -14,7 +14,7 @@
   [class.glass-inactive]="!glassThemeService.isGlassEnabled()">
 </div>
 
-<div class="app-layout" [class.sky-background-active]="showReactiveSky()" (click)="closeMenus()">
+<div class="app-layout" [class.sky-background-active]="showReactiveSky()" [class.deep-space-active]="showDeepSpace()" (click)="closeMenus()">
 
   <!-- Universal Top Header -->
   <header class="universal-top-header">
@@ -22,9 +22,16 @@
     <!-- Left: Brand Logo + Expandable Observatories Dropdown + Subtle Navigation Links -->
     <div class="header-left">
       
-      <!-- Reactive identity mark: the same celestial state drives day/night, phase and simulated time. -->
-      <a routerLink="/" class="brand-link" (click)="closeMenus()">
-        <app-celestial-logo></app-celestial-logo>
+      <!-- Brand Logo (Solar/Lunar + Live Weather Reactive Circular Orb) -->
+      <a routerLink="/" class="brand-link" (click)="closeMenus()" [attr.title]="badgeTooltip()">
+        <div
+          class="brand-badge"
+          [class.brand-badge-sun]="isDaytime()"
+          [class.brand-badge-moon]="!isDaytime()"
+          [attr.aria-label]="badgeTooltip()">
+          <span class="celestial-disc" aria-hidden="true"></span>
+          <img class="brand-logo-image" src="/2pi.png" alt="" aria-hidden="true">
+        </div>
         <div class="brand-text-col">
           <span class="brand-title">2piClock</span>
           <span class="brand-sub">2PICLOCK.COM</span>
@@ -82,12 +89,13 @@
 
       <!-- Subtle Basic Navigation Links on the Left -->
       <nav class="hidden lg:flex items-center gap-0.5 text-xs" aria-label="Primary">
-        <a routerLink="/" routerLinkActive="nav-main-active" [routerLinkActiveOptions]="{exact:true}" class="nav-main-link"><span>Sky</span></a>
+        <a [routerLink]="locationPath()" routerLinkActive="nav-main-active" [routerLinkActiveOptions]="{exact:true}" class="nav-main-link"><span>Sky</span></a>
         <a routerLink="/time" routerLinkActive="nav-main-active" class="nav-main-link"><span>Time</span></a>
         <a routerLink="/world" routerLinkActive="nav-main-active" class="nav-main-link"><span>World</span></a>
-        <a routerLink="/astronomy" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
+        <a routerLink="/world-clocks" routerLinkActive="nav-main-active" class="nav-main-link"><span>Clocks</span></a>
+        <a [routerLink]="locationPath('astronomy')" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
         <a routerLink="/radio" routerLinkActive="nav-main-active" class="nav-main-link"><span>Radio</span></a>
-        <a routerLink="/events" routerLinkActive="nav-main-active" class="nav-main-link"><span>Events</span></a>
+        <a [routerLink]="locationPath('events')" routerLinkActive="nav-main-active" class="nav-main-link"><span>Events</span></a>
       </nav>
 
     </div>
@@ -149,14 +157,6 @@
               </button>
             </div>
 
-            <button
-              type="button"
-              class="btn-explore-current"
-              (click)="router.navigate(['/', selectedLocation().id]); closeMenus()">
-              <span>Explore {{ selectedLocation().name }}</span>
-              <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </button>
-
             <!-- Remote Search Results -->
             @if (isRemoteSearching()) {
               <div class="search-loading-row">
@@ -182,9 +182,10 @@
               </div>
             }
 
-            <!-- Featured Preset Locations by Country -->
+            <!-- Fresh random city preset from the complete library catalogue -->
+            @if (!searchQuery()) {
             <div class="preset-locations-scroll">
-              <span class="search-section-label">Featured Cities & Observatories</span>
+              <span class="search-section-label">Random Cities</span>
               @for (loc of filteredLocations(); track loc.id) {
                 <button 
                   type="button" 
@@ -204,6 +205,7 @@
                 </button>
               }
             </div>
+            }
           </div>
         }
       </div>

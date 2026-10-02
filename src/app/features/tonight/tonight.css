@@ -1,0 +1,1541 @@
+/* ==========================================================================
+   Tonight Observatory Almanac — Astronomical Space & Science Visual Styles
+   ========================================================================== */
+
+.tonight-observatory {
+  min-height: 100vh;
+  background-color: #07090e;
+  color: #f1f5f9;
+  padding: 24px 32px 64px;
+  max-width: 1440px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   Top Observatory Command Header
+   -------------------------------------------------------------------------- */
+.observatory-command-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+}
+
+.command-brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.observatory-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.observatory-emblem {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 35% 30%, var(--color-border) 0%, #0d121f 100%);
+  border: 1px solid var(--color-border-dark);
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.observatory-kicker {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f59e0b;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.observatory-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  line-height: 1.15;
+}
+
+.observatory-location-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.location-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border-dark);
+  color: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.location-trigger-btn:hover {
+  background: var(--color-border);
+  border-color: #64748b;
+}
+
+.location-country {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.chevron-sm {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+}
+
+.meta-sep {
+  color: #475569;
+}
+
+.meta-item {
+  color: #cbd5e1;
+}
+
+/* Quick Location Picker Modal */
+.location-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.location-picker-panel {
+  width: 100%;
+  max-width: 640px;
+  max-height: 80vh;
+  background: #0d121f;
+  border: 1px solid var(--color-border-dark);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.picker-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-midnight-950);
+  color: #94a3b8;
+}
+
+.picker-search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.picker-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.picker-close-btn:hover {
+  color: #ffffff;
+}
+
+.picker-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.picker-result-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: #f1f5f9;
+  transition: all 0.15s ease;
+}
+
+.picker-result-card:hover {
+  background: var(--color-border);
+  border-color: #f59e0b;
+}
+
+.picker-result-card.selected {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+}
+
+.picker-loc-info strong {
+  display: block;
+  font-size: 13.5px;
+  color: #ffffff;
+}
+
+.picker-loc-info span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Header Right Block */
+.command-right-block {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.twilight-stage-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+
+.stage-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.twilight-stage-badge[data-stage="full_night"] .stage-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.twilight-stage-badge[data-stage="day"] .stage-dot {
+  background: #eab308;
+  box-shadow: 0 0 8px #eab308;
+}
+
+.stage-name {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.stage-alt {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.live-clock-card {
+  text-align: right;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+}
+
+.live-clock-time {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.live-clock-date {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.command-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn-live-reset,
+.action-btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn-live-reset {
+  background: #ea580c;
+  border: 1px solid #f97316;
+  color: #ffffff;
+}
+
+.action-btn-live-reset:hover {
+  background: #c2410c;
+}
+
+.action-btn-share {
+  background: #161e2e;
+  border: 1px solid var(--color-border-dark);
+  color: #cbd5e1;
+}
+
+.action-btn-share:hover {
+  background: var(--color-border);
+  color: #ffffff;
+  border-color: #64748b;
+}
+
+/* --------------------------------------------------------------------------
+   Photometric Twilight & Darkness Spectrum Ribbon
+   -------------------------------------------------------------------------- */
+.twilight-spectrum-ribbon {
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 24px;
+}
+
+.spectrum-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.spectrum-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  font-family: monospace;
+}
+
+.spectrum-duration {
+  font-size: 12px;
+  color: #38bdf8;
+  margin-left: 10px;
+}
+
+.spectrum-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.legend-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.color-day { background: #f97316; }
+.color-civil { background: #b45309; }
+.color-nautical { background: #1e3a8a; }
+.color-astro { background: #1e1b4b; }
+.color-dark { background: #030712; border: 1px solid var(--color-border-dark); }
+
+/* The Color Ramp Track */
+.spectrum-track {
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--color-border-dark);
+  margin-bottom: 14px;
+  background: #020617;
+}
+
+.track-segment {
+  position: relative;
+  transition: opacity 0.2s ease;
+}
+
+.seg-day { flex: 1.2; background: linear-gradient(to right, #ea580c, #c2410c); }
+.seg-civil { flex: 0.9; background: linear-gradient(to right, #9a3412, #6b21a8); }
+.seg-nautical { flex: 1; background: linear-gradient(to right, #3730a3, #1e1b4b); }
+.seg-astro { flex: 1.2; background: linear-gradient(to right, #1e1b4b, #090d16); }
+.seg-dark {
+  flex: 4;
+  background: #020409;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px dashed rgba(37, 99, 235, 0.4);
+  border-right: 1px dashed rgba(37, 99, 235, 0.4);
+}
+
+.dark-window-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #93c5fd;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.seg-astro-dawn { flex: 1.2; background: linear-gradient(to right, #090d16, #1e1b4b); }
+.seg-nautical-dawn { flex: 1; background: linear-gradient(to right, #1e1b4b, #3730a3); }
+.seg-civil-dawn { flex: 0.9; background: linear-gradient(to right, #6b21a8, #9a3412); }
+.seg-day-end { flex: 1.2; background: linear-gradient(to right, #c2410c, #ea580c); }
+
+/* Milestones Row */
+.milestones-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.milestone-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-name {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.ms-time {
+  font-size: 13.5px;
+  color: #cbd5e1;
+}
+
+.ms-prime .ms-time {
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Tonight Scrubber Deck (Night Simulator)
+   -------------------------------------------------------------------------- */
+.tonight-scrubber-deck {
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px 22px;
+  margin-bottom: 24px;
+}
+
+.scrubber-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.scrubber-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.status-indicator.live {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.status-text {
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #cbd5e1;
+}
+
+.scrubber-quick-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.quick-jump-btn {
+  background: #161e2e;
+  border: 1px solid var(--color-border-dark);
+  color: #94a3b8;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quick-jump-btn:hover {
+  background: var(--color-border);
+  color: #ffffff;
+  border-color: #64748b;
+}
+
+.quick-jump-btn.live-btn {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-weight: 600;
+}
+
+.quick-jump-btn.live-btn:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+}
+
+.scrubber-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.scrubber-bound {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  min-width: 50px;
+}
+
+.nocturnal-slider {
+  flex: 1;
+  accent-color: #f59e0b;
+  height: 6px;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Observatory Main Split Stage (Dome & Seeing HUD)
+   -------------------------------------------------------------------------- */
+.observatory-split-stage {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1080px) {
+  .observatory-split-stage {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left / Primary: Sky Planisphere Card */
+.sky-planisphere-card {
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.card-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  font-family: monospace;
+}
+
+.card-title {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.planisphere-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 520px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planisphere-svg {
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+.star-group,
+.planet-dome-group,
+.moon-dome-group {
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.star-group:hover,
+.planet-dome-group:hover,
+.moon-dome-group:hover {
+  filter: brightness(1.3);
+}
+
+.star-label {
+  pointer-events: none;
+}
+
+/* Selected Body Telemetry HUD */
+.body-telemetry-hud {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  max-width: 380px;
+  background: rgba(13, 18, 31, 0.95);
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.hud-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hud-cat {
+  font-size: 10.5px;
+  color: #38bdf8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hud-name {
+  margin: 2px 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hud-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.hud-coords {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+}
+
+.hud-coords b {
+  color: #64748b;
+}
+
+.hud-detail {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+
+.hud-riseset {
+  font-size: 11px;
+  color: #f59e0b;
+}
+
+/* Right Column Panels */
+.seeing-and-moon-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.observatory-panel {
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.panel-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+/* Moon Showcase Row */
+.moon-showcase-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.moon-render-orb {
+  width: 90px;
+  height: 90px;
+  min-width: 90px;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  background: var(--color-midnight-950);
+  overflow: hidden;
+}
+
+.moon-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.moon-metrics-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-item .lbl {
+  font-size: 10.5px;
+  color: #64748b;
+  display: block;
+}
+
+.metric-item .val {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.lunar-riseset-strip {
+  display: flex;
+  justify-content: space-between;
+  background: var(--color-midnight-950);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.lunar-riseset-strip span {
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.lunar-riseset-strip b {
+  color: #f1f5f9;
+}
+
+/* Lunar Glare Meter */
+.lunar-glare-card {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+}
+
+.glare-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.glare-title {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.glare-pct {
+  color: #f59e0b;
+}
+
+.glare-bar-bg {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.glare-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #10b981, #f59e0b, #ef4444);
+  transition: width 0.3s ease;
+}
+
+.glare-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Seeing & Transparency Card */
+.score-display-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-circle-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  min-width: 76px;
+  border-radius: 50%;
+  border: 2px solid;
+}
+
+.score-num {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-den {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.score-rating-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.score-summary {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.seeing-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: var(--color-midnight-950);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.seeing-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-lbl {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.stat-val {
+  font-size: 14px;
+  color: #f1f5f9;
+}
+
+.dew-warning-callout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.dew-warning-callout mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* --------------------------------------------------------------------------
+   Planetary Ephemeris Table Section
+   -------------------------------------------------------------------------- */
+.tonight-table-section {
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.section-head-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.section-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  font-family: monospace;
+}
+
+.section-title {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.section-meta-text {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.planetary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.planetary-table th {
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.planetary-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-midnight-950);
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.planetary-table tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.planetary-table tr:hover {
+  background-color: var(--color-midnight-950);
+}
+
+.planetary-table tr.highlighted {
+  background-color: rgba(56, 189, 248, 0.04);
+}
+
+.td-planet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planet-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.planet-glyph {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.status-indicator-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  background: var(--color-border);
+  color: #94a3b8;
+}
+
+.status-indicator-tag.optimal {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-indicator-tag.visible {
+  background: rgba(30, 58, 138, 0.25);
+  color: #93c5fd;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+.status-indicator-tag.below {
+  background: var(--color-midnight-950);
+  color: #64748b;
+}
+
+/* --------------------------------------------------------------------------
+   Visual Night Sky Trajectory & Altitude Card (Dark Midnight Blue)
+   -------------------------------------------------------------------------- */
+.tonight-altitude-chart-card {
+  background: #060c1c;
+  border: 1px solid #14244b;
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.chart-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.curve-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: #091226;
+  border: 1px solid #162447;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toggle-pill:hover {
+  background: #0d1a38;
+  color: #ffffff;
+  border-color: #1e3a8a;
+}
+
+.toggle-pill .pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.toggle-pill.active {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: #ffffff;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+.toggle-pill.pill-moon.active .pill-dot { background: #ffffff; }
+.toggle-pill.pill-jupiter.active .pill-dot { background: #fed7aa; }
+.toggle-pill.pill-saturn.active .pill-dot { background: #fde047; }
+.toggle-pill.pill-venus.active .pill-dot { background: #fef08a; }
+.toggle-pill.pill-mars.active .pill-dot { background: #f87171; }
+
+.altitude-svg-wrapper {
+  width: 100%;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 0%, var(--color-surface-elevated) 0%, #050d22 55%, #020512 100%);
+  border: 1px solid #162a56;
+  border-radius: 10px;
+  padding: 14px 14px 18px;
+  box-shadow: 0 12px 36px -8px rgba(2, 6, 23, 0.8), inset 0 1px 0 color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+.altitude-svg {
+  width: 100%;
+  height: 220px;
+  display: block;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.peak-badge-group {
+  pointer-events: none;
+  user-select: none;
+}
+
+.current-time-marker {
+  pointer-events: none;
+}
+
+.altitude-time-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 30px 14px;
+  font-size: 11px;
+  color: #94a3b8;
+  border-top: 1px solid #14244b;
+  margin-top: 4px;
+}
+
+/* Visual "When to Spot Them Tonight" Guide Cards Deck */
+.visual-sky-guide-deck {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #14244b;
+}
+
+.guide-deck-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.guide-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-strong);
+}
+
+.guide-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.guide-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.celestial-guide-card {
+  background: #060e22;
+  border: 1px solid #122144;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.celestial-guide-card:hover {
+  background: #091636;
+  border-color: #1e3a8a;
+  transform: translateY(-1px);
+}
+
+.celestial-guide-card.active {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.guide-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.guide-planet-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #f8fafc;
+}
+
+.guide-orb {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.guide-symbol {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.guide-status-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.guide-status-tag.optimal {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.guide-status-tag.visible {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  color: #93c5fd;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+}
+
+.guide-status-tag.low {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.guide-status-tag.below {
+  background: #030712;
+  color: #64748b;
+  border: 1px solid var(--color-border);
+}
+
+.peak-time-row {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.peak-time-row .lbl {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.peak-time-row .val {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.peak-time-row .alt-val {
+  color: #93c5fd;
+  font-size: 10.5px;
+}
+
+.guide-timeline-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.guide-timeline-track {
+  height: 5px;
+  background: #020614;
+  border: 1px solid #142247;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.guide-timeline-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  opacity: 0.85;
+}
+
+.guide-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #475569;
+}
+
+.guide-tip {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   Deep-Sky Targets Checklist
+   -------------------------------------------------------------------------- */
+.targets-checklist-section {
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.targets-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.target-card {
+  background: var(--color-midnight-950);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.target-card:hover {
+  background: #161e2e;
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+.target-card.is-observed {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.target-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.checkbox-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  transition: all 0.15s ease;
+}
+
+.checkbox-circle.checked {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.check-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.target-heading {
+  flex: 1;
+}
+
+.target-catalog {
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+}
+
+.target-name {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.target-type-badge {
+  font-size: 10px;
+  font-family: monospace;
+  padding: 2px 6px;
+  background: var(--color-border);
+  color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.target-desc {
+  font-size: 12.5px;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0;
+  flex: 1;
+}
+
+.target-footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #cbd5e1;
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.target-footer-meta b {
+  color: #64748b;
+}
+
+/* --------------------------------------------------------------------------
+   Footer Navigation / Stargazing Link Out Cards
+   -------------------------------------------------------------------------- */
+.tonight-footer-nav {
+  margin-top: 16px;
+}
+
+.footer-links-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.footer-link-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #0d121f;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  color: #f1f5f9;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.footer-link-card:hover {
+  background: var(--color-midnight-950);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+}
+
+.footer-link-card mat-icon:first-child {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: #f59e0b;
+}
+
+.footer-link-card strong {
+  display: block;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.footer-link-card span {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.footer-link-card .arrow-icon {
+  margin-left: auto;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.footer-link-card:hover .arrow-icon {
+  transform: translateX(3px);
+  color: #ffffff;
+}

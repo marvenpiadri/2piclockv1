@@ -323,7 +323,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private readonly mapBackbone = inject(MapBackboneService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets = this.locationService.allPresets;
   readonly activeDate = this.timeControlService.currentActiveDate;
   readonly celestial = this.celestialService.celestialState;
   readonly localTime = this.celestialService.formattedLocalTime;
@@ -331,37 +330,28 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly currentWeather = this.weatherService.currentWeather;
 
   // View Display Toggles
-  readonly showNightTerminator = signal<boolean>(true);
-  readonly showTwilightBands = signal<boolean>(true);
   readonly showCityLabels = signal<boolean>(true);
   readonly showTimezoneGrid = signal<boolean>(false);
   readonly showCelestialGrid = signal<boolean>(true);
   readonly showSolarTrack = signal<boolean>(true);
   readonly showMoonZenith = signal<boolean>(true);
-  readonly showWindVectors = signal<boolean>(false);
+  readonly showWorldWeather = signal<boolean>(false);
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
 
-  @ViewChild('windCanvas', { static: false }) windCanvasRef?: ElementRef<HTMLCanvasElement>;
-
-  private windParticles: { lat: number; lng: number; age: number; maxAge: number }[] = [];
-  private windAnimFrameId: number | null = null;
-
-  // Search & Inspection State
-  readonly searchQuery = signal<string>('');
-  readonly isSearchOpen = signal<boolean>(false);
+  readonly isSearchOpen = signal(false);
+  readonly searchQuery = signal('');
   readonly inspectedLocation = signal<GeoLocation | null>(null);
-  readonly probePoint = signal<MapProbePoint | null>(null);
-
-  readonly observatories = FAMOUS_OBSERVATORIES;
-
   private map: MapLibreMap | null = null;
+  private readonly cityMarkers = new Map<string, Marker>();
+  private allMapLocations: GeoLocation[] = [];
+  private readonly mapLocationById = new Map<string, GeoLocation>();
   private observerMarker: Marker | null = null;
   private subsolarMarker: Marker | null = null;
   private sublunarMarker: Marker | null = null;
   private probeMarker: Marker | null = null;
-  private cityMarkers = new Map<string, Marker>();
-  private countryLocations: GeoLocation[] = [];
+  readonly probePoint = signal<MapProbePoint | null>(null);
+
   private lastLocationId = '';
 
   // Subsolar Point Calculation (Point where Sun is directly at Zenith Alt 90°)
@@ -379,16 +369,16 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly isRemoteSearching = signal(false);
   private remoteSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
+  readonly observatories = FAMOUS_OBSERVATORIES;
+  private worldWeatherSourceReady = false;
+
+  /**
+   * Search results come from the complete server-side city catalogue.
+   * Presets are only defaults/watchlist data and must never limit map search.
+   */
   readonly searchResults = computed<GeoLocation[]>(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return [];
-    const local = this.allPresets.filter(loc =>
-      loc.name.toLowerCase().includes(q) ||
-      loc.country.toLowerCase().includes(q) ||
-      loc.timezone.toLowerCase().includes(q)
-    );
-    const seen = new Set(local.map(loc => loc.id));
-    return [...local, ...this.remoteSearchResults().filter(loc => !seen.has(loc.id))].slice(0, 12);
+    if (this.searchQuery().trim().length < 2) return [];
+    return this.remoteSearchResults().slice(0, 20);
   });
 
   onSearchQueryChange(value: string): void {
@@ -401,7 +391,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
     this.remoteSearchTimer = setTimeout(() => {
       this.isRemoteSearching.set(true);
-      this.geocodingService.search(value, 10).subscribe(results => {
+      this.geocodingService.search(value, 50).subscribe(results => {
         this.remoteSearchResults.set(results);
         this.isRemoteSearching.set(false);
       });
@@ -409,7 +399,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   }
 
   private markerRenderState = new Map<string, string>();
-  private lastTerminatorDateMs = 0;
   private lastSolarTrackLat: number | null = null;
 
   // Calculates complete WorldHubStatus for a single location on demand
@@ -527,28 +516,22 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       effect(() => {
         const date = this.activeDate();
         const loc = this.selectedLocation();
-        const showNight = this.showNightTerminator();
-        const showTwilight = this.showTwilightBands();
         const showTz = this.showTimezoneGrid();
         const showCel = this.showCelestialGrid();
         const showTrack = this.showSolarTrack();
+        const showWeather = this.showWorldWeather();
 
         if (this.map && this.isMapLoaded()) {
-          this.updateTerminatorLayers(date, showNight, showTwilight);
           this.updateTimezoneLayer(showTz);
           this.updateCelestialGridLayer(showCel);
           this.updateSolarTrackLayer(date, showTrack);
+          this.updateWorldWeatherLayer(showWeather);
           this.updateSubsolarMarker();
           this.updateSublunarMarker();
           this.updateObserverMarker(loc);
           this.updateCityMarkerLabels();
 
-          if (loc.id !== this.lastLocationId) {
-            this.lastLocationId = loc.id;
-            if (this.showWindVectors()) {
-              this.weatherService.fetchWeatherForLocation(loc);
-            }
-          }
+          if (loc.id !== this.lastLocationId) this.lastLocationId = loc.id;
         }
       });
     }
@@ -558,15 +541,11 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       setTimeout(() => {
         this.initMapLibreMap();
-        if (this.showWindVectors()) {
-          this.startWindParticleLoop();
-        }
       }, 40);
     }
   }
 
   ngOnDestroy(): void {
-    this.stopWindParticleLoop();
     if (this.map) {
       this.cityMarkers.forEach(m => m.remove());
       this.cityMarkers.clear();
@@ -574,7 +553,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       if (this.subsolarMarker) this.subsolarMarker.remove();
       if (this.sublunarMarker) this.sublunarMarker.remove();
       if (this.probeMarker) this.probeMarker.remove();
-      this.countryLocations = [];
       this.map.remove();
       this.map = null;
     }
@@ -601,9 +579,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       if (!this.map) return;
       this.isMapLoaded.set(true);
 
-      // Add Day/Night Terminator and Twilight Multi-band GeoJSON Source & Layers
-      this.initTerminatorSource();
-
       // Add Timezone Meridians Grid
       this.initTimezoneSource();
 
@@ -612,6 +587,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
       // Add Solar Ground Track
       this.initSolarTrackSource();
+      this.initWorldWeatherSource();
 
       // Add Subsolar Marker
       this.initSubsolarMarker();
@@ -622,9 +598,8 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       // Add Observer Location Marker
       this.initObserverMarker();
 
-      // Add global country database pins first, then the curated city hubs.
-      this.initCountryPins();
-      this.initCityMarkers();
+      // Render curated labels plus the complete internal city catalogue.
+      this.initGlobalCityCatalogue();
 
       // Update on zoom change for level-of-detail rendering
       map.on('zoom', () => {
@@ -632,11 +607,10 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       });
 
       // Initial update
-      this.updateTerminatorLayers(this.activeDate(), this.showNightTerminator(), this.showTwilightBands());
       this.updateTimezoneLayer(this.showTimezoneGrid());
       this.updateCelestialGridLayer(this.showCelestialGrid());
       this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
-
+      this.updateWorldWeatherLayer(this.showWorldWeather());
       // Fetch weather for initial location
       this.weatherService.fetchWeatherForLocation(loc);
     });
@@ -661,11 +635,10 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       this.map.setStyle(MAP_THEMES[theme]);
       this.map.once('style.load', () => {
         this.isMapLoaded.set(true);
-        this.initTerminatorSource();
         this.initTimezoneSource();
         this.initCelestialGridSource();
         this.initSolarTrackSource();
-        this.updateTerminatorLayers(this.activeDate(), this.showNightTerminator(), this.showTwilightBands());
+        this.initWorldWeatherSource();
         this.updateTimezoneLayer(this.showTimezoneGrid());
         this.updateCelestialGridLayer(this.showCelestialGrid());
         this.updateSolarTrackLayer(this.activeDate(), this.showSolarTrack());
@@ -673,271 +646,72 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Initializes Day/Night Terminator and Multi-stage Twilight Layers
-   */
-  private initTerminatorSource(): void {
+  private initWorldWeatherSource(): void {
     if (!this.map) return;
-
-    const initialGeoJson = this.buildTerminatorGeoJson(this.activeDate());
-
-    if (!this.map.getSource('terminator-source')) {
-      this.map.addSource('terminator-source', {
+    if (!this.map.getSource('world-weather-source')) {
+      this.map.addSource('world-weather-source', {
         type: 'geojson',
-        data: initialGeoJson as any
+        data: { type: 'FeatureCollection', features: [] } as any
       });
     }
-
-    // Deep Night Fill Layer (Dark translucent shadow)
-    if (!this.map.getLayer('terminator-night-fill')) {
+    if (!this.map.getLayer('world-weather-points')) {
       this.map.addLayer({
-        id: 'terminator-night-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'night'],
+        id: 'world-weather-points',
+        type: 'circle',
+        source: 'world-weather-source',
+        minzoom: 1.5,
         paint: {
-          'fill-color': '#020617',
-          'fill-opacity': 0.68
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 1.5, 3, 5, 5],
+          'circle-color': [
+            'match', ['get', 'condition'],
+            'clear', '#fbbf24',
+            'partly_cloudy', '#cbd5e1',
+            'overcast', '#94a3b8',
+            'fog', '#a8b4c2',
+            'rain', '#60a5fa',
+            'heavy_rain', '#3b82f6',
+            'snow', '#e2e8f0',
+            'heavy_snow', '#f8fafc',
+            'thunderstorm', '#a78bfa',
+            'severe_thunderstorm', '#c084fc',
+            '#94a3b8'
+          ],
+          'circle-opacity': 0.82,
+          'circle-stroke-color': '#07111f',
+          'circle-stroke-width': 1
         }
       });
     }
-
-    // Astronomical Twilight Layer (-18° to -12°)
-    if (!this.map.getLayer('twilight-astro-fill')) {
-      this.map.addLayer({
-        id: 'twilight-astro-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'twilight-astro'],
-        paint: {
-          'fill-color': '#030712',
-          'fill-opacity': 0.45
-        }
-      });
-    }
-
-    // Nautical Twilight Layer (-12° to -6°)
-    if (!this.map.getLayer('twilight-naut-fill')) {
-      this.map.addLayer({
-        id: 'twilight-naut-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'twilight-naut'],
-        paint: {
-          'fill-color': '#0f172a',
-          'fill-opacity': 0.35
-        }
-      });
-    }
-
-    // Civil Twilight Layer (-6° to 0°)
-    if (!this.map.getLayer('twilight-civil-fill')) {
-      this.map.addLayer({
-        id: 'twilight-civil-fill',
-        type: 'fill',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'twilight-civil'],
-        paint: {
-          'fill-color': '#1e1b4b',
-          'fill-opacity': 0.25
-        }
-      });
-    }
-
-    // Atmospheric Glow Line
-    if (!this.map.getLayer('terminator-glow-line')) {
-      this.map.addLayer({
-        id: 'terminator-glow-line',
-        type: 'line',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'terminator-line'],
-        paint: {
-          'line-color': '#fbbf24',
-          'line-width': 7,
-          'line-opacity': 0.35,
-          'line-blur': 3.5
-        }
-      });
-    }
-
-    // Golden Solar Terminator Boundary Line (Day/Night dividing line)
-    if (!this.map.getLayer('terminator-boundary-line')) {
-      this.map.addLayer({
-        id: 'terminator-boundary-line',
-        type: 'line',
-        source: 'terminator-source',
-        filter: ['==', 'layerType', 'terminator-line'],
-        paint: {
-          'line-color': '#f59e0b',
-          'line-width': 2.0,
-          'line-opacity': 0.95
-        }
-      });
-    }
+    this.worldWeatherSourceReady = true;
+    this.refreshWorldWeatherSource();
   }
 
-  /**
-   * Generates continuous spherical geometry for the Solar Terminator & Twilight Bands
-   * Uses analytical hour-angle transformation along longitude to guarantee zero self-intersections,
-   * zero antimeridian crossing glitches, and exact polar day/night handling.
-   */
-  private buildTerminatorGeoJson(date: Date): { type: 'FeatureCollection'; features: unknown[] } {
-    const subsolar = calculateSubsolarPoint(date);
-    const decDeg = subsolar.latitude;
-    const subLngDeg = subsolar.longitude;
-    const decRad = (decDeg * Math.PI) / 180;
-    const isNorthIlluminated = decDeg >= 0;
-
-    const clampLat = (lat: number): number => Math.max(-85.0511, Math.min(85.0511, lat));
-
-    // Computes continuous latitude array for longitude from -180 to +180 in 1° steps
-    const computeTerminatorCurve = (zenithAngleDeg: number): [number, number][] => {
-      const zRad = (zenithAngleDeg * Math.PI) / 180;
-      const R = Math.cos(zRad);
-      const sinDec = Math.sin(decRad);
-      const cosDec = Math.cos(decRad);
-
-      const points: [number, number][] = [];
-
-      for (let lng = -180; lng <= 180; lng += 1) {
-        // Local Hour Angle H = lng - subLngDeg in radians
-        let dLng = (lng - subLngDeg) % 360;
-        if (dLng > 180) dLng -= 360;
-        if (dLng < -180) dLng += 360;
-        const H = (dLng * Math.PI) / 180;
-
-        const A = sinDec;
-        const B = cosDec * Math.cos(H);
-        const C = Math.sqrt(A * A + B * B);
-
-        let lat: number;
-        if (C < 0.0001) {
-          lat = isNorthIlluminated ? -85.0511 : 85.0511;
-        } else if (R > C) {
-          lat = isNorthIlluminated ? -85.0511 : 85.0511;
-        } else if (R < -C) {
-          lat = isNorthIlluminated ? 85.0511 : -85.0511;
-        } else {
-          const gamma = Math.atan2(B, A);
-          const alpha = Math.asin(Math.max(-1, Math.min(1, R / C)));
-          const latRad = alpha - gamma;
-          lat = (latRad * 180) / Math.PI;
-
-          if (lat > 90) lat = 180 - lat;
-          if (lat < -90) lat = -180 - lat;
+  private refreshWorldWeatherSource(): void {
+    if (!this.map || !this.worldWeatherSourceReady) return;
+    const weather = this.weatherService.worldWeather();
+    const features = this.allMapLocations
+      .filter(loc => weather[loc.id])
+      .map(loc => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
+        properties: {
+          id: loc.id,
+          condition: weather[loc.id].condition,
+          temperatureC: weather[loc.id].temperatureC,
+          cloudCoverPct: weather[loc.id].cloudCoverPct,
+          windSpeedKmh: weather[loc.id].windSpeedKmh
         }
-
-        points.push([lng, clampLat(lat)]);
-      }
-
-      return points;
-    };
-
-    const makeNightPolygon = (curve: [number, number][]): [number, number][] => {
-      if (curve.length === 0) return [];
-      const poly: [number, number][] = [];
-
-      if (isNorthIlluminated) {
-        for (let i = curve.length - 1; i >= 0; i--) {
-          poly.push(curve[i]);
-        }
-        poly.push([-180, -85.0511]);
-        poly.push([180, -85.0511]);
-        poly.push(curve[curve.length - 1]);
-      } else {
-        for (const pt of curve) {
-          poly.push(pt);
-        }
-        poly.push([180, 85.0511]);
-        poly.push([-180, 85.0511]);
-        poly.push(curve[0]);
-      }
-
-      return poly;
-    };
-
-    const geometricCurve = computeTerminatorCurve(90.833);
-    const civilCurve = computeTerminatorCurve(96.0);
-    const nautCurve = computeTerminatorCurve(102.0);
-    const astroCurve = computeTerminatorCurve(108.0);
-
-    const nightPolygon = makeNightPolygon(geometricCurve);
-    const civilPolygon = makeNightPolygon(civilCurve);
-    const nautPolygon = makeNightPolygon(nautCurve);
-    const astroPolygon = makeNightPolygon(astroCurve);
-
-    return {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: { layerType: 'twilight-astro' },
-          geometry: { type: 'Polygon', coordinates: [astroPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'twilight-naut' },
-          geometry: { type: 'Polygon', coordinates: [nautPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'twilight-civil' },
-          geometry: { type: 'Polygon', coordinates: [civilPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'night' },
-          geometry: { type: 'Polygon', coordinates: [nightPolygon] }
-        },
-        {
-          type: 'Feature',
-          properties: { layerType: 'terminator-line' },
-          geometry: { type: 'LineString', coordinates: geometricCurve }
-        }
-      ]
-    };
+      }));
+    const source = this.map.getSource('world-weather-source') as GeoJSONSource | undefined;
+    source?.setData({ type: 'FeatureCollection', features } as any);
   }
 
-  private updateTerminatorLayers(date: Date, showNight: boolean, showTwilight: boolean): void {
-    if (!this.map || !this.map.getSource('terminator-source')) return;
-
-    const dateMs = date.getTime();
-    if (Math.abs(dateMs - this.lastTerminatorDateMs) >= 2000) {
-      this.lastTerminatorDateMs = dateMs;
-      const source = this.map.getSource('terminator-source') as GeoJSONSource;
-      if (source) {
-        const data = this.buildTerminatorGeoJson(date);
-        source.setData(data as any);
-      }
-    }
-
-    const nightFill = showNight ? 0.68 : 0;
-    const boundaryLine = showNight ? 0.95 : 0;
-    const twilightOpacity = (showNight && showTwilight) ? 0.32 : 0;
-
-    if (this.map.getLayer('terminator-night-fill')) {
-      this.map.setPaintProperty('terminator-night-fill', 'fill-opacity', nightFill);
-    }
-    if (this.map.getLayer('terminator-boundary-line')) {
-      this.map.setPaintProperty('terminator-boundary-line', 'line-opacity', boundaryLine);
-    }
-    if (this.map.getLayer('terminator-glow-line')) {
-      this.map.setPaintProperty('terminator-glow-line', 'line-opacity', boundaryLine * 0.35);
-    }
-    if (this.map.getLayer('twilight-civil-fill')) {
-      this.map.setPaintProperty('twilight-civil-fill', 'fill-opacity', twilightOpacity * 0.8);
-    }
-    if (this.map.getLayer('twilight-naut-fill')) {
-      this.map.setPaintProperty('twilight-naut-fill', 'fill-opacity', twilightOpacity);
-    }
-    if (this.map.getLayer('twilight-astro-fill')) {
-      this.map.setPaintProperty('twilight-astro-fill', 'fill-opacity', twilightOpacity * 1.15);
-    }
+  private updateWorldWeatherLayer(show: boolean): void {
+    if (!this.map || !this.map.getLayer('world-weather-points')) return;
+    this.refreshWorldWeatherSource();
+    this.map.setPaintProperty('world-weather-points', 'circle-opacity', show ? 0.82 : 0);
   }
 
-  /**
-   * Initializes the UTC Timezone Meridian Lines GeoJSON Source & Layer
-   */
   private initTimezoneSource(): void {
     if (!this.map) return;
 
@@ -1313,60 +1087,139 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   /**
    * Initializes Global City Markers with progressive Level-Of-Detail
    */
-  private initCountryPins(): void {
+  private initGlobalCityCatalogue(): void {
     if (!this.map) return;
 
-    this.geocodingService.getCountries().subscribe(countries => {
-      if (!this.map || !this.isMapLoaded()) return;
-      this.countryLocations = countries;
-      const sourceData = {
-        type: 'FeatureCollection',
-        features: countries.map(loc => ({
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
-          properties: { id: loc.id, name: loc.country, flag: loc.flag, countryCode: loc.countryCode }
+    this.geocodingService.getMapLocations().subscribe(locations => {
+      if (!this.map || !locations.length) return;
+
+      this.allMapLocations = locations;
+      if (this.showWorldWeather()) this.weatherService.fetchWorldWeather(locations);
+      this.mapLocationById.clear();
+      for (const location of locations) this.mapLocationById.set(location.id, location);
+
+      const data = {
+        type: 'FeatureCollection' as const,
+        features: locations.map(location => ({
+          type: 'Feature' as const,
+          id: location.id,
+          properties: {
+            id: location.id,
+            name: location.name,
+            country: location.country
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [location.longitude, location.latitude]
+          }
         }))
       };
 
-      if (this.map.getSource('country-pins')) {
-        (this.map.getSource('country-pins') as GeoJSONSource).setData(sourceData as any);
-      } else {
-        this.map.addSource('country-pins', { type: 'geojson', data: sourceData as any });
-        this.map.addLayer({
-          id: 'country-pins',
-          type: 'circle',
-          source: 'country-pins',
-          minzoom: 1,
-          maxzoom: 3.8,
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 2.2, 3.5, 3.8],
-            'circle-color': '#fbbf24',
-            'circle-opacity': 0.82,
-            'circle-stroke-color': '#0a1628',
-            'circle-stroke-width': 1
-          }
+      this.map.addSource('global-city-catalogue', {
+        type: 'geojson',
+        data: data as any,
+        cluster: true,
+        clusterMaxZoom: 5,
+        clusterRadius: 42
+      });
+
+      this.map.addLayer({
+        id: 'global-city-clusters',
+        type: 'circle',
+        source: 'global-city-catalogue',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#f59e0b',
+          'circle-opacity': 0.72,
+          'circle-radius': ['step', ['get', 'point_count'], 11, 25, 15, 100, 20],
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#fde68a',
+          'circle-stroke-opacity': 0.55
+        }
+      });
+
+      this.map.addLayer({
+        id: 'global-city-cluster-count',
+        type: 'symbol',
+        source: 'global-city-catalogue',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-size': 10,
+          'text-allow-overlap': true
+        },
+        paint: { 'text-color': '#111827' }
+      });
+
+      this.map.addLayer({
+        id: 'global-city-points',
+        type: 'circle',
+        source: 'global-city-catalogue',
+        minzoom: 3.5,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 3.5, 1.5, 7, 3, 10, 4],
+          'circle-color': '#fbbf24',
+          'circle-opacity': 0.72,
+          'circle-stroke-width': 0.6,
+          'circle-stroke-color': '#fff7ed',
+          'circle-stroke-opacity': 0.55
+        }
+      });
+
+      this.map.addLayer({
+        id: 'global-city-labels',
+        type: 'symbol',
+        source: 'global-city-catalogue',
+        minzoom: 6,
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 6, 9, 10, 12],
+          'text-offset': [0, 0.9],
+          'text-anchor': 'top',
+          'text-allow-overlap': false
+        },
+        paint: {
+          'text-color': '#fef3c7',
+          'text-halo-color': '#07111f',
+          'text-halo-width': 1.4
+        }
+      });
+
+      this.map.on('click', 'global-city-clusters', async event => {
+        const feature = event.features?.[0];
+        if (!feature) return;
+        const clusterId = feature.properties?.['cluster_id'];
+        const source = this.map?.getSource('global-city-catalogue') as GeoJSONSource | undefined;
+        if (!source || clusterId == null) return;
+        const zoom = await source.getClusterExpansionZoom(Number(clusterId));
+        const coordinates = (feature.geometry as any).coordinates as [number, number];
+        this.map?.easeTo({ center: coordinates, zoom });
+      });
+
+      this.map.on('click', 'global-city-points', event => {
+        const feature = event.features?.[0];
+        const id = String(feature?.properties?.['id'] ?? '');
+        const location = this.mapLocationById.get(id);
+        if (location) this.selectLocation(location);
+      });
+
+      for (const layerId of ['global-city-clusters', 'global-city-points']) {
+        this.map.on('mouseenter', layerId, () => {
+          if (this.map) this.map.getCanvas().style.cursor = 'pointer';
+        });
+        this.map.on('mouseleave', layerId, () => {
+          if (this.map) this.map.getCanvas().style.cursor = '';
         });
       }
-
-      this.map.on('click', 'country-pins', event => {
-        const feature = event.features?.[0];
-        const id = feature?.properties?.['id'];
-        const country = this.countryLocations.find(loc => loc.id === id);
-        if (country) this.selectLocation(country);
-      });
-      this.map.on('mouseenter', 'country-pins', () => {
-        if (this.map) this.map.getCanvas().style.cursor = 'pointer';
-      });
-      this.map.on('mouseleave', 'country-pins', () => {
-        if (this.map) this.map.getCanvas().style.cursor = '';
-      });
     });
   }
 
   private initCityMarkers(): void {
     if (!this.map) return;
 
-    this.allPresets.forEach(loc => {
+    this.allMapLocations.forEach(loc => {
       const el = document.createElement('div');
       el.className = 'city-marker-anchor';
       el.dataset['cityId'] = loc.id;
@@ -1401,7 +1254,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     const currentZoom = this.map ? this.map.getZoom() : 2;
     const minuteBucket = Math.floor(date.getTime() / 60000);
 
-    for (const loc of this.allPresets) {
+    for (const loc of this.allMapLocations) {
       const marker = this.cityMarkers.get(loc.id);
       if (!marker) continue;
 
@@ -1733,14 +1586,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleTerminator(): void {
-    this.showNightTerminator.update(v => !v);
-  }
-
-  toggleTwilight(): void {
-    this.showTwilightBands.update(v => !v);
-  }
-
   toggleCityLabels(): void {
     this.showCityLabels.update(v => !v);
     this.updateCityMarkerLabels();
@@ -1766,158 +1611,11 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleWindVectors(): void {
-    const enabled = !this.showWindVectors();
-    this.showWindVectors.set(enabled);
-
-    if (enabled) {
-      // Weather is an opt-in analytical layer on the World Map.
-      this.weatherService.fetchWeatherForLocation(this.selectedLocation());
-      this.startWindParticleLoop();
-    } else {
-      this.stopWindParticleLoop();
-    }
-  }
-
-  private stopWindParticleLoop(): void {
-    if (this.windAnimFrameId !== null && this.isBrowser) {
-      cancelAnimationFrame(this.windAnimFrameId);
-      this.windAnimFrameId = null;
-    }
-    const canvas = this.windCanvasRef?.nativeElement;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  private startWindParticleLoop(): void {
-    if (this.windAnimFrameId !== null || !this.isBrowser) return;
-    const loop = () => {
-      if (!this.showWindVectors()) {
-        this.stopWindParticleLoop();
-        return;
-      }
-      this.renderWindFrame();
-      this.windAnimFrameId = requestAnimationFrame(loop);
-    };
-    this.windAnimFrameId = requestAnimationFrame(loop);
-  }
-
-  private initWindParticles(west: number, east: number, south: number, north: number): void {
-    this.windParticles = [];
-    const particleCount = 160;
-    for (let i = 0; i < particleCount; i++) {
-      this.windParticles.push({
-        lng: west + Math.random() * (east - west),
-        lat: south + Math.random() * (north - south),
-        age: Math.floor(Math.random() * 80),
-        maxAge: 50 + Math.floor(Math.random() * 60)
-      });
-    }
-  }
-
-  private renderWindFrame(): void {
-    const canvas = this.windCanvasRef?.nativeElement;
-    if (!canvas || !this.map || !this.showWindVectors() || !this.isMapLoaded()) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      const bounds = this.map.getBounds();
-      this.initWindParticles(bounds.getWest(), bounds.getEast(), bounds.getSouth(), bounds.getNorth());
-    }
-
-    // Fading background fill creates Windy.com motion trail streamlines
-    ctx.fillStyle = 'rgba(10, 22, 40, 0.2)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const bounds = this.map.getBounds();
-    const west = bounds.getWest();
-    const east = bounds.getEast();
-    const south = bounds.getSouth();
-    const north = bounds.getNorth();
-
-    if (this.windParticles.length === 0) {
-      this.initWindParticles(west, east, south, north);
-    }
-
-    const currentW = this.currentWeather();
-    const baseSpeed = currentW.windSpeedKmh || 18;
-    const baseDeg = currentW.windDirectionDeg || 210;
-    const zoom = this.map.getZoom();
-
-    for (const p of this.windParticles) {
-      p.age++;
-
-      if (p.age > p.maxAge || p.lng < west || p.lng > east || p.lat < south || p.lat > north) {
-        p.lng = west + Math.random() * (east - west);
-        p.lat = south + Math.random() * (north - south);
-        p.age = 0;
-        p.maxAge = 50 + Math.floor(Math.random() * 60);
-        continue;
-      }
-
-      // Convert Lat/Lng to Canvas pixel screen coordinates
-      const pxCurr = this.map.project([p.lng, p.lat]);
-
-      // Local regional wave modulation across lat/lng for realistic Windy.com fluid flow
-      const waveDeg = Math.sin(p.lat * 0.12 + p.lng * 0.08) * 20 + Math.cos(p.lat * 0.05) * 15;
-      const localDeg = (baseDeg + waveDeg + 360) % 360;
-      const localSpeed = Math.max(6, baseSpeed + Math.sin(p.lng * 0.1) * 8);
-
-      // Meteorology wind direction is "coming FROM". Flow is towards (deg + 180)
-      const flowRad = ((localDeg + 180) % 360) * (Math.PI / 180);
-
-      // Scale geographic step for map zoom level
-      const stepScale = 0.012 / Math.pow(1.4, Math.max(0, zoom - 2));
-      const dLng = localSpeed * Math.sin(flowRad) * stepScale;
-      const dLat = localSpeed * Math.cos(flowRad) * stepScale;
-
-      p.lng += dLng;
-      p.lat += dLat;
-
-      const pxNext = this.map.project([p.lng, p.lat]);
-
-      // Render vector streamline
-      ctx.beginPath();
-      ctx.moveTo(pxCurr.x, pxCurr.y);
-      ctx.lineTo(pxNext.x, pxNext.y);
-
-      // Windy.com Color Palette according to velocity
-      if (localSpeed >= 70) {
-        ctx.strokeStyle = 'rgba(225, 29, 72, 0.9)'; // Crimson (> 70 km/h)
-        ctx.lineWidth = 2.4;
-      } else if (localSpeed >= 50) {
-        ctx.strokeStyle = 'rgba(249, 115, 22, 0.85)'; // Orange (50 - 70 km/h)
-        ctx.lineWidth = 2.0;
-      } else if (localSpeed >= 30) {
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)'; // Amber (30 - 50 km/h)
-        ctx.lineWidth = 1.6;
-      } else if (localSpeed >= 15) {
-        ctx.strokeStyle = 'rgba(16, 185, 129, 0.75)'; // Emerald (15 - 30 km/h)
-        ctx.lineWidth = 1.4;
-      } else {
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'; // Sky Blue (< 15 km/h)
-        ctx.lineWidth = 1.2;
-      }
-
-      ctx.stroke();
-
-      // Vector head dot
-      if (p.age % 10 === 0) {
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.beginPath();
-        ctx.arc(pxNext.x, pxNext.y, ctx.lineWidth * 0.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+  toggleWorldWeather(): void {
+    const enabled = !this.showWorldWeather();
+    this.showWorldWeather.set(enabled);
+    if (enabled) this.weatherService.fetchWorldWeather(this.allMapLocations);
+    this.updateWorldWeatherLayer(enabled);
   }
 
   private formatTimeOnly(date: Date, timezone: string): string {

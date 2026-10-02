@@ -1,21 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CelestialService } from '../../core/services/celestial.service';
 import { TimeControlService, SimulationSpeed } from '../../core/services/time-control.service';
 import { LocationService } from '../../core/services/location.service';
 import { WeatherService } from '../../core/services/weather.service';
+import { AstronomicalCalculatorService } from '../../core/services/astronomical-calculator.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
+import { GeocodingService } from '../../core/services/geocoding.service';
+import { Subscription } from 'rxjs';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
-import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent, AnalogClockComponent } from '../../shared/components';
+import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent, ReactiveSkyComponent, CelestialAstrolabeComponent } from '../../shared/components';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
-import { WorldEventsService } from '../../core/services/world-events.service';
-import { ReactiveSkyComponent } from '../../shared/components/reactive-sky/reactive-sky';
+import * as Astronomy from 'astronomy-engine';
 
 @Component({
   selector: 'app-sky-home',
@@ -31,30 +33,44 @@ import { ReactiveSkyComponent } from '../../shared/components/reactive-sky/react
     WeatherBarChartComponent, WeatherIconComponent,
     RouterLink,
     CountryFlagComponent,
-    AnalogClockComponent,
     ReactiveSkyComponent,
+    CelestialAstrolabeComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
   styleUrl: './sky-home.css'
 })
-export class SkyHomeComponent {
+export class SkyHomeComponent implements OnDestroy {
+  // Angular templates resolve identifiers against the component instance.
+  readonly Math = Math;
   private celestialService = inject(CelestialService);
   private timeControlService = inject(TimeControlService);
   private locationService = inject(LocationService);
+  private readonly geocodingService = inject(GeocodingService);
   readonly weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
-  readonly worldEvents = inject(WorldEventsService);
+  private astronomicalCalculator = inject(AstronomicalCalculatorService);
   private title = inject(Title);
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
+  readonly tonightViewMode = signal<'celestial' | 'analog'>('celestial');
 
-  private readonly skyPageState = signal<'time' | 'weather' | 'astronomy' | 'tonight' | 'world'>(
-    (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
+  private readonly skyPageState = signal<'time' | 'weather' | 'tonight'>(
+    (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'tonight'
   );
-  get skyPage(): 'time' | 'weather' | 'astronomy' | 'tonight' | 'world' {
+  get skyPage(): 'time' | 'weather' | 'tonight' {
     return this.skyPageState();
+  }
+
+  locationPath(section?: string): string[] {
+    return this.locationService.getLocationPath(this.selectedLocation(), section);
+  }
+
+  navigateToSection(section: 'weather' | 'tonight'): void {
+    const path = this.locationService.getLocationPath(this.selectedLocation(), section).join('/');
+    void this.router.navigateByUrl('/' + path);
   }
 
   readonly activeView = this.observatoryViewService.activeView;
@@ -67,7 +83,7 @@ export class SkyHomeComponent {
   readonly showEventsPanel = signal<boolean>(false);
   readonly showSettingsModal = signal<boolean>(false);
   readonly selectedLocation = this.locationService.selectedLocation;
-  readonly allPresets = this.locationService.allPresets;
+  readonly allLocations = this.locationService.locations;
   readonly activeDate = this.timeControlService.currentActiveDate;
   readonly isLive = this.timeControlService.isLive;
   readonly isPlaying = this.timeControlService.isPlaying;
@@ -86,9 +102,28 @@ export class SkyHomeComponent {
     );
   });
 
+  // The scrubber drives the local astronomical simulation immediately.
+  // Network-backed data is refreshed only when the user releases the control.
+  readonly scrubberPreviewFraction = signal<number | null>(null);
+  readonly scrubberFraction = computed(() =>
+    this.scrubberPreviewFraction() ?? this.localDayFraction()
+  );
+
+
+
   readonly localTime = this.celestialService.formattedLocalTime;
   readonly localDate = this.celestialService.formattedLocalDate;
   readonly timezoneDisplay = this.celestialService.timezoneDisplay;
+  readonly polarAngles = this.celestialService.polarClockAngles;
+  readonly isBrightSky = this.celestialService.isBrightSky;
+
+  readonly moonHandRotation = computed(() => {
+    const ageDays = this.celestial().moon.ageDays;
+    const elongationDeg = (ageDays / 29.530588853) * 360;
+    const sunRot = this.localDayFraction() * 360 - 180;
+    return sunRot + elongationDeg;
+  });
+
   // Simulated Eclipse State for interactive exploration and visual testing
   readonly simulatedEclipse = signal<'none' | 'solar' | 'lunar'>('none');
 
@@ -192,7 +227,109 @@ export class SkyHomeComponent {
   readonly planetaryPositions = this.celestialService.planetaryPositions;
 
   readonly visiblePlanetsTonight = computed(() => {
-    return this.planetaryPositions().filter(p => p.altitudeDeg > 0);
+    const location = this.selectedLocation();
+    const date = this.activeDate();
+
+    return this.planetaryPositions()
+      .filter(p => p.altitudeDeg > 0 && p.visible)
+      .map(planet => {
+        const riseSet = this.celestialService.getPlanetRiseSet(
+          planet.body,
+          date,
+          location.latitude,
+          location.longitude,
+          location.elevationMeters ?? 0
+        );
+
+        return {
+          ...planet,
+          rise: riseSet.rise,
+          set: riseSet.set
+        };
+      });
+  });
+
+  readonly tonightDarknessWindow = computed(() => {
+    const ev = this.celestial().solarEvents;
+    return {
+      civilDusk: ev.civilDusk,
+      nauticalDusk: ev.nauticalDusk,
+      astronomicalDusk: ev.astronomicalDusk,
+      astronomicalDawn: ev.astronomicalDawn,
+      nauticalDawn: ev.nauticalDawn,
+      civilDawn: ev.civilDawn
+    };
+  });
+
+  readonly moonObserving = computed(() => {
+    const c = this.celestial();
+    const moon = c.moon;
+    const location = this.selectedLocation();
+    const moonEvents = this.celestialService.getPlanetRiseSet(
+      Astronomy.Body.Moon,
+      this.activeDate(),
+      location.latitude,
+      location.longitude,
+      location.elevationMeters ?? 0
+    );
+    const sunAlt = c.sun.altitudeDeg;
+    const moonAbove = moon.altitudeDeg > 0;
+    const moonInterference = moonAbove ? Math.round(moon.illuminationFraction * 100) : 0;
+
+    return {
+      illuminationPct: Math.round(moon.illuminationFraction * 100),
+      altitudeDeg: moon.altitudeDeg,
+      azimuthDeg: moon.azimuthDeg,
+      phaseName: moon.phaseName,
+      rise: moonEvents.rise,
+      set: moonEvents.set,
+      aboveHorizon: moonAbove,
+      interferencePct: sunAlt < -12 ? moonInterference : Math.round(moonInterference * 0.35)
+    };
+  });
+
+  readonly visibleConstellations = computed(() =>
+    this.celestialService.getVisibleConstellations(
+      this.activeDate(),
+      this.selectedLocation().latitude,
+      this.selectedLocation().longitude,
+      8
+    )
+  );
+
+  readonly tonightTimeline = computed(() => {
+    const c = this.celestial();
+    const moon = this.moonObserving();
+    const events = [
+      { label: 'Sunset', time: c.solarEvents.sunset, detail: 'Sun reaches the horizon' },
+      { label: 'Civil dusk', time: c.solarEvents.civilDusk, detail: 'Bright stars begin to emerge' },
+      { label: 'Moonrise', time: moon.rise, detail: moon.phaseName + ' · ' + moon.illuminationPct + '% illuminated' },
+      { label: 'Astronomical dusk', time: c.solarEvents.astronomicalDusk, detail: 'Astronomical darkness begins' },
+      { label: 'Astronomical dawn', time: c.solarEvents.astronomicalDawn, detail: 'Astronomical darkness ends' },
+      { label: 'Moonset', time: moon.set, detail: 'Moon drops below the horizon' }
+    ];
+    return events
+      .filter(event => event.time instanceof Date && Number.isFinite(event.time.getTime()))
+      .sort((a, b) => a.time!.getTime() - b.time!.getTime());
+  });
+
+  readonly upcomingCelestialEvents = computed(() => {
+    const now = this.activeDate().getTime();
+    const location = this.selectedLocation();
+    const year = Number(new Intl.DateTimeFormat('en-US', {
+      timeZone: location.timezone,
+      year: 'numeric'
+    }).format(this.activeDate()));
+
+    const events = [
+      ...this.astronomicalCalculator.calculateYearlyEvents(year, location),
+      ...this.astronomicalCalculator.calculateYearlyEvents(year + 1, location)
+    ];
+
+    return events
+      .filter(event => event.date.getTime() > now)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 4);
   });
 
   readonly tonightTwilightSequence = computed(() => {
@@ -207,18 +344,21 @@ export class SkyHomeComponent {
     ];
   });
 
+  // Clock Display Mode: Radian 2Pi Dial vs Analog Clock (Digital option removed as requested)
+  readonly clockDisplayMode = signal<'radian' | 'analog'>('radian');
+
   readonly showShareModal = signal<boolean>(false);
   
   readonly isInspectorVisible = signal<boolean>(false);
   // Integrated right environmental deck: expanded by default, part of the page layout (not absolute or fixed modal)
   readonly isRightPanelExpanded = signal<boolean>(true);
-  readonly activeDeckTab = signal<'weather' | 'astronomy' | 'observations'>('weather');
+  readonly activeDeckTab = signal<'weather' | 'observations'>('weather');
 
   toggleRightPanel(): void {
     this.isRightPanelExpanded.update(v => !v);
   }
 
-  setDeckTab(tab: 'weather' | 'astronomy' | 'observations'): void {
+  setDeckTab(tab: 'weather' | 'observations'): void {
     this.activeDeckTab.set(tab);
   }
 
@@ -251,6 +391,12 @@ export class SkyHomeComponent {
     if (uv <= 7) return { label: 'High', color: '#fb923c', advice: 'Protection required' };
     if (uv <= 10) return { label: 'Very High', color: '#f43f5e', advice: 'Seek shade midday' };
     return { label: 'Extreme', color: '#c084fc', advice: 'Avoid direct midday exposure' };
+  });
+
+  readonly daylightDurationMinutes = computed(() => {
+    const events = this.celestial().solarEvents;
+    if (!events.sunrise || !events.sunset) return null;
+    return Math.max(0, Math.round((events.sunset.getTime() - events.sunrise.getTime()) / 60000));
   });
 
   readonly solarProgress = computed(() => {
@@ -312,12 +458,10 @@ export class SkyHomeComponent {
     return { score: 55, label: 'Brisk / Demanding', color: '#fb923c', activity: 'Dress appropriately for conditions' };
   });
   // Route-driven Sky pages keep each subject focused and lightweight.
-  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'footer'>('time');
+  readonly activeSection = signal<'time' | 'weather' | 'footer'>('time');
   readonly skySections = [
     { id: 'time', label: 'Time', icon: 'schedule' },
     { id: 'weather', label: 'Weather', icon: 'cloud' },
-    { id: 'astronomy', label: 'Astronomy', icon: 'auto_awesome' },
-    { id: 'world', label: 'World Time', icon: 'public' },
     { id: 'footer', label: 'About', icon: 'info' }
   ] as const;
 
@@ -331,15 +475,25 @@ export class SkyHomeComponent {
   constructor() {
     // A single SkyHome component powers the location-first routes. The URL
     // supplies both the location slug and the focused experience.
+    // Restore a shared astronomical instant from ?at=<ISO timestamp>.
+    // Location remains authoritative from the route; the timestamp is optional.
+    this.route.queryParamMap.subscribe(params => {
+      const sharedAt = params.get('at');
+      if (!sharedAt) return;
+      const date = new Date(sharedAt);
+      if (Number.isFinite(date.getTime())) {
+        this.timeControlService.setSpecificInstant(date);
+      }
+    });
+
     this.route.paramMap.subscribe(params => {
-      const slug = params.get('location');
       const experience = params.get('experience') as string | null;
       // Location-scoped routes are synchronized by validLocationGuard before
       // this component renders. Do not select again here or a route change
       // would clear weather overrides and trigger a duplicate refresh.
-      const routeExperience = experience && ['time', 'weather', 'astronomy', 'tonight', 'world'].includes(experience)
-        ? experience as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
-        : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
+      const routeExperience = experience && ['time', 'weather', 'tonight'].includes(experience)
+        ? experience as 'time' | 'weather' | 'tonight'
+        : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'tonight';
       this.skyPageState.set(routeExperience);
     });
 
@@ -347,24 +501,15 @@ export class SkyHomeComponent {
     // exactly one request path across the app.
     effect(() => {
       const location = this.selectedLocation();
-      if (this.skyPage === 'world') this.worldEvents.loadForLocation(location, this.activeDate());
-    });
-
-    effect(() => {
-      const location = this.selectedLocation();
       const labels = {
         time: `Now in ${location.name}, ${location.country}`,
         weather: `Weather in ${location.name}, ${location.country}`,
-        astronomy: `Astronomy in ${location.name}, ${location.country}`,
-        tonight: `Tonight in ${location.name}, ${location.country}`,
-        world: 'World Time'
+        tonight: `Tonight in ${location.name}, ${location.country}`
       };
       const descriptions = {
         time: `Current local time, sunrise, sunset, weather and astronomical conditions for ${location.name}, ${location.country}.`,
         weather: `Current conditions, hourly weather and a 7-day forecast for ${location.name}, ${location.country}.`,
-        astronomy: `Solar and lunar positions, moon phase, twilight and astronomical information for ${location.name}, ${location.country}.`,
-        tonight: `Tonight in ${location.name}: moon phase, twilight, stargazing conditions and the night sky.`,
-        world: 'Compare local time across major cities around the world.'
+        tonight: `Tonight in ${location.name}: moon phase, twilight, stargazing conditions and the night sky.`
       };
       const title = `${labels[this.skyPage]} | 2piClock`;
       const description = descriptions[this.skyPage];
@@ -402,7 +547,7 @@ export class SkyHomeComponent {
       }
     }
 
-    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'footer');
+    this.activeSection.set(nearest as 'time' | 'weather' | 'footer');
   }
 
   scrollToSection(id: string): void {
@@ -542,16 +687,51 @@ export class SkyHomeComponent {
     this.zoomLevel.set(100);
   }
 
-  // Drawer location search filter
+  // Drawer location search is backed by the complete internal city database.
+  // Presets remain only for the default state; they never constrain search.
   readonly drawerSearchQuery = signal<string>('');
+  readonly drawerLocationResults = signal<GeoLocation[]>([]);
+  readonly drawerLocationSearching = signal(false);
+  private drawerSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private drawerSearchSubscription: Subscription | null = null;
 
   readonly filteredDrawerLocations = computed(() => {
-    const q = this.drawerSearchQuery().toLowerCase().trim();
-    if (!q) return this.allPresets;
-    return this.allPresets.filter(
-      l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
-    );
+    const q = this.drawerSearchQuery().trim();
+    if (!q) return this.allLocations();
+    return this.drawerLocationResults();
   });
+
+  onDrawerSearch(value: string): void {
+    this.drawerSearchQuery.set(value);
+    if (this.drawerSearchTimer) clearTimeout(this.drawerSearchTimer);
+    this.drawerSearchSubscription?.unsubscribe();
+
+    const q = value.trim();
+    if (q.length < 2) {
+      this.drawerLocationResults.set([]);
+      this.drawerLocationSearching.set(false);
+      return;
+    }
+
+    this.drawerLocationSearching.set(true);
+    this.drawerSearchTimer = setTimeout(() => {
+      this.drawerSearchSubscription = this.geocodingService.search(q, 50).subscribe({
+        next: results => {
+          this.drawerLocationResults.set(results);
+          this.drawerLocationSearching.set(false);
+        },
+        error: () => {
+          this.drawerLocationResults.set([]);
+          this.drawerLocationSearching.set(false);
+        }
+      });
+    }, 180);
+  }
+
+  ngOnDestroy(): void {
+    if (this.drawerSearchTimer) clearTimeout(this.drawerSearchTimer);
+    this.drawerSearchSubscription?.unsubscribe();
+  }
 
   setView(view: ObservatoryView): void {
     this.observatoryViewService.setView(view);
@@ -635,9 +815,91 @@ export class SkyHomeComponent {
     }
   }
 
+  readonly comparisonDateInput = signal('');
+  readonly isComparingDates = computed(() => this.comparisonDateInput().length === 10);
+
+  readonly timeMachineComparison = computed(() => {
+    const value = this.comparisonDateInput();
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null;
+    const [year, month, day] = value.split('-').map(Number);
+    const timezone = this.selectedLocation().timezone;
+    const comparisonDate = this.getZonedDateTime(year, month, day, 12, 0, 0, timezone);
+    const observer = new Astronomy.Observer(
+      this.selectedLocation().latitude,
+      this.selectedLocation().longitude,
+      this.selectedLocation().elevationMeters ?? 0
+    );
+    const rise = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, comparisonDate, 1);
+    const set = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, comparisonDate, 1);
+    const currentParts = this.getLocalDateParts(this.activeDate(), timezone);
+    const comparisonMs = Date.UTC(year, month - 1, day);
+    const currentMs = Date.UTC(currentParts.year, currentParts.month - 1, currentParts.day);
+    const dayDelta = Math.round((comparisonMs - currentMs) / 86400000);
+    const daylightMinutes = rise && set ? Math.round((set.date.getTime() - rise.date.getTime()) / 60000) : null;
+    return {
+      date: value,
+      dayDelta,
+      sunrise: rise ? this.formatTime(rise.date) : '--:--',
+      sunset: set ? this.formatTime(set.date) : '--:--',
+      daylightMinutes
+    };
+  });
+
+  setComparisonDate(value: string): void {
+    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) this.comparisonDateInput.set(value);
+  }
+
+  clearComparisonDate(): void {
+    this.comparisonDateInput.set('');
+  }
+
+  readonly activeLocalDateInput = computed(() => {
+    const p = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+    return p.year + '-' + String(p.month).padStart(2, '0') + '-' + String(p.day).padStart(2, '0');
+  });
+
+  setTimeMachineDate(value: string): void {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return;
+    this.timeControlService.setSpecificInstant(
+      this.getZonedDateTime(year, month, day, 12, 0, 0, this.selectedLocation().timezone)
+    );
+  }
+
+  shiftTimeMachineDate(days: number): void {
+    if (!Number.isFinite(days)) return;
+    const current = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+    const carrier = new Date(Date.UTC(current.year, current.month - 1, current.day + Math.trunc(days)));
+    this.setTimeMachineDate(carrier.toISOString().slice(0, 10));
+  }
+
+
   onScrubberInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
+    this.scrubberPreviewFraction.set(fraction);
+
+    // The Time Machine is a local simulation control: update the temporal
+    // authority on every input event so the entire sky reacts while dragging.
+    this.setScrubberInstant(fraction);
+  }
+
+  onScrubberChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
+
+    // Ensure the final thumb position is authoritative before external data
+    // is refreshed.
+    this.setScrubberInstant(fraction);
+    this.scrubberPreviewFraction.set(null);
+
+    // Network-backed data is intentionally release-only. The sky itself never
+    // waits for this request and never depends on its completion.
+    this.celestialService.refreshExternalDataForInstant();
+  }
+
+  private setScrubberInstant(fraction: number): void {
     const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
     const totalMs = fraction * 86400000;
     const hours = Math.floor(totalMs / 3600000);
@@ -704,7 +966,13 @@ export class SkyHomeComponent {
     );
   }
 
-  setLive(): void {
+  toggleLive(): void {
+    if (this.isLive()) {
+      // Leaving live mode freezes the exact instant currently displayed.
+      this.timeControlService.setSpecificInstant(this.activeDate());
+      return;
+    }
+
     this.timeControlService.setLive();
   }
 

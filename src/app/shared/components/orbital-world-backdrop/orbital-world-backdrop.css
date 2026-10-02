@@ -52,8 +52,8 @@
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   backdrop-filter: blur(8px);
   padding: 4px 10px;
   border-radius: 8px;
@@ -117,7 +117,7 @@
   font-family: monospace;
   font-weight: 700;
   color: #fef08a;
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--color-surface-modal);
   border: 1px solid rgba(245, 158, 11, 0.4);
   padding: 1px 6px;
   border-radius: 4px;
@@ -145,8 +145,8 @@
 }
 
 ::ng-deep .beacon-card {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: var(--color-surface-modal);
+  border: 1px solid var(--color-border-dark);
   backdrop-filter: blur(6px);
   padding: 4px 8px;
   border-radius: 6px;

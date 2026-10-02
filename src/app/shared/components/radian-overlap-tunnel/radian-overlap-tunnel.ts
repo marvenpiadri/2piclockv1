@@ -15,7 +15,7 @@ export class RadianOverlapTunnelComponent implements OnInit,OnChanges,OnDestroy 
  currentUtcHour=14; selectedCityId:string|null=null; private dragging=false;
  localTimes:Record<string,string>={}; workWindows:Record<string,{start:number;duration:number}>={};
 
- get effectiveCities(){return this.cities?.length?this.cities.slice(0,6):this.locationService.allPresets.slice(0,4)}
+ get effectiveCities(){return this.cities?.length?this.cities.slice(0,6):this.locationService.locations().slice(0,4)}
  ngOnInit(){this.updateOverlap();if(isPlatformBrowser(this.platformId)){window.addEventListener('pointermove',this.onPointerMove);window.addEventListener('pointerup',this.stopDrag);}}
  ngOnChanges(changes:SimpleChanges){if(changes['activeDate']||changes['cities']){this.updateOverlap();}}
  ngOnDestroy(){if(isPlatformBrowser(this.platformId)){window.removeEventListener('pointermove',this.onPointerMove);window.removeEventListener('pointerup',this.stopDrag)}}

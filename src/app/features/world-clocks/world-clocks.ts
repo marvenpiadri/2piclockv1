@@ -5,11 +5,11 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { GeocodingService } from '../../core/services/geocoding.service';
 import { MatIconModule } from '@angular/material/icon';
 import { CountryFlagComponent } from '../../shared/components/country-flag/country-flag';
-import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { WorldClockPreferencesService } from '../../core/services/world-clock-preferences.service';
+import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 
 type ClockStyle='digital'|'analog';
 interface WorldClock { location:GeoLocation; hour:number; minute:number; second:number; hour24:number; time:string; offset:string; date:string; isDay:boolean; }
@@ -34,10 +34,7 @@ export class WorldClocksComponent implements OnDestroy {
  private searchTimer:ReturnType<typeof setTimeout>|null=null;
  private searchSubscription:Subscription|null=null;
 
- readonly defaultLocations=computed(()=> {
-   const defaults=['new-york','london','tokyo','casablanca','los-angeles'];
-   return defaults.map(id=>this.locationService.allPresets.find(x=>x.id===id)).filter(Boolean) as GeoLocation[];
- });
+ readonly defaultLocations=computed(()=> this.locationService.randomLocations().slice(0, 5));
  readonly displayedLocations=computed(()=> {
    const saved=this.pinnedLocations();
    return this.preferences.hasSavedPreferences()?saved:this.defaultLocations();
