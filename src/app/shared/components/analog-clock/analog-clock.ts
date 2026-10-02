@@ -36,11 +36,11 @@ import { CelestialService } from '../../../core/services/celestial.service';
         }
 
         <!-- Simple rounded hands: no arrows or pointer heads. -->
-        <line x1="100" y1="105" [attr.x2]="hourHand().x" [attr.y2]="hourHand().y" class="hour-hand" />
-        <line x1="100" y1="106" [attr.x2]="minuteHand().x" [attr.y2]="minuteHand().y" class="minute-hand" />
+        <line x1="100" y1="100" [attr.x2]="hourHand().x" [attr.y2]="hourHand().y" class="hour-hand" />
+        <line x1="100" y1="100" [attr.x2]="minuteHand().x" [attr.y2]="minuteHand().y" class="minute-hand" />
 
         @if (showSeconds) {
-          <line x1="100" y1="108" [attr.x2]="secondHand().x" [attr.y2]="secondHand().y" class="second-hand" />
+          <line x1="100" y1="100" [attr.x2]="secondHand().x" [attr.y2]="secondHand().y" class="second-hand" />
         }
 
         <circle cx="100" cy="100" r="5" class="center-pin" />
@@ -61,10 +61,10 @@ import { CelestialService } from '../../../core/services/celestial.service';
     .tick.major { stroke: var(--color-math-orange); stroke-width: 2; }
     .number { fill: var(--color-text-main); font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
     .hour-hand { stroke: var(--color-text-main); stroke-width: 5; stroke-linecap: round; }
-    .minute-hand { stroke: var(--color-math-orange); stroke-width: 3; stroke-linecap: round; }
-    .second-hand { stroke: var(--color-text-secondary); stroke-width: 1.2; stroke-linecap: round; }
-    .center-pin { fill: var(--color-math-orange); }
-    .center-core { fill: var(--color-math-orange-light); }
+    .minute-hand { stroke: var(--color-text-main); stroke-width: 3; stroke-linecap: round; }
+    .second-hand { stroke: var(--color-accent); stroke-width: 1.35; stroke-linecap: round; }
+    .center-pin { fill: var(--color-text-main); }
+    .center-core { fill: var(--color-accent); }
     .sun-marker { fill: var(--color-math-orange); opacity: .9; }
     .moon-marker { fill: var(--color-text-main); stroke: var(--color-text-main); stroke-width: .7; }
   `]
