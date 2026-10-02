@@ -66,11 +66,14 @@
           </div>
 
           <div class="time-controls">
-            @if (!isLive()) {
-              <button type="button" class="live-return" (click)="setLive()"><i></i> Live</button>
-            } @else {
-              <span class="live-status"><i></i> Live</span>
-            }
+            <button
+              type="button"
+              class="live-toggle"
+              [class.active]="isLive()"
+              [attr.aria-pressed]="isLive()"
+              (click)="toggleLive()">
+              Live
+            </button>
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunrise')"><span>Sunrise</span><b>{{ formatTime(celestial().solarEvents.sunrise) }}</b></button>
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('noon')"><span>Noon</span><b>{{ formatTime(celestial().solarEvents.solarNoon) }}</b></button>
             <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunset')"><span>Sunset</span><b>{{ formatTime(celestial().solarEvents.sunset) }}</b></button>
