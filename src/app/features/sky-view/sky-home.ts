@@ -102,9 +102,8 @@ export class SkyHomeComponent implements OnDestroy {
     );
   });
 
-  // The scrubber is deliberately decoupled from the astronomical state while
-  // dragging. The thumb can move freely without recomputing the sky or
-  // refreshing weather until the user releases the control.
+  // The scrubber drives the local astronomical simulation immediately.
+  // Network-backed data is refreshed only when the user releases the control.
   readonly scrubberPreviewFraction = signal<number | null>(null);
   readonly scrubberFraction = computed(() =>
     this.scrubberPreviewFraction() ?? this.localDayFraction()
@@ -880,11 +879,27 @@ export class SkyHomeComponent implements OnDestroy {
     const target = event.target as HTMLInputElement;
     const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
     this.scrubberPreviewFraction.set(fraction);
+
+    // The Time Machine is a local simulation control: update the temporal
+    // authority on every input event so the entire sky reacts while dragging.
+    this.setScrubberInstant(fraction);
   }
 
   onScrubberChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
+
+    // Ensure the final thumb position is authoritative before external data
+    // is refreshed.
+    this.setScrubberInstant(fraction);
+    this.scrubberPreviewFraction.set(null);
+
+    // Network-backed data is intentionally release-only. The sky itself never
+    // waits for this request and never depends on its completion.
+    this.celestialService.refreshExternalDataForInstant();
+  }
+
+  private setScrubberInstant(fraction: number): void {
     const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
     const totalMs = fraction * 86400000;
     const hours = Math.floor(totalMs / 3600000);
@@ -904,13 +919,6 @@ export class SkyHomeComponent implements OnDestroy {
         milliseconds
       )
     );
-
-    this.scrubberPreviewFraction.set(null);
-
-    // Refreshing here is intentionally release-only. WeatherService caches
-    // the location forecast, so repeated Time Machine releases do not spam
-    // the provider within the cache window.
-    this.weatherService.fetchWeatherForLocation(this.selectedLocation());
   }
 
   private getLocalDateParts(date: Date, timeZone: string): { year: number; month: number; day: number; hour: number; minute: number; second: number } {
