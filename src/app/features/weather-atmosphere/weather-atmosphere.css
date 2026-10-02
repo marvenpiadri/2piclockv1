@@ -254,3 +254,52 @@
 .metric-item .v.highlight {
   color: #f59e0b;
 }
+
+
+/* V2.0 preset controls: quiet glass surfaces that follow the shared 2piClock token system. */
+.weather-studio-page .category-chips .cat-chip {
+  background: var(--color-surface-subtle) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-secondary) !important;
+  box-shadow: none;
+}
+
+.weather-studio-page .category-chips .cat-chip:hover {
+  background: var(--color-surface-hover) !important;
+  border-color: var(--color-accent-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.weather-studio-page .category-chips .cat-chip.bg-amber-400 {
+  background: var(--color-accent-soft) !important;
+  border-color: var(--color-accent-border) !important;
+  color: var(--color-accent-strong) !important;
+  box-shadow: none !important;
+}
+
+.weather-studio-page .condition-card {
+  background: var(--color-surface-subtle) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main);
+  box-shadow: none;
+}
+
+.weather-studio-page .condition-card:hover {
+  background: var(--color-surface-hover) !important;
+  border-color: var(--color-accent-border) !important;
+  transform: translateY(-1px);
+}
+
+.weather-studio-page .condition-card.bg-amber-500\\/15 {
+  background: var(--color-accent-soft) !important;
+  border-color: var(--color-accent-border) !important;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.10) !important;
+}
+
+.weather-studio-page .condition-card .c-label {
+  color: var(--color-text-main) !important;
+}
+
+.weather-studio-page .condition-card .c-desc {
+  color: var(--color-text-secondary) !important;
+}
