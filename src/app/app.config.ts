@@ -6,7 +6,8 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { isPlatformBrowser, provideHttpClient } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { SeoService } from './core/services/seo.service';
