@@ -369,6 +369,27 @@
   text-transform: uppercase;
 }
 
+@media (max-width: 720px) {
+  .clock-search {
+    width: 100%;
+    margin-bottom: 7px;
+  }
+  .world-clock {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .clock-location {
+    order: 0;
+  }
+  .digital-clock {
+    min-height: 120px;
+  }
+  .analog-clock-wrapper {
+    width: 170px;
+  }
+}
+
+/* Dynamic Grid Layout for Analog Clock view */
 .digital-footer span:last-child { color: var(--color-accent); }
 
 .clock-list.layout-grid {
