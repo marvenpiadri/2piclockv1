@@ -59,37 +59,54 @@ export class CelestialService {
 
       effect(() => {
         const loc = this.selectedLocation();
-        const date = this.activeDate();
         if (!loc?.timezone) return;
-
-        const requestKey = loc.timezone + '|' + Math.floor(date.getTime() / 3600000);
-        if (requestKey === this.timezoneOffsetRequestKey) return;
-
-        const cached = this.timezoneOffsetCache.get(requestKey);
-        if (cached !== undefined) {
-          this.authoritativeTimezoneOffsetMinutes.set(cached);
-          this.timezoneOffsetRequestKey = requestKey;
-          return;
-        }
-
-        this.timezoneOffsetRequestKey = requestKey;
-        void fetch(
-          '/api/v1/timezone?timezone=' +
-          encodeURIComponent(loc.timezone) +
-          '&at=' +
-          encodeURIComponent(date.toISOString())
-        )
-          .then(response => response.ok ? response.json() as Promise<{ offsetMinutes?: number }> : null)
-          .then(data => {
-            if (!data || typeof data.offsetMinutes !== 'number') return;
-            this.timezoneOffsetCache.set(requestKey, data.offsetMinutes);
-            if (this.timezoneOffsetRequestKey === requestKey) {
-              this.authoritativeTimezoneOffsetMinutes.set(data.offsetMinutes);
-            }
-          })
-          .catch(() => undefined);
+        this.refreshTimezoneOffset();
       });
     }
+  }
+
+  /**
+   * Refresh network-backed timezone state for the current simulated instant.
+   * This is deliberately explicit so high-frequency local time simulation does
+   * not turn a range drag into a stream of API requests.
+   */
+  refreshExternalDataForInstant(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.weatherService.fetchWeatherForLocation(this.selectedLocation());
+    this.refreshTimezoneOffset();
+  }
+
+  private refreshTimezoneOffset(): void {
+    const loc = this.selectedLocation();
+    const date = this.activeDate();
+    if (!loc?.timezone) return;
+
+    const requestKey = loc.timezone + '|' + Math.floor(date.getTime() / 3600000);
+    if (requestKey === this.timezoneOffsetRequestKey) return;
+
+    const cached = this.timezoneOffsetCache.get(requestKey);
+    if (cached !== undefined) {
+      this.authoritativeTimezoneOffsetMinutes.set(cached);
+      this.timezoneOffsetRequestKey = requestKey;
+      return;
+    }
+
+    this.timezoneOffsetRequestKey = requestKey;
+    void fetch(
+      '/api/v1/timezone?timezone=' +
+      encodeURIComponent(loc.timezone) +
+      '&at=' +
+      encodeURIComponent(date.toISOString())
+    )
+      .then(response => response.ok ? response.json() as Promise<{ offsetMinutes?: number }> : null)
+      .then(data => {
+        if (!data || typeof data.offsetMinutes !== 'number') return;
+        this.timezoneOffsetCache.set(requestKey, data.offsetMinutes);
+        if (this.timezoneOffsetRequestKey === requestKey) {
+          this.authoritativeTimezoneOffsetMinutes.set(data.offsetMinutes);
+        }
+      })
+      .catch(() => undefined);
   }
 
   // Active Astronomical & Celestial State computed from Date + Location
