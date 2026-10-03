@@ -1724,3 +1724,51 @@
   box-shadow: 0 5px 18px rgba(245,158,11,.18);
 }
 .time-controls .live-toggle.active:hover { filter: brightness(1.05); }
+
+
+/* ==========================================================================
+   Final launch polish: information hierarchy
+   ========================================================================== */
+
+/* The right deck should not repeat the same weather telemetry in three formats.
+   Keep the primary weather readout, then let the forecast strips carry detail. */
+.environmental-deck .sky-info-card,
+.environmental-deck .deck-metrics-grid,
+.environmental-deck .deck-banner-card {
+  display: none !important;
+}
+
+/* Weather is a transparent/glass surface, never a solid blue data-card stack. */
+.environmental-deck .deck-weather-hero,
+.environmental-deck .deck-section-group,
+.environmental-deck .deck-insight-card {
+  background: rgba(5, 15, 29, 0.30) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+/* Live is the one explicit state control: solid amber when active. */
+.time-controls .live-toggle.active,
+.time-controls .live-toggle.active:hover {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-text-on-accent) !important;
+  box-shadow: 0 5px 18px rgba(245, 158, 11, 0.20);
+}
+
+/* Sky-native surfaces: let the living background remain visible. */
+.sky-report,
+.sky-page,
+.sky-time-layout,
+.time-column,
+.home-info-panel {
+  background: transparent !important;
+}
+
+.sky-report .sky-info-card,
+.sky-report .deck-metric-card,
+.sky-report .deck-banner-card {
+  background: rgba(5, 15, 29, 0.28) !important;
+}
+
