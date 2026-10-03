@@ -16,7 +16,7 @@ body[data-theme="dark"],
   --color-surface-elevated: rgba(8, 21, 39, 0.48);
   --color-surface-hover: rgba(255, 255, 255, 0.07);
   --color-surface-active: rgba(255, 255, 255, 0.10);
-  --color-surface-modal: rgba(20, 20, 20, 0.94);
+  --color-surface-modal: rgba(5, 13, 25, 0.90);
   --color-border: rgba(251, 191, 36, 0.16);
   --color-border-dark: rgba(251, 191, 36, 0.28);
   --color-border-focus: #f59e0b;
