@@ -919,3 +919,45 @@
 /* Deep-space routes must let the astronomical substrate remain visible behind the UI. */
 :host:has(.deep-space-active) { background: transparent; }
 .deep-space-active .main-content-viewport { background: transparent; }
+
+
+/* ==========================================================================
+   2piClock final launch polish
+   The sky is the substrate. Never cover it with an opaque page layer.
+   ========================================================================== */
+
+.full-page-glass-substrate,
+.full-page-glass-substrate.glass-active,
+.full-page-glass-substrate.glass-inactive {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.app-layout.sky-background-active .universal-top-header {
+  background: rgba(4, 12, 23, 0.58) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(18px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(120%) !important;
+}
+
+.app-layout.sky-background-active .nav-main-active {
+  background: rgba(7, 17, 31, 0.42) !important;
+}
+
+.app-layout.sky-background-active .nav-directory-menu,
+.app-layout.sky-background-active .location-dropdown-menu,
+.app-layout.sky-background-active .search-dropdown-menu {
+  background: rgba(4, 12, 23, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(24px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
+}
+
+.app-layout.sky-background-active .btn-observatories,
+.app-layout.sky-background-active .location-pill-btn,
+.app-layout.sky-background-active .btn-gps-action {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
