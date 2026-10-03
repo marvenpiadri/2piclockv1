@@ -10,39 +10,39 @@ body[data-theme="dark"],
 .theme-dark {
   color-scheme: dark;
 
-  --color-canvas: #020617;
-  --color-surface: rgba(2, 6, 23, 0.46);
-  --color-surface-subtle: rgba(2, 6, 23, 0.32);
-  --color-surface-elevated: rgba(2, 6, 23, 0.58);
-  --color-surface-hover: rgba(2, 6, 23, 0.70);
-  --color-surface-active: rgba(2, 6, 23, 0.80);
-  --color-surface-modal: rgba(2, 6, 23, 0.78);
+  --color-canvas: #0d0d0d;
+  --color-surface: rgba(24, 24, 24, 0.72);
+  --color-surface-subtle: rgba(255, 255, 255, 0.035);
+  --color-surface-elevated: rgba(29, 29, 29, 0.82);
+  --color-surface-hover: rgba(255, 255, 255, 0.07);
+  --color-surface-active: rgba(255, 255, 255, 0.10);
+  --color-surface-modal: rgba(20, 20, 20, 0.94);
   --color-border: rgba(251, 191, 36, 0.16);
   --color-border-dark: rgba(251, 191, 36, 0.28);
   --color-border-focus: #f59e0b;
 
-  --color-input-bg: rgba(2, 6, 23, 0.42);
+  --color-input-bg: rgba(18, 18, 18, 0.82);
   --color-input-border: rgba(251, 191, 36, 0.16);
   --color-input-text: #f0f6fc;
   --color-input-placeholder: #8b949e;
 
-  --color-btn-dark-bg: rgba(2, 6, 23, 0.58);
-  --color-btn-dark-hover: rgba(2, 6, 23, 0.72);
+  --color-btn-dark-bg: rgba(24, 24, 24, 0.86);
+  --color-btn-dark-hover: rgba(255, 255, 255, 0.07);
   --color-btn-dark-text: #f0f6fc;
-  --color-header-bg: rgba(2, 6, 23, 0.72);
+  --color-header-bg: rgba(15, 15, 15, 0.88);
   --color-header-border: rgba(251, 191, 36, 0.14);
   --color-header-text: #f0f6fc;
   --color-header-subtext: #8b949e;
   --color-header-link: #c9d1d9;
   --color-header-link-hover: #ffffff;
-  --color-header-link-hover-bg: rgba(2, 6, 23, 0.68);
+  --color-header-link-hover-bg: rgba(255, 255, 255, 0.06);
   --color-header-link-active: #f59e0b;
   --color-header-link-active-bg: rgba(245, 158, 11, 0.14);
 
   --color-text-main: #f0f6fc;
   --color-text-secondary: #8b949e;
   --color-text-muted: #6e7681;
-  --color-text-inverse: #020617;
+  --color-text-inverse: #111111;
 
   --color-math-orange: var(--color-accent);
   --color-math-orange-dark: var(--color-accent-deep);
@@ -62,13 +62,13 @@ body[data-theme="dark"],
   --color-accent: #f59e0b;
   --color-accent-soft: rgba(245, 158, 11, 0.14);
   --color-accent-border: rgba(245, 158, 11, 0.38);
-  --color-neutral-950: #020617;
-  --color-neutral-900: #020617;
-  --color-neutral-850: #020617;
-  --color-neutral-800: #020617;
-  --color-neutral-700: #020617;
-  --color-neutral-600: #020617;
-  --color-neutral-500: #020617;
+  --color-neutral-950: #0d0d0d;
+  --color-neutral-900: #111111;
+  --color-neutral-850: #151515;
+  --color-neutral-800: #181818;
+  --color-neutral-700: #222222;
+  --color-neutral-600: #2a2a2a;
+  --color-neutral-500: #333333;
   --color-positive: #34d399;
   --color-danger: #f87171;
   --color-accent-strong: #fbbf24;
@@ -79,16 +79,16 @@ body[data-theme="dark"],
   --color-sky-shadow: #431407;
   --color-star: #ffd76a;
 
-  --color-midnight-950: #020617;
-  --color-midnight-900: #020617;
-  --color-midnight-850: #020617;
-  --color-midnight-800: #020617;
-  --color-midnight-700: #020617;
-  --color-midnight-600: rgba(251, 191, 36, 0.16);
-  --color-midnight-500: rgba(251, 191, 36, 0.28);
+  --color-midnight-950: #0d0d0d;
+  --color-midnight-900: #111111;
+  --color-midnight-850: #151515;
+  --color-midnight-800: #181818;
+  --color-midnight-700: #222222;
+  --color-midnight-600: rgba(255, 255, 255, 0.08);
+  --color-midnight-500: rgba(255, 255, 255, 0.14);
 
   --color-status-draft: #8b949e;
-  --color-status-draft-bg: rgba(2, 6, 23, 0.58);
+  --color-status-draft-bg: rgba(255, 255, 255, 0.05);
   --color-status-draft-border: rgba(251, 191, 36, 0.14);
   --color-status-sent: var(--color-text-secondary);
   --color-status-sent-bg: rgba(255, 255, 255, 0.06);
@@ -100,7 +100,7 @@ body[data-theme="dark"],
   --color-status-overdue-bg: rgba(248, 81, 73, 0.15);
   --color-status-overdue-border: rgba(248, 81, 73, 0.35);
   --color-status-void: #8b949e;
-  --color-status-void-bg: rgba(2, 6, 23, 0.58);
+  --color-status-void-bg: rgba(255, 255, 255, 0.05);
   --color-status-void-border: rgba(251, 191, 36, 0.14);
 
   --space-0: 0;
