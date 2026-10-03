@@ -79,11 +79,11 @@ body[data-theme="dark"],
   --color-sky-shadow: #431407;
   --color-star: #ffd76a;
 
-  --color-midnight-950: #0d0d0d;
-  --color-midnight-900: #111111;
-  --color-midnight-850: #151515;
-  --color-midnight-800: #181818;
-  --color-midnight-700: #222222;
+  --color-midnight-950: #030811;
+  --color-midnight-900: #06101d;
+  --color-midnight-850: #081523;
+  --color-midnight-800: #0a192a;
+  --color-midnight-700: #0d2137;
   --color-midnight-600: rgba(255, 255, 255, 0.08);
   --color-midnight-500: rgba(255, 255, 255, 0.14);
 
