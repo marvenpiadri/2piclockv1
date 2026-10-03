@@ -10,10 +10,10 @@ body[data-theme="dark"],
 .theme-dark {
   color-scheme: dark;
 
-  --color-canvas: #0d0d0d;
-  --color-surface: rgba(24, 24, 24, 0.72);
-  --color-surface-subtle: rgba(255, 255, 255, 0.035);
-  --color-surface-elevated: rgba(29, 29, 29, 0.82);
+  --color-canvas: #050b14;
+  --color-surface: rgba(7, 17, 31, 0.42);
+  --color-surface-subtle: rgba(7, 17, 31, 0.24);
+  --color-surface-elevated: rgba(8, 21, 39, 0.48);
   --color-surface-hover: rgba(255, 255, 255, 0.07);
   --color-surface-active: rgba(255, 255, 255, 0.10);
   --color-surface-modal: rgba(20, 20, 20, 0.94);
