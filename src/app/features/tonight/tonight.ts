@@ -43,6 +43,7 @@ export interface PlanetTonightDetail {
   riseTime: string;
   transitTime: string;
   transitAltitudeDeg: number;
+  transitAzimuthDeg: number;
   setTime: string;
   isVisibleNow: boolean;
   viewingStatus: string;
@@ -80,6 +81,7 @@ export interface CelestialVisibilityGuide {
   equipment: string;
   isVisibleTonight: boolean;
   statusBadge: string;
+  peakDirection: string;
 }
 
 @Component({
@@ -206,6 +208,12 @@ export class TonightComponent {
       return d.toTimeString().slice(0, 8);
     }
   });
+
+  formatSkyDirection(azimuthDeg: number): string {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round(((azimuthDeg % 360) / 45)) % 8;
+    return directions[index];
+  }
 
   formatLocalTime(date: Date): string {
     const tz = this.selectedLocation().timezone;
@@ -558,6 +566,7 @@ export class TonightComponent {
         riseTime: fmt(riseSearch?.date ?? null),
         transitTime: fmt(transitDate),
         transitAltitudeDeg: Math.round((transitHor?.altitude ?? hor.altitude) * 10) / 10,
+        transitAzimuthDeg: Math.round(transitHor?.azimuth ?? hor.azimuth),
         setTime: fmt(setSearch?.date ?? null),
         isVisibleNow,
         viewingStatus,
@@ -785,7 +794,8 @@ export class TonightComponent {
         viewingTip: planet.viewingTip || fallbackTip,
         equipment: planet.equipment,
         isVisibleTonight: visible,
-        statusBadge: status.statusBadge
+        statusBadge: status.statusBadge,
+        peakDirection: this.formatSkyDirection(planet.transitAzimuthDeg)
       };
     };
 
@@ -799,6 +809,7 @@ export class TonightComponent {
       ? Astronomy.Horizon(moonTransitDate, this.observer(), moonTransitEq.ra, moonTransitEq.dec, 'normal')
       : null;
     const moonPeakAlt = Math.max(0, moonTransitHor?.altitude ?? moon.altitudeDeg);
+    const moonPeakAzimuth = moonTransitHor?.azimuth ?? moon.azimuthDeg;
     const moonVisible = moonPeakAlt > 0 && moon.riseFormatted !== '—' && moon.setFormatted !== '—';
     const moonStatus = getStatus(moonPeakAlt, moonVisible);
 
@@ -816,7 +827,8 @@ export class TonightComponent {
         viewingTip: `${moon.phaseName} (${moon.illuminationPct}% illuminated). ${moon.interferenceRating}.`,
         equipment: 'Naked Eye',
         isVisibleTonight: moonVisible,
-        statusBadge: moonStatus.statusBadge
+        statusBadge: moonStatus.statusBadge,
+        peakDirection: this.formatSkyDirection(moonPeakAzimuth)
       },
       ...(jup ? [planetGuide('jupiter', jup, 'Bright and easy to spot with the naked eye.')] : []),
       ...(sat ? [planetGuide('saturn', sat, 'Look for its steady pale-golden point; a telescope reveals the rings.')] : []),
