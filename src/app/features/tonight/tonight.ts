@@ -42,6 +42,7 @@ export interface PlanetTonightDetail {
   constellation: string;
   riseTime: string;
   transitTime: string;
+  transitAltitudeDeg: number;
   setTime: string;
   isVisibleNow: boolean;
   viewingStatus: string;
@@ -65,30 +66,6 @@ export interface DeepSkyTargetItem {
   observed: boolean;
 }
 
-export interface AltitudeCurvePoint {
-  hourLabel: string;
-  date: Date;
-  sunAlt: number;
-  moonAlt: number;
-  venusAlt: number;
-  marsAlt: number;
-  jupiterAlt: number;
-  saturnAlt: number;
-}
-
-export interface CurvePeakInfo {
-  id: string;
-  name: string;
-  color: string;
-  symbol: string;
-  x: number;
-  y: number;
-  alt: number;
-  timeLabel: string;
-  isVisible: boolean;
-  zone: string;
-}
-
 export interface CelestialVisibilityGuide {
   id: string;
   name: string;
@@ -103,8 +80,6 @@ export interface CelestialVisibilityGuide {
   equipment: string;
   isVisibleTonight: boolean;
   statusBadge: string;
-  timelineStartPct: number;
-  timelineEndPct: number;
 }
 
 @Component({
@@ -161,13 +136,6 @@ export class TonightComponent {
 
   // Checklist of observing targets stored in local storage
   readonly checkedTargetIds = signal<Set<string>>(new Set());
-
-  // Active chart curve visibility toggles
-  readonly showCurveMoon = signal<boolean>(true);
-  readonly showCurveJupiter = signal<boolean>(true);
-  readonly showCurveSaturn = signal<boolean>(true);
-  readonly showCurveVenus = signal<boolean>(true);
-  readonly showCurveMars = signal<boolean>(true);
 
   constructor() {
     const platformId = inject(PLATFORM_ID);
@@ -238,6 +206,20 @@ export class TonightComponent {
       return d.toTimeString().slice(0, 8);
     }
   });
+
+  formatLocalTime(date: Date): string {
+    const tz = this.selectedLocation().timezone;
+    try {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(date);
+    } catch {
+      return date.toTimeString().slice(0, 5);
+    }
+  }
 
   readonly formattedLocalDate = computed(() => {
     const d = this.activeInstant();
@@ -522,6 +504,10 @@ export class TonightComponent {
       const riseSearch = Astronomy.SearchRiseSet(p.body, obs, +1, new Date(d.getTime() - 12 * 3600000), 2);
       const setSearch = Astronomy.SearchRiseSet(p.body, obs, -1, new Date(d.getTime() - 12 * 3600000), 2);
       const transitSearch = Astronomy.SearchHourAngle(p.body, obs, 0, new Date(d.getTime() - 12 * 3600000));
+      const transitDate = transitSearch?.time?.date ?? null;
+      const transitHor = transitDate
+        ? Astronomy.Horizon(transitDate, obs, eq.ra, eq.dec, 'normal')
+        : null;
 
       const isVisibleNow = hor.altitude > 0;
       let viewingStatus = 'Below Horizon';
@@ -567,7 +553,8 @@ export class TonightComponent {
         azimuthDeg: hor.azimuth,
         constellation,
         riseTime: fmt(riseSearch?.date ?? null),
-        transitTime: fmt(transitSearch?.time?.date ?? null),
+        transitTime: fmt(transitDate),
+        transitAltitudeDeg: Math.round((transitHor?.altitude ?? hor.altitude) * 10) / 10,
         setTime: fmt(setSearch?.date ?? null),
         isVisibleNow,
         viewingStatus,
@@ -739,277 +726,32 @@ export class TonightComponent {
     }));
   });
 
-  readonly altitudeCurves = computed<AltitudeCurvePoint[]>(() => {
-    const obs = this.observer();
-    const tz = this.selectedLocation().timezone;
-    const ms = this.tonightSolarMilestones();
-    const refStart = ms.sunset ? new Date(ms.sunset.getTime() - 30 * 60000) : new Date(this.activeInstant().getTime() - 6 * 3600000);
-    const refEnd = ms.sunrise ? new Date(ms.sunrise.getTime() + 30 * 60000) : new Date(refStart.getTime() + 13 * 3600000);
-
-    const totalSpan = refEnd.getTime() - refStart.getTime();
-    const steps = 14;
-    const intervalMs = totalSpan / steps;
-
-    const points: AltitudeCurvePoint[] = [];
-
-    for (let i = 0; i <= steps; i++) {
-      const t = new Date(refStart.getTime() + i * intervalMs);
-      const sunEq = Astronomy.Equator(Astronomy.Body.Sun, t, obs, true, true);
-      const sunHor = Astronomy.Horizon(t, obs, sunEq.ra, sunEq.dec, 'normal');
-
-      const moonEq = Astronomy.Equator(Astronomy.Body.Moon, t, obs, true, true);
-      const moonHor = Astronomy.Horizon(t, obs, moonEq.ra, moonEq.dec, 'normal');
-
-      const venusEq = Astronomy.Equator(Astronomy.Body.Venus, t, obs, true, true);
-      const venusHor = Astronomy.Horizon(t, obs, venusEq.ra, venusEq.dec, 'normal');
-
-      const marsEq = Astronomy.Equator(Astronomy.Body.Mars, t, obs, true, true);
-      const marsHor = Astronomy.Horizon(t, obs, marsEq.ra, marsEq.dec, 'normal');
-
-      const jupiterEq = Astronomy.Equator(Astronomy.Body.Jupiter, t, obs, true, true);
-      const jupiterHor = Astronomy.Horizon(t, obs, jupiterEq.ra, jupiterEq.dec, 'normal');
-
-      const saturnEq = Astronomy.Equator(Astronomy.Body.Saturn, t, obs, true, true);
-      const saturnHor = Astronomy.Horizon(t, obs, saturnEq.ra, saturnEq.dec, 'normal');
-
-      let hourLabel = '';
-      try {
-        hourLabel = new Intl.DateTimeFormat('en-GB', {
-          timeZone: tz,
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }).format(t);
-      } catch {
-        hourLabel = t.toTimeString().slice(0, 5);
-      }
-
-      points.push({
-        hourLabel,
-        date: t,
-        sunAlt: Math.round(sunHor.altitude * 10) / 10,
-        moonAlt: Math.round(moonHor.altitude * 10) / 10,
-        venusAlt: Math.round(venusHor.altitude * 10) / 10,
-        marsAlt: Math.round(marsHor.altitude * 10) / 10,
-        jupiterAlt: Math.round(jupiterHor.altitude * 10) / 10,
-        saturnAlt: Math.round(saturnHor.altitude * 10) / 10
-      });
-    }
-
-    return points;
-  });
-
-  readonly svgCurvePaths = computed(() => {
-    const points = this.altitudeCurves();
-    if (points.length < 2) return {
-      sun: '',
-      moon: '',
-      venus: '',
-      mars: '',
-      jupiter: '',
-      saturn: '',
-      sunArea: '',
-      moonArea: '',
-      venusArea: '',
-      marsArea: '',
-      jupiterArea: '',
-      saturnArea: '',
-      zeroAltY: 160,
-      thirtyAltY: 100,
-      sixtyAltY: 50,
-      peaks: [] as CurvePeakInfo[],
-      currentTimeX: null as number | null,
-      currentTimeLabel: null as string | null
-    };
-
-    const width = 800;
-    const height = 240;
-    const paddingX = 40;
-    const paddingY = 24;
-
-    const minAlt = -30;
-    const maxAlt = 90;
-    const altSpan = maxAlt - minAlt;
-
-    const getX = (index: number) => paddingX + (index / (points.length - 1)) * (width - 2 * paddingX);
-    const getY = (alt: number) => {
-      const clamped = Math.max(minAlt, Math.min(maxAlt, alt));
-      return height - paddingY - ((clamped - minAlt) / altSpan) * (height - 2 * paddingY);
-    };
-
-    const buildPath = (key: 'sunAlt' | 'moonAlt' | 'venusAlt' | 'marsAlt' | 'jupiterAlt' | 'saturnAlt') => {
-      return points.map((p, idx) => {
-        const x = getX(idx);
-        const y = getY(p[key]);
-        return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-      }).join(' ');
-    };
-
-    const zeroAltY = getY(0);
-    const thirtyAltY = getY(30);
-    const sixtyAltY = getY(60);
-
-    const buildAreaPath = (key: 'sunAlt' | 'moonAlt' | 'venusAlt' | 'marsAlt' | 'jupiterAlt' | 'saturnAlt') => {
-      const pts = points.map((p, idx) => ({
-        x: getX(idx),
-        y: getY(Math.max(0, p[key]))
-      }));
-      const first = pts[0];
-      const last = pts[pts.length - 1];
-      const linePts = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-      return `${linePts} L ${last.x.toFixed(1)} ${zeroAltY.toFixed(1)} L ${first.x.toFixed(1)} ${zeroAltY.toFixed(1)} Z`;
-    };
-
-    const findPeak = (key: 'moonAlt' | 'jupiterAlt' | 'saturnAlt' | 'venusAlt' | 'marsAlt', id: string, name: string, color: string, symbol: string): CurvePeakInfo => {
-      let maxAlt = -999;
-      let maxIdx = 0;
-      for (let i = 0; i < points.length; i++) {
-        if (points[i][key] > maxAlt) {
-          maxAlt = points[i][key];
-          maxIdx = i;
-        }
-      }
-      const x = getX(maxIdx);
-      const y = getY(maxAlt);
-      const isVisible = maxAlt > 0;
-      let zone = 'High in Sky';
-      if (maxAlt > 50) zone = 'High Overhead · Best View';
-      else if (maxAlt > 25) zone = 'Mid-Sky';
-      else if (maxAlt > 5) zone = 'Low on Horizon';
-      else zone = 'Below Horizon';
-
-      return {
-        id,
-        name,
-        color,
-        symbol,
-        x: Math.round(x),
-        y: Math.round(y),
-        alt: Math.round(maxAlt),
-        timeLabel: points[maxIdx]?.hourLabel ?? '—',
-        isVisible,
-        zone
-      };
-    };
-
-    const peaks: CurvePeakInfo[] = [
-      findPeak('moonAlt', 'moon', 'Moon', '#ffffff', '☾'),
-      findPeak('jupiterAlt', 'jupiter', 'Jupiter', '#fed7aa', '♃'),
-      findPeak('saturnAlt', 'saturn', 'Saturn', '#fde047', '♄'),
-      findPeak('venusAlt', 'venus', 'Venus', '#fef08a', '♀'),
-      findPeak('marsAlt', 'mars', 'Mars', '#f87171', '♂')
-    ];
-
-    const ms = this.tonightSolarMilestones();
-    const refStart = ms.sunset ? new Date(ms.sunset.getTime() - 30 * 60000) : new Date(this.activeInstant().getTime() - 6 * 3600000);
-    const refEnd = ms.sunrise ? new Date(ms.sunrise.getTime() + 30 * 60000) : new Date(refStart.getTime() + 13 * 3600000);
-    const totalSpan = refEnd.getTime() - refStart.getTime();
-
-    const now = this.activeInstant();
-    let currentTimeX: number | null = null;
-    let currentTimeLabel: string | null = null;
-    if (now >= refStart && now <= refEnd && totalSpan > 0) {
-      const frac = (now.getTime() - refStart.getTime()) / totalSpan;
-      currentTimeX = Math.round(paddingX + frac * (width - 2 * paddingX));
-      currentTimeLabel = this.formattedLocalTime();
-    }
-
-    return {
-      sun: buildPath('sunAlt'),
-      moon: buildPath('moonAlt'),
-      venus: buildPath('venusAlt'),
-      mars: buildPath('marsAlt'),
-      jupiter: buildPath('jupiterAlt'),
-      saturn: buildPath('saturnAlt'),
-      sunArea: buildAreaPath('sunAlt'),
-      moonArea: buildAreaPath('moonAlt'),
-      venusArea: buildAreaPath('venusAlt'),
-      marsArea: buildAreaPath('marsAlt'),
-      jupiterArea: buildAreaPath('jupiterAlt'),
-      saturnArea: buildAreaPath('saturnAlt'),
-      zeroAltY,
-      thirtyAltY,
-      sixtyAltY,
-      peaks,
-      currentTimeX,
-      currentTimeLabel
-    };
-  });
-
   readonly celestialVisibilityGuides = computed<CelestialVisibilityGuide[]>(() => {
-    const points = this.altitudeCurves();
-    if (points.length < 2) return [];
-
     const planets = this.planetsTonight();
     const moon = this.moonDetail();
 
-    const getGuide = (
-      id: string,
-      name: string,
-      color: string,
-      symbol: string,
-      altKey: 'moonAlt' | 'jupiterAlt' | 'saturnAlt' | 'venusAlt' | 'marsAlt',
-      equipment: string,
-      customTip: string,
-      rise: string,
-      set: string
-    ): CelestialVisibilityGuide => {
-      let maxAlt = -999;
-      let maxIdx = 0;
-      let startIdx = -1;
-      let endIdx = -1;
-
-      for (let i = 0; i < points.length; i++) {
-        const alt = points[i][altKey];
-        if (alt > maxAlt) {
-          maxAlt = alt;
-          maxIdx = i;
-        }
-        if (alt > 0) {
-          if (startIdx === -1) startIdx = i;
-          endIdx = i;
-        }
+    const getStatus = (peakAlt: number, visible: boolean) => {
+      if (!visible) {
+        return {
+          statusBadge: 'Not visible tonight',
+          summary: 'This object stays below your horizon during the useful night.'
+        };
       }
-
-      const isVisibleTonight = maxAlt > 0;
-      const peakTime = points[maxIdx]?.hourLabel ?? '—';
-      const peakAlt = Math.max(0, Math.round(maxAlt));
-
-      let statusBadge = 'Optimal Viewing';
-      let summary = '';
-      if (!isVisibleTonight) {
-        statusBadge = 'Below Horizon';
-        summary = 'Remains below your local horizon throughout the night.';
-      } else if (peakAlt > 45) {
-        statusBadge = 'Prime Overhead';
-        summary = `High in dark sky (highest at ${peakTime}, ${peakAlt}° elevation).`;
-      } else if (peakAlt > 20) {
-        statusBadge = 'Good Visibility';
-        summary = `Well visible across the night; reaches ${peakAlt}° elevation at ${peakTime}.`;
-      } else {
-        statusBadge = 'Low Horizon View';
-        summary = `Hugs low horizon (max ${peakAlt}° at ${peakTime}). Look in open unobstructed terrain.`;
+      if (peakAlt > 45) {
+        return {
+          statusBadge: 'High in the sky',
+          summary: `Reaches about ${Math.round(peakAlt)}° above the horizon at its highest point.`
+        };
       }
-
-      const timelineStartPct = startIdx !== -1 ? Math.round((startIdx / (points.length - 1)) * 100) : 0;
-      const timelineEndPct = endIdx !== -1 ? Math.round((endIdx / (points.length - 1)) * 100) : 0;
-
+      if (peakAlt > 20) {
+        return {
+          statusBadge: 'Good height',
+          summary: `Reaches about ${Math.round(peakAlt)}° above the horizon at its highest point.`
+        };
+      }
       return {
-        id,
-        name,
-        color,
-        symbol,
-        peakTime,
-        peakAlt,
-        riseTime: rise,
-        setTime: set,
-        summary,
-        viewingTip: customTip,
-        equipment,
-        isVisibleTonight,
-        statusBadge,
-        timelineStartPct,
-        timelineEndPct
+        statusBadge: 'Low in the sky',
+        summary: `Only reaches about ${Math.round(peakAlt)}° above the horizon. An open view is important.`
       };
     };
 
@@ -1018,35 +760,64 @@ export class TonightComponent {
     const ven = planets.find(p => p.name === 'Venus');
     const mar = planets.find(p => p.name === 'Mars');
 
+    const planetGuide = (
+      id: string,
+      planet: PlanetTonightDetail,
+      fallbackTip: string
+    ): CelestialVisibilityGuide => {
+      const peakAlt = Math.max(0, planet.transitAltitudeDeg);
+      const visible = peakAlt > 0 && planet.riseTime !== '—' && planet.setTime !== '—';
+      const status = getStatus(peakAlt, visible);
+
+      return {
+        id,
+        name: planet.name,
+        color: planet.color,
+        symbol: planet.symbol,
+        peakTime: planet.transitTime,
+        peakAlt: Math.round(peakAlt),
+        riseTime: planet.riseTime,
+        setTime: planet.setTime,
+        summary: status.summary,
+        viewingTip: planet.viewingTip || fallbackTip,
+        equipment: planet.equipment,
+        isVisibleTonight: visible,
+        statusBadge: status.statusBadge
+      };
+    };
+
+    const moonEq = Astronomy.Equator(Astronomy.Body.Moon, this.activeInstant(), this.observer(), true, true);
+    const moonTransit = Astronomy.SearchHourAngle(Astronomy.Body.Moon, this.observer(), 0, new Date(this.activeInstant().getTime() - 12 * 3600000));
+    const moonTransitDate = moonTransit?.time?.date ?? null;
+    const moonTransitHor = moonTransitDate
+      ? Astronomy.Horizon(moonTransitDate, this.observer(), moonEq.ra, moonEq.dec, 'normal')
+      : null;
+    const moonPeakAlt = Math.max(0, moonTransitHor?.altitude ?? moon.altitudeDeg);
+    const moonVisible = moonPeakAlt > 0 && moon.riseFormatted !== '—' && moon.setFormatted !== '—';
+    const moonStatus = getStatus(moonPeakAlt, moonVisible);
+
     return [
-      getGuide('moon', 'The Moon', '#ffffff', '☾', 'moonAlt', 'Naked Eye', `${moon.phaseName} (${moon.illuminationPct}% illuminated). ${moon.interferenceRating}.`, moon.riseFormatted, moon.setFormatted),
-      getGuide('jupiter', 'Jupiter', '#fed7aa', '♃', 'jupiterAlt', jup?.equipment ?? 'Naked Eye', jup?.viewingTip ?? 'Brilliant beacon, easiest planet to see naked-eye.', jup?.riseTime ?? '—', jup?.setTime ?? '—'),
-      getGuide('saturn', 'Saturn', '#fde047', '♄', 'saturnAlt', sat?.equipment ?? 'Naked Eye', sat?.viewingTip ?? 'Golden-amber jewel; rings visible in small telescope.', sat?.riseTime ?? '—', sat?.setTime ?? '—'),
-      getGuide('venus', 'Venus', '#fef08a', '♀', 'venusAlt', ven?.equipment ?? 'Naked Eye', ven?.viewingTip ?? 'Brilliant Evening/Morning Star; outshines all stars.', ven?.riseTime ?? '—', ven?.setTime ?? '—'),
-      getGuide('mars', 'Mars', '#f87171', '♂', 'marsAlt', mar?.equipment ?? 'Naked Eye', mar?.viewingTip ?? 'Distinct reddish point; look for its steady glow.', mar?.riseTime ?? '—', mar?.setTime ?? '—')
+      {
+        id: 'moon',
+        name: 'The Moon',
+        color: '#ffffff',
+        symbol: '☾',
+        peakTime: moonTransitDate ? this.formatLocalTime(moonTransitDate) : '—',
+        peakAlt: Math.round(moonPeakAlt),
+        riseTime: moon.riseFormatted,
+        setTime: moon.setFormatted,
+        summary: moonStatus.summary,
+        viewingTip: `${moon.phaseName} (${moon.illuminationPct}% illuminated). ${moon.interferenceRating}.`,
+        equipment: 'Naked Eye',
+        isVisibleTonight: moonVisible,
+        statusBadge: moonStatus.statusBadge
+      },
+      ...(jup ? [planetGuide('jupiter', jup, 'Bright and easy to spot with the naked eye.')] : []),
+      ...(sat ? [planetGuide('saturn', sat, 'Look for its steady pale-golden point; a telescope reveals the rings.')] : []),
+      ...(ven ? [planetGuide('venus', ven, 'Extremely bright; look for it low in the twilight sky.')] : []),
+      ...(mar ? [planetGuide('mars', mar, 'Look for its distinct reddish point of light.')] : [])
     ];
   });
-
-  toggleCurve(id: string): void {
-    switch (id) {
-      case 'moon': this.showCurveMoon.set(!this.showCurveMoon()); break;
-      case 'jupiter': this.showCurveJupiter.set(!this.showCurveJupiter()); break;
-      case 'saturn': this.showCurveSaturn.set(!this.showCurveSaturn()); break;
-      case 'venus': this.showCurveVenus.set(!this.showCurveVenus()); break;
-      case 'mars': this.showCurveMars.set(!this.showCurveMars()); break;
-    }
-  }
-
-  isCurveActive(id: string): boolean {
-    switch (id) {
-      case 'moon': return this.showCurveMoon();
-      case 'jupiter': return this.showCurveJupiter();
-      case 'saturn': return this.showCurveSaturn();
-      case 'venus': return this.showCurveVenus();
-      case 'mars': return this.showCurveMars();
-      default: return false;
-    }
-  }
 
   readonly selectedBodyInfo = computed(() => {
     const id = this.selectedPlanisphereObject();
