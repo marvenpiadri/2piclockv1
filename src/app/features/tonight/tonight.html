@@ -524,250 +524,69 @@
     </div>
   </section>
 
-  <!-- Visual 12-Hour Multi-Object Altitude Curve & Night Sky Trajectory -->
-  <section class="tonight-altitude-chart-card">
-    <div class="chart-header-row">
+  <!-- Tonight viewing schedule: a practical rise, best-view and set guide. -->
+  <section class="tonight-viewing-section">
+    <div class="section-head-bar viewing-schedule-header">
       <div>
-        <div class="section-kicker">VISUAL NIGHT SKY JOURNEY</div>
+        <span class="section-kicker">TONIGHT'S VIEWING SCHEDULE</span>
         <h2 class="section-title">When & Where to Look Tonight</h2>
-        <p class="section-subtitle">Visual celestial path across your local nocturnal sky dome from sunset to sunrise</p>
+        <p class="section-subtitle">A simple guide to when each object is above your horizon. No astronomy chart reading required.</p>
       </div>
-      <div class="curve-toggles">
-        <button type="button" class="toggle-pill pill-moon" [class.active]="showCurveMoon()" (click)="showCurveMoon.set(!showCurveMoon())">
-          <span class="pill-dot"></span>Moon
-        </button>
-        <button type="button" class="toggle-pill pill-jupiter" [class.active]="showCurveJupiter()" (click)="showCurveJupiter.set(!showCurveJupiter())">
-          <span class="pill-dot"></span>Jupiter
-        </button>
-        <button type="button" class="toggle-pill pill-saturn" [class.active]="showCurveSaturn()" (click)="showCurveSaturn.set(!showCurveSaturn())">
-          <span class="pill-dot"></span>Saturn
-        </button>
-        <button type="button" class="toggle-pill pill-venus" [class.active]="showCurveVenus()" (click)="showCurveVenus.set(!showCurveVenus())">
-          <span class="pill-dot"></span>Venus
-        </button>
-        <button type="button" class="toggle-pill pill-mars" [class.active]="showCurveMars()" (click)="showCurveMars.set(!showCurveMars())">
-          <span class="pill-dot"></span>Mars
-        </button>
+      <div class="viewing-schedule-note">
+        <span>BEST TIME</span>
+        <strong>Highest in your sky</strong>
       </div>
     </div>
 
-    <div class="altitude-svg-wrapper">
-      <svg class="altitude-svg" viewBox="0 0 800 240" preserveAspectRatio="none">
-        <defs>
-          <!-- Dark Midnight Blue Sky Gradient -->
-          <linearGradient id="midnightSkyGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#040b1e" />
-            <stop offset="35%" stop-color="#081436" />
-            <stop offset="70%" stop-color="#0a1a44" />
-            <stop offset="100%" stop-color="#030818" />
-          </linearGradient>
+    <div class="viewing-schedule">
+      @for (guide of celestialVisibilityGuides(); track guide.id) {
+        <article class="viewing-row" [class.not-visible]="!guide.isVisibleTonight">
+          <div class="viewing-object">
+            <span class="viewing-object-orb" [style.backgroundColor]="guide.color"></span>
+            <div>
+              <strong>{{ guide.name }}</strong>
+              <span>{{ guide.equipment }} · {{ guide.statusBadge }}</span>
+            </div>
+          </div>
 
-          <!-- Area Fills with Gentle Dark Midnight Luminous Gradients -->
-          <linearGradient id="moonAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
-          </linearGradient>
-          <linearGradient id="jupiterAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fed7aa" stop-opacity="0.22" />
-            <stop offset="100%" stop-color="#fed7aa" stop-opacity="0.0" />
-          </linearGradient>
-          <linearGradient id="saturnAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fde047" stop-opacity="0.22" />
-            <stop offset="100%" stop-color="#fde047" stop-opacity="0.0" />
-          </linearGradient>
-          <linearGradient id="venusAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fef08a" stop-opacity="0.25" />
-            <stop offset="100%" stop-color="#fef08a" stop-opacity="0.0" />
-          </linearGradient>
-          <linearGradient id="marsAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#f87171" stop-opacity="0.22" />
-            <stop offset="100%" stop-color="#f87171" stop-opacity="0.0" />
-          </linearGradient>
-        </defs>
-
-        <!-- Dark Midnight Sky Canvas -->
-        <rect width="800" height="240" fill="url(#midnightSkyGrad)" />
-
-        <!-- Starfield Pinpricks in Dark Sky -->
-        <g class="night-stars" opacity="0.65">
-          <circle cx="65" cy="35" r="1" fill="#ffffff" opacity="0.8" />
-          <circle cx="112" cy="72" r="0.8" fill="#ffffff" opacity="0.5" />
-          <circle cx="178" cy="28" r="1.2" fill="#ffffff" opacity="0.9" />
-          <circle cx="245" cy="54" r="0.9" fill="#ffffff" opacity="0.6" />
-          <circle cx="310" cy="22" r="1.1" fill="#ffffff" opacity="0.7" />
-          <circle cx="380" cy="46" r="0.8" fill="#ffffff" opacity="0.5" />
-          <circle cx="435" cy="18" r="1.3" fill="#ffffff" opacity="0.9" />
-          <circle cx="510" cy="62" r="0.9" fill="#ffffff" opacity="0.6" />
-          <circle cx="578" cy="32" r="1.1" fill="#ffffff" opacity="0.8" />
-          <circle cx="642" cy="58" r="0.8" fill="#ffffff" opacity="0.5" />
-          <circle cx="705" cy="24" r="1.2" fill="#ffffff" opacity="0.75" />
-          <circle cx="752" cy="68" r="0.9" fill="#ffffff" opacity="0.6" />
-          <circle cx="140" cy="110" r="0.8" fill="#ffffff" opacity="0.4" />
-          <circle cx="280" cy="98" r="1" fill="#ffffff" opacity="0.5" />
-          <circle cx="490" cy="105" r="0.9" fill="#ffffff" opacity="0.5" />
-          <circle cx="620" cy="92" r="0.8" fill="#ffffff" opacity="0.4" />
-        </g>
-
-        <!-- Ground Zone (Below Horizon) -->
-        <rect x="0" [attr.y]="svgCurvePaths().zeroAltY" width="800" [attr.height]="240 - svgCurvePaths().zeroAltY" fill="#02040a" fill-opacity="0.85" />
-        <text x="45" [attr.y]="svgCurvePaths().zeroAltY + 24" fill="#475569" font-size="9.5" font-family="monospace">▼ BELOW HORIZON (NOT VISIBLE YET)</text>
-
-        <!-- 60° Overhead Reference Line -->
-        <line x1="40" [attr.y1]="svgCurvePaths().sixtyAltY" x2="760" [attr.y2]="svgCurvePaths().sixtyAltY" stroke="rgba(30, 58, 138, 0.4)" stroke-width="1" stroke-dasharray="2,3" />
-        <text x="45" [attr.y]="svgCurvePaths().sixtyAltY - 4" fill="#64748b" font-size="9" font-family="monospace">+60° HIGH OVERHEAD (CLEAREST VIEWS)</text>
-
-        <!-- 30° Prime Visibility Reference Line -->
-        <line x1="40" [attr.y1]="svgCurvePaths().thirtyAltY" x2="760" [attr.y2]="svgCurvePaths().thirtyAltY" stroke="rgba(37, 99, 235, 0.45)" stroke-width="1" stroke-dasharray="3,3" />
-        <text x="45" [attr.y]="svgCurvePaths().thirtyAltY - 4" fill="#93c5fd" font-size="9" font-family="monospace">+30° PRIME VISIBILITY (ABOVE HORIZON HAZE)</text>
-
-        <!-- 0° Horizon Line -->
-        <line x1="40" [attr.y1]="svgCurvePaths().zeroAltY" x2="760" [attr.y2]="svgCurvePaths().zeroAltY" stroke="#334155" stroke-width="1.2" stroke-dasharray="4,4" />
-        <text x="755" [attr.y]="svgCurvePaths().zeroAltY - 5" fill="#94a3b8" font-size="9.5" font-family="monospace" text-anchor="end">0° HORIZON</text>
-
-        <!-- Sun Altitude Curve (Sun dipping down to Nadir and back) -->
-        <path [attr.d]="svgCurvePaths().sun" fill="none" stroke="#ea580c" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="3,3" />
-
-        <!-- Area Fills & Smooth Visual Arcs for Planets & Moon -->
-        @if (showCurveMoon()) {
-          <path [attr.d]="svgCurvePaths().moonArea" fill="url(#moonAreaGrad)" />
-          <path [attr.d]="svgCurvePaths().moon" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" />
-        }
-
-        @if (showCurveJupiter()) {
-          <path [attr.d]="svgCurvePaths().jupiterArea" fill="url(#jupiterAreaGrad)" />
-          <path [attr.d]="svgCurvePaths().jupiter" fill="none" stroke="#fed7aa" stroke-width="2" stroke-linecap="round" />
-        }
-
-        @if (showCurveSaturn()) {
-          <path [attr.d]="svgCurvePaths().saturnArea" fill="url(#saturnAreaGrad)" />
-          <path [attr.d]="svgCurvePaths().saturn" fill="none" stroke="#fde047" stroke-width="2" stroke-linecap="round" />
-        }
-
-        @if (showCurveVenus()) {
-          <path [attr.d]="svgCurvePaths().venusArea" fill="url(#venusAreaGrad)" />
-          <path [attr.d]="svgCurvePaths().venus" fill="none" stroke="#fef08a" stroke-width="2" stroke-linecap="round" />
-        }
-
-        @if (showCurveMars()) {
-          <path [attr.d]="svgCurvePaths().marsArea" fill="url(#marsAreaGrad)" />
-          <path [attr.d]="svgCurvePaths().mars" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" />
-        }
-
-        <!-- Interactive Visual Peak Badges on Celestial Arcs -->
-        @for (peak of svgCurvePaths().peaks; track peak.id) {
-          @if (isCurveActive(peak.id) && peak.isVisible) {
-            <g class="peak-badge-group">
-              <circle [attr.cx]="peak.x" [attr.cy]="peak.y" r="8" [attr.fill]="peak.color" fill-opacity="0.25" />
-              <circle [attr.cx]="peak.x" [attr.cy]="peak.y" r="4" [attr.fill]="peak.color" stroke="#040b1e" stroke-width="1.5" />
-              <!-- Floating Midnight Pill Label -->
-              <rect
-                [attr.x]="Math.min(640, Math.max(50, peak.x - 65))"
-                [attr.y]="peak.y > 45 ? peak.y - 30 : peak.y + 12"
-                width="130"
-                height="22"
-                rx="11"
-                fill="#050e26"
-                stroke="#1e3a8a"
-                stroke-width="1" />
-              <text
-                [attr.x]="Math.min(640, Math.max(50, peak.x - 65)) + 65"
-                [attr.y]="peak.y > 45 ? peak.y - 15 : peak.y + 27"
-                fill="#f8fafc"
-                font-size="9"
-                font-weight="bold"
-                font-family="sans-serif"
-                text-anchor="middle">
-                {{ peak.name }} · Peak {{ peak.timeLabel }} ({{ peak.alt }}°)
-              </text>
-            </g>
-          }
-        }
-
-        <!-- Current Observation Time Indicator Needle -->
-        @if (svgCurvePaths().currentTimeX !== null) {
-          <g class="current-time-marker">
-            <line [attr.x1]="svgCurvePaths().currentTimeX" y1="12" [attr.x2]="svgCurvePaths().currentTimeX" y2="225" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3" />
-            <rect [attr.x]="(svgCurvePaths().currentTimeX ?? 0) - 22" y="6" width="44" height="15" rx="3" fill="#0c1d47" stroke="#2563eb" stroke-width="0.8" />
-            <text [attr.x]="svgCurvePaths().currentTimeX" y="17" fill="#93c5fd" font-size="8.5" font-weight="bold" font-family="monospace" text-anchor="middle">NOW</text>
-          </g>
-        }
-      </svg>
-
-      <!-- Time Axis Labels Row -->
-      <div class="altitude-time-axis font-mono tabular-nums">
-        @for (pt of altitudeCurves(); track pt.hourLabel) {
-          <span>{{ pt.hourLabel }}</span>
-        }
-      </div>
-
-      <!-- Intuitive Visual "When to Spot Them Tonight" Guide Cards Deck -->
-      <div class="visual-sky-guide-deck">
-        <div class="guide-deck-header">
-          <span class="guide-kicker font-mono">VISUAL TIMELINE · WHEN TO LOOK OUTSIDE</span>
-          <span class="guide-hint">Click any body to toggle its path above</span>
-        </div>
-
-        <div class="guide-cards-grid">
-          @for (guide of celestialVisibilityGuides(); track guide.id) {
-            <div
-              class="celestial-guide-card"
-              [class.active]="isCurveActive(guide.id)"
-              (click)="toggleCurve(guide.id)"
-              [attr.title]="'Click to toggle ' + guide.name + ' sky path'">
-              <div class="guide-card-top">
-                <div class="guide-planet-badge">
-                  <span class="guide-orb" [style.backgroundColor]="guide.color"></span>
-                  <strong>{{ guide.name }}</strong>
-                  <span class="guide-symbol">{{ guide.symbol }}</span>
-                </div>
-                <span
-                  class="guide-status-tag"
-                  [class.optimal]="guide.peakAlt > 45"
-                  [class.visible]="guide.peakAlt > 20 && guide.peakAlt <= 45"
-                  [class.low]="guide.peakAlt > 0 && guide.peakAlt <= 20"
-                  [class.below]="!guide.isVisibleTonight">
-                  {{ guide.statusBadge }}
-                </span>
+          @if (guide.isVisibleTonight) {
+            <div class="viewing-times">
+              <div>
+                <span>RISES</span>
+                <strong>{{ guide.riseTime }}</strong>
               </div>
-
-              <div class="guide-card-peak font-mono">
-                @if (guide.isVisibleTonight) {
-                  <div class="peak-time-row">
-                    <span class="lbl">BEST TIME:</span>
-                    <strong class="val">{{ guide.peakTime }}</strong>
-                    <span class="alt-val">({{ guide.peakAlt }}° high)</span>
-                  </div>
-                } @else {
-                  <div class="peak-time-row text-slate-500">
-                    <span>Below horizon tonight</span>
-                  </div>
-                }
+              <div class="viewing-best-time">
+                <span>BEST TIME</span>
+                <strong>{{ guide.peakTime }}</strong>
+                <small>{{ guide.peakAlt }}° high</small>
               </div>
-
-              <!-- Visual Mini-Timeline Track -->
-              <div class="guide-timeline-bar-wrap">
-                <div class="guide-timeline-track">
-                  @if (guide.isVisibleTonight) {
-                    <div
-                      class="guide-timeline-fill"
-                      [style.left.%]="guide.timelineStartPct"
-                      [style.width.%]="Math.max(6, guide.timelineEndPct - guide.timelineStartPct)"
-                      [style.backgroundColor]="guide.color">
-                    </div>
-                  }
-                </div>
-                <div class="guide-timeline-labels font-mono">
-                  <span>Dusk</span>
-                  <span>Midnight</span>
-                  <span>Dawn</span>
-                </div>
+              <div>
+                <span>SETS</span>
+                <strong>{{ guide.setTime }}</strong>
               </div>
+            </div>
 
-              <p class="guide-tip">{{ guide.viewingTip }}</p>
+            <div class="viewing-advice">
+              <strong>{{ guide.summary }}</strong>
+              <span>{{ guide.viewingTip }}</span>
+            </div>
+          } @else {
+            <div class="viewing-unavailable">
+              <strong>Not above the horizon tonight</strong>
+              <span>{{ guide.summary }}</span>
             </div>
           }
-        </div>
-      </div>
+        </article>
+      }
+    </div>
+
+    <div class="viewing-schedule-footer">
+      <span>RISE</span>
+      <span>Look toward the open horizon after the rise time.</span>
+      <span>BEST TIME</span>
+      <span>The object is highest above the horizon.</span>
+      <span>SET</span>
+      <span>It drops below the horizon.</span>
     </div>
   </section>
 
