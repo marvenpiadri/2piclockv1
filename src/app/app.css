@@ -963,7 +963,7 @@
 
 /* Final sky rule for every routed page: the living atmosphere is the page surface.
    Keep intentional inner cards/panels intact; only the routed component shell is transparent. */
-.sky-background-active .main-content-viewport > router-outlet + * {
+.main-content-viewport > router-outlet + * {
   background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
