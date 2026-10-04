@@ -1772,3 +1772,10 @@
   background: rgba(5, 15, 29, 0.28) !important;
 }
 
+/* Tonight Observatory is part of the living sky, not a filled panel. */
+.sky-report .tonight-observatory {
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
