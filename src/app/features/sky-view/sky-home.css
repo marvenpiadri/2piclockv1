@@ -1738,14 +1738,24 @@
   display: none !important;
 }
 
-/* Weather is a transparent/glass surface, never a solid blue data-card stack. */
+/* Weather surfaces belong to the outer glass container.
+   Section groups are structural wrappers and must never double the surface. */
 .environmental-deck .deck-weather-hero,
-.environmental-deck .deck-section-group,
 .environmental-deck .deck-insight-card {
   background: rgba(5, 15, 29, 0.30) !important;
   border-color: rgba(255, 255, 255, 0.10) !important;
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+.environmental-deck .deck-section-group {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Live is the one explicit state control: solid amber when active. */
