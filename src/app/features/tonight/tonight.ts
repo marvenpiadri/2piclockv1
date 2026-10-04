@@ -505,8 +505,11 @@ export class TonightComponent {
       const setSearch = Astronomy.SearchRiseSet(p.body, obs, -1, new Date(d.getTime() - 12 * 3600000), 2);
       const transitSearch = Astronomy.SearchHourAngle(p.body, obs, 0, new Date(d.getTime() - 12 * 3600000));
       const transitDate = transitSearch?.time?.date ?? null;
-      const transitHor = transitDate
-        ? Astronomy.Horizon(transitDate, obs, eq.ra, eq.dec, 'normal')
+      const transitEq = transitDate
+        ? Astronomy.Equator(p.body, transitDate, obs, true, true)
+        : null;
+      const transitHor = transitDate && transitEq
+        ? Astronomy.Horizon(transitDate, obs, transitEq.ra, transitEq.dec, 'normal')
         : null;
 
       const isVisibleNow = hor.altitude > 0;
@@ -789,8 +792,11 @@ export class TonightComponent {
     const moonEq = Astronomy.Equator(Astronomy.Body.Moon, this.activeInstant(), this.observer(), true, true);
     const moonTransit = Astronomy.SearchHourAngle(Astronomy.Body.Moon, this.observer(), 0, new Date(this.activeInstant().getTime() - 12 * 3600000));
     const moonTransitDate = moonTransit?.time?.date ?? null;
-    const moonTransitHor = moonTransitDate
-      ? Astronomy.Horizon(moonTransitDate, this.observer(), moonEq.ra, moonEq.dec, 'normal')
+    const moonTransitEq = moonTransitDate
+      ? Astronomy.Equator(Astronomy.Body.Moon, moonTransitDate, this.observer(), true, true)
+      : null;
+    const moonTransitHor = moonTransitDate && moonTransitEq
+      ? Astronomy.Horizon(moonTransitDate, this.observer(), moonTransitEq.ra, moonTransitEq.dec, 'normal')
       : null;
     const moonPeakAlt = Math.max(0, moonTransitHor?.altitude ?? moon.altitudeDeg);
     const moonVisible = moonPeakAlt > 0 && moon.riseFormatted !== '—' && moon.setFormatted !== '—';
