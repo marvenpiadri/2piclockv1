@@ -1070,291 +1070,238 @@
 }
 
 /* --------------------------------------------------------------------------
-   Visual Night Sky Trajectory & Altitude Card (Dark Midnight Blue)
+   Tonight viewing schedule
    -------------------------------------------------------------------------- */
-.tonight-altitude-chart-card {
-  background: #060c1c;
-  border: 1px solid #14244b;
-  border-radius: 12px;
-  padding: 22px;
+.tonight-viewing-section {
   margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  background: var(--color-surface-elevated);
 }
 
-.chart-header-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+.viewing-schedule-header {
+  align-items: flex-start;
   margin-bottom: 16px;
 }
 
-.section-subtitle {
-  font-size: 13px;
-  color: #94a3b8;
-  margin: 4px 0 0 0;
+.viewing-schedule-header .section-subtitle {
+  max-width: 680px;
+  line-height: 1.5;
 }
 
-.curve-toggles {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+.viewing-schedule-note {
+  flex: 0 0 auto;
+  min-width: 150px;
+  padding: 9px 12px;
+  border-left: 2px solid var(--color-accent);
 }
 
-.toggle-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  background: #091226;
-  border: 1px solid #162447;
-  color: #94a3b8;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.toggle-pill:hover {
-  background: #0d1a38;
-  color: #ffffff;
-  border-color: #1e3a8a;
-}
-
-.toggle-pill .pill-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.toggle-pill.active {
-  background: var(--color-accent-soft);
-  border-color: var(--color-accent);
-  color: #ffffff;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 25%, transparent);
-}
-
-.toggle-pill.pill-moon.active .pill-dot { background: #ffffff; }
-.toggle-pill.pill-jupiter.active .pill-dot { background: #fed7aa; }
-.toggle-pill.pill-saturn.active .pill-dot { background: #fde047; }
-.toggle-pill.pill-venus.active .pill-dot { background: #fef08a; }
-.toggle-pill.pill-mars.active .pill-dot { background: #f87171; }
-
-.altitude-svg-wrapper {
-  width: 100%;
-  position: relative;
-  background: radial-gradient(ellipse at 50% 0%, var(--color-surface-elevated) 0%, #050d22 55%, #020512 100%);
-  border: 1px solid #162a56;
-  border-radius: 10px;
-  padding: 14px 14px 18px;
-  box-shadow: 0 12px 36px -8px rgba(2, 6, 23, 0.8), inset 0 1px 0 color-mix(in srgb, var(--color-accent) 25%, transparent);
-}
-
-.altitude-svg {
-  width: 100%;
-  height: 220px;
+.viewing-schedule-note span,
+.viewing-schedule-note strong {
   display: block;
-  border-radius: 6px;
-  overflow: hidden;
 }
 
-.peak-badge-group {
-  pointer-events: none;
-  user-select: none;
-}
-
-.current-time-marker {
-  pointer-events: none;
-}
-
-.altitude-time-axis {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 30px 14px;
-  font-size: 11px;
-  color: #94a3b8;
-  border-top: 1px solid #14244b;
-  margin-top: 4px;
-}
-
-/* Visual "When to Spot Them Tonight" Guide Cards Deck */
-.visual-sky-guide-deck {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #14244b;
-}
-
-.guide-deck-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.guide-kicker {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.viewing-schedule-note span {
   color: var(--color-accent-strong);
+  font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
 }
 
-.guide-hint {
-  font-size: 11px;
-  color: #64748b;
+.viewing-schedule-note strong {
+  margin-top: 5px;
+  color: #fff;
+  font-size: 12px;
 }
 
-.guide-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 10px;
-}
-
-.celestial-guide-card {
-  background: #060e22;
-  border: 1px solid #122144;
-  border-radius: 8px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.viewing-schedule {
   display: flex;
   flex-direction: column;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.viewing-row {
+  display: grid;
+  grid-template-columns: minmax(170px, .85fr) minmax(300px, 1.35fr) minmax(240px, 1fr);
+  gap: 18px;
+  align-items: center;
+  min-height: 82px;
+  padding: 14px 4px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.viewing-row:last-child {
+  border-bottom: 0;
+}
+
+.viewing-object {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.viewing-object-orb {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.viewing-object strong,
+.viewing-object span {
+  display: block;
+}
+
+.viewing-object strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.viewing-object span {
+  margin-top: 3px;
+  color: rgba(255,255,255,.48);
+  font: 9px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.viewing-times {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
   gap: 8px;
 }
 
-.celestial-guide-card:hover {
-  background: #091636;
-  border-color: #1e3a8a;
-  transform: translateY(-1px);
+.viewing-times > div {
+  min-width: 0;
+  padding: 7px 9px;
+  border-left: 1px solid rgba(255,255,255,.09);
 }
 
-.celestial-guide-card.active {
-  background: var(--color-surface-elevated);
-  border-color: var(--color-accent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 20%, transparent);
+.viewing-times span,
+.viewing-times strong,
+.viewing-times small {
+  display: block;
 }
 
-.guide-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+.viewing-times span {
+  color: rgba(255,255,255,.4);
+  font: 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .06em;
 }
 
-.guide-planet-badge {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  color: #f8fafc;
+.viewing-times strong {
+  margin-top: 5px;
+  color: #fff;
+  font: 700 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-.guide-orb {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: 0 0 6px currentColor;
+.viewing-times small {
+  margin-top: 3px;
+  color: var(--color-accent-strong);
+  font: 9px ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-.guide-symbol {
-  font-size: 12px;
-  color: #94a3b8;
+.viewing-best-time {
+  border-left-color: color-mix(in srgb, var(--color-accent) 45%, transparent) !important;
 }
 
-.guide-status-tag {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
-  font-weight: 600;
-  white-space: nowrap;
+.viewing-advice {
+  min-width: 0;
 }
 
-.guide-status-tag.optimal {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+.viewing-advice strong,
+.viewing-advice span {
+  display: block;
 }
 
-.guide-status-tag.visible {
-  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  color: #93c5fd;
-  border: 1px solid rgba(37, 99, 235, 0.35);
-}
-
-.guide-status-tag.low {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.guide-status-tag.below {
-  background: #030712;
-  color: #64748b;
-  border: 1px solid var(--color-border);
-}
-
-.peak-time-row {
+.viewing-advice strong {
+  color: rgba(255,255,255,.78);
   font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  line-height: 1.4;
 }
 
-.peak-time-row .lbl {
-  color: #64748b;
+.viewing-advice span {
+  margin-top: 4px;
+  color: rgba(255,255,255,.44);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.viewing-unavailable {
+  grid-column: 2 / -1;
+  padding: 9px 12px;
+  border-left: 2px solid rgba(255,255,255,.12);
+}
+
+.viewing-unavailable strong,
+.viewing-unavailable span {
+  display: block;
+}
+
+.viewing-unavailable strong {
+  color: rgba(255,255,255,.55);
+  font-size: 11px;
+}
+
+.viewing-unavailable span {
+  margin-top: 3px;
+  color: rgba(255,255,255,.35);
   font-size: 10px;
 }
 
-.peak-time-row .val {
-  color: #ffffff;
+.viewing-row.not-visible {
+  opacity: .72;
+}
+
+.viewing-schedule-footer {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto 1fr;
+  gap: 7px 10px;
+  margin-top: 14px;
+  color: rgba(255,255,255,.38);
+  font: 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.viewing-schedule-footer span:nth-child(odd) {
+  color: var(--color-accent-strong);
   font-weight: 700;
 }
 
-.peak-time-row .alt-val {
-  color: #93c5fd;
-  font-size: 10.5px;
+@media (max-width: 900px) {
+  .viewing-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .viewing-unavailable {
+    grid-column: auto;
+  }
+
+  .viewing-advice {
+    padding-left: 23px;
+  }
 }
 
-.guide-timeline-bar-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+@media (max-width: 620px) {
+  .tonight-viewing-section {
+    padding: 16px;
+  }
 
-.guide-timeline-track {
-  height: 5px;
-  background: #020614;
-  border: 1px solid #142247;
-  border-radius: 3px;
-  position: relative;
-  overflow: hidden;
-}
+  .viewing-schedule-note {
+    display: none;
+  }
 
-.guide-timeline-fill {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: 3px;
-  opacity: 0.85;
-}
+  .viewing-times {
+    padding-left: 23px;
+  }
 
-.guide-timeline-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 9px;
-  color: #475569;
-}
+  .viewing-times strong {
+    font-size: 14px;
+  }
 
-.guide-tip {
-  font-size: 11px;
-  color: #94a3b8;
-  margin: 0;
-  line-height: 1.35;
+  .viewing-schedule-footer {
+    grid-template-columns: auto 1fr;
+  }
 }
 
 /* --------------------------------------------------------------------------
