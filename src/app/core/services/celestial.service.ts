@@ -127,11 +127,7 @@ export class CelestialService {
 
     // 1. Natural astronomical season from date + latitude
     let season: Season = this.weatherService.getSeason(date, loc.latitude, loc.timezone);
-    let seasonalBias = 0;
-    if (season === 'winter') seasonalBias = -8;
-    else if (season === 'summer') seasonalBias = +8;
-    else if (season === 'spring') seasonalBias = -1;
-    else seasonalBias = +1;
+    let seasonalBias = season === 'winter' ? -8 : season === 'summer' ? 8 : season === 'spring' ? -1 : 1;
 
     // Preset / condition overrides for season
     if (w.condition === 'winter_clear' || w.condition === 'winter_overcast') {
