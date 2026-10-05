@@ -17,6 +17,7 @@ module.exports = defineConfig([
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-useless-assignment': 'off',
       '@angular-eslint/use-lifecycle-interface': 'warn',
       '@angular-eslint/directive-selector': [
         'error',
