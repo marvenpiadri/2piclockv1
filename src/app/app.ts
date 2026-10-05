@@ -495,6 +495,11 @@ export class App {
     this.locationService.selectLocation(loc);
     this.closeMenus();
 
+    // GPS/custom coordinates are not entries in the canonical SEO catalogue.
+    // Never turn them into a fake /country/city URL that the SEO guard must
+    // resolve through the API.
+    if (loc.isCustom) return;
+
     const path = this.router.url.split('?')[0].replace(/^\//, '');
     const parts = path.split('/').filter(Boolean);
     const focusedExperiences = new Set(['time', 'weather', 'sun', 'moon', 'tonight', 'astronomy']);
@@ -512,6 +517,8 @@ export class App {
   async detectGPS(): Promise<void> {
     const loc = await this.locationService.detectUserLocation();
     this.closeMenus();
-    if (loc) this.router.navigate(this.locationService.getLocationPath(loc));
+    if (loc && !loc.isCustom) {
+      this.router.navigate(this.locationService.getLocationPath(loc));
+    }
   }
 }
