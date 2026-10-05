@@ -13,6 +13,9 @@ export class LocationService {
   private readonly selectedLocationStore = 'selected-location';
   private readonly savedLocationsStore = 'saved-locations';
   private locationLoadPromise?: Promise<GeoLocation[]>;
+  private initialLocationPromise?: Promise<GeoLocation>;
+  private resolvedInitialLocation?: GeoLocation;
+  private geolocationPromise?: Promise<GeoLocation | null>;
   readonly randomLocations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
   readonly locations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
   readonly selectedLocation = signal<GeoLocation>(DEFAULT_LOCATIONS[0]);
@@ -89,6 +92,22 @@ export class LocationService {
   }
 
   async ensureInitialLocation(): Promise<GeoLocation> {
+    if (this.resolvedInitialLocation) return this.resolvedInitialLocation;
+    if (this.initialLocationPromise) return this.initialLocationPromise;
+
+    this.initialLocationPromise = this.resolveInitialLocation()
+      .then(location => {
+        this.resolvedInitialLocation = location;
+        return location;
+      })
+      .finally(() => {
+        this.initialLocationPromise = undefined;
+      });
+
+    return this.initialLocationPromise;
+  }
+
+  private async resolveInitialLocation(): Promise<GeoLocation> {
     const current = this.selectedLocation();
     try {
       if (this.isBrowser) {
@@ -133,9 +152,15 @@ export class LocationService {
   }
 
   detectUserLocation(): Promise<GeoLocation | null> {
-    if (!this.isBrowser || !navigator.geolocation) { this.locationError.set('Geolocation is not supported by your browser.'); return Promise.resolve(null); }
-    this.isLocating.set(true); this.locationError.set(null);
-    return new Promise(resolve => navigator.geolocation.getCurrentPosition(
+    if (this.geolocationPromise) return this.geolocationPromise;
+    if (!this.isBrowser || !navigator.geolocation) {
+      this.locationError.set('Geolocation is not supported by your browser.');
+      return Promise.resolve(null);
+    }
+
+    this.isLocating.set(true);
+    this.locationError.set(null);
+    this.geolocationPromise = new Promise<GeoLocation | null>(resolve => navigator.geolocation.getCurrentPosition(
       async pos => {
         const latitude = Math.round(pos.coords.latitude * 10000) / 10000;
         const longitude = Math.round(pos.coords.longitude * 10000) / 10000;
@@ -174,7 +199,11 @@ export class LocationService {
       },
       err => { this.isLocating.set(false); this.locationError.set(err.message || 'Unable to retrieve location.'); resolve(null); },
       { timeout: 5000, enableHighAccuracy: false }
-    ));
+    )).finally(() => {
+      this.geolocationPromise = undefined;
+    });
+
+    return this.geolocationPromise;
   }
 
   refreshRandomLocations(): void { this.locationLoadPromise = undefined; this.locations.set([]); void this.loadLocations().catch(() => undefined); }
