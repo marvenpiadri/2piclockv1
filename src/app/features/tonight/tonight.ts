@@ -426,12 +426,11 @@ export class TonightComponent {
 
     const phaseDeg = illum.phase_angle;
     const phaseFraction = illum.phase_fraction;
-    let phaseName = 'New Moon';
-    if (phaseFraction < 0.02) phaseName = 'New Moon';
-    else if (phaseFraction < 0.48) phaseName = phaseDeg < 90 ? 'Waxing Crescent' : 'Waning Crescent';
-    else if (phaseFraction < 0.52) phaseName = phaseDeg < 90 ? 'First Quarter' : 'Last Quarter';
-    else if (phaseFraction < 0.98) phaseName = phaseDeg < 90 ? 'Waxing Gibbous' : 'Waning Gibbous';
-    else phaseName = 'Full Moon';
+    const phaseName = phaseFraction < 0.02 ? 'New Moon'
+      : phaseFraction < 0.48 ? (phaseDeg < 90 ? 'Waxing Crescent' : 'Waning Crescent')
+        : phaseFraction < 0.52 ? (phaseDeg < 90 ? 'First Quarter' : 'Last Quarter')
+          : phaseFraction < 0.98 ? (phaseDeg < 90 ? 'Waxing Gibbous' : 'Waning Gibbous')
+            : 'Full Moon';
 
     const isAboveHorizon = hor.altitude > 0;
     let interferencePct = 0;
@@ -799,7 +798,7 @@ export class TonightComponent {
       };
     };
 
-    const moonEq = Astronomy.Equator(Astronomy.Body.Moon, this.activeInstant(), this.observer(), true, true);
+    void Astronomy.Equator(Astronomy.Body.Moon, this.activeInstant(), this.observer(), true, true);
     const moonTransit = Astronomy.SearchHourAngle(Astronomy.Body.Moon, this.observer(), 0, new Date(this.activeInstant().getTime() - 12 * 3600000));
     const moonTransitDate = moonTransit?.time?.date ?? null;
     const moonTransitEq = moonTransitDate
