@@ -41,10 +41,12 @@ export class SeoService {
 
     this.title.setTitle(page.title);
     this.meta.updateTag({ name: 'description', content: page.description });
-    this.meta.updateTag({
-      name: 'robots',
-      content: 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
-    });
+    const indexable = this.isIndexableRoute(url);
+    const robots = indexable
+      ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+      : 'noindex,follow';
+    this.meta.updateTag({ name: 'robots', content: robots });
+    this.meta.updateTag({ name: 'googlebot', content: robots });
 
     this.meta.updateTag({ property: 'og:type', content: page.type ?? 'website' });
     this.meta.updateTag({ property: 'og:title', content: page.title });
@@ -55,7 +57,7 @@ export class SeoService {
     this.meta.updateTag({ property: 'og:image', content: this.socialImage });
     this.meta.updateTag({ property: 'og:image:alt', content: '2piClock living sky and astronomical world clock' });
 
-    this.meta.updateTag({ name: 'twitter:card', content: 'summary' });
+    this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     this.meta.updateTag({ name: 'twitter:title', content: page.title });
     this.meta.updateTag({ name: 'twitter:description', content: page.description });
     this.meta.updateTag({ name: 'twitter:image', content: this.socialImage });
@@ -75,6 +77,16 @@ export class SeoService {
 
   private canonicalUrl(path: string): string {
     return path === '/' ? this.origin + '/' : this.origin + path;
+  }
+
+  private isIndexableRoute(url: string): boolean {
+    return !(
+      url === '/dashboard' ||
+      url === '/alerts' ||
+      url === '/radio/favorites' ||
+      url === '/radio/recent' ||
+      url.startsWith('/widget/embed/')
+    );
   }
 
   private describe(url: string, location: string, country: string): SeoPage {
