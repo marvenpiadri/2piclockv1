@@ -406,9 +406,9 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
     const sunTimes = calculateSolarEvents(date, loc.latitude, loc.longitude);
 
-    let timeStr = '--:--';
-    let timeSecStr = '--:--:--';
-    let utcOffset = 'UTC';
+    let timeStr: string;
+    let timeSecStr: string;
+    let utcOffset: string;
 
     try {
       timeStr = new Intl.DateTimeFormat('en-US', {
@@ -437,28 +437,8 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
 
     const alt = sun.altitudeDeg;
-    let astroState: WorldHubStatus['astroState'] = 'night';
-    let statusLabel = 'Deep Night';
-
-    if (alt > 6) {
-      astroState = 'day';
-      statusLabel = 'Full Daylight';
-    } else if (alt > 0) {
-      astroState = 'day';
-      statusLabel = 'Golden Hour';
-    } else if (alt > -6) {
-      astroState = 'civil-twilight';
-      statusLabel = 'Civil Twilight';
-    } else if (alt > -12) {
-      astroState = 'nautical-twilight';
-      statusLabel = 'Nautical Twilight';
-    } else if (alt > -18) {
-      astroState = 'astro-twilight';
-      statusLabel = 'Astronomical Twilight';
-    } else {
-      astroState = 'night';
-      statusLabel = 'Deep Night';
-    }
+    const astroState: WorldHubStatus['astroState'] = alt > 0 ? 'day' : alt > -6 ? 'civil-twilight' : alt > -12 ? 'nautical-twilight' : alt > -18 ? 'astro-twilight' : 'night';
+    const statusLabel = alt > 6 ? 'Full Daylight' : alt > 0 ? 'Golden Hour' : alt > -6 ? 'Civil Twilight' : alt > -12 ? 'Nautical Twilight' : alt > -18 ? 'Astronomical Twilight' : 'Deep Night';
 
     // Calculate 2Pi Diurnal Phase [0, 2π] based on local time
     const timeParts = timeSecStr.split(':');
@@ -1262,16 +1242,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       const isSelected = loc.id === activeLocId;
       const tier = loc.tier ?? 2;
 
-      let isVisible = false;
-      if (isSelected) {
-        isVisible = true;
-      } else if (currentZoom < 2.5) {
-        isVisible = tier === 1;
-      } else if (currentZoom < 4.5) {
-        isVisible = tier <= 2;
-      } else {
-        isVisible = true;
-      }
+      const isVisible = isSelected || (currentZoom < 2.5 ? tier === 1 : currentZoom < 4.5 ? tier <= 2 : true);
 
       if (!isVisible && !isSelected) {
         if (el.style.display !== 'none') {
@@ -1298,21 +1269,13 @@ export class WorldViewComponent implements OnInit, OnDestroy {
         astroState = 'astro-twilight';
       }
 
-      let dotColorClass = 'bg-sky-400';
-      let badgeTimeClass = 'text-sky-300';
-      if (astroState === 'day') {
-        dotColorClass = 'bg-amber-400 shadow-amber-400/80';
-        badgeTimeClass = 'text-amber-300';
-      } else if (astroState === 'civil-twilight') {
-        dotColorClass = 'bg-purple-400 shadow-purple-400/80';
-        badgeTimeClass = 'text-purple-300';
-      } else if (astroState === 'nautical-twilight') {
-        dotColorClass = 'bg-indigo-400 shadow-indigo-400/80';
-        badgeTimeClass = 'text-indigo-300';
-      } else {
-        dotColorClass = 'bg-sky-400 shadow-sky-400/80';
-        badgeTimeClass = 'text-sky-300';
-      }
+      const { dotColorClass, badgeTimeClass } = astroState === 'day'
+        ? { dotColorClass: 'bg-amber-400 shadow-amber-400/80', badgeTimeClass: 'text-amber-300' }
+        : astroState === 'civil-twilight'
+          ? { dotColorClass: 'bg-purple-400 shadow-purple-400/80', badgeTimeClass: 'text-purple-300' }
+          : astroState === 'nautical-twilight'
+            ? { dotColorClass: 'bg-indigo-400 shadow-indigo-400/80', badgeTimeClass: 'text-indigo-300' }
+            : { dotColorClass: 'bg-sky-400 shadow-sky-400/80', badgeTimeClass: 'text-sky-300' };
 
       el.classList.toggle('is-selected', isSelected);
 
@@ -1324,7 +1287,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
           second: '2-digit',
           hour12: false
         }).format(date);
-        let utcOffset = 'UTC';
+        let utcOffset: string;
         try {
           const parts = new Intl.DateTimeFormat('en-US', {
             timeZone: loc.timezone,
@@ -1361,7 +1324,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
         const stateKey = `label_${dotColorClass}_${minuteBucket}`;
         if (this.markerRenderState.get(loc.id) !== stateKey) {
           this.markerRenderState.set(loc.id, stateKey);
-          let localTime = '--:--';
+          let localTime: string;
           try {
             localTime = new Intl.DateTimeFormat('en-US', {
               timeZone: loc.timezone,
