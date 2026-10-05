@@ -149,7 +149,7 @@ export class DashboardComponent {
       const state = getCelestialState(now, loc.latitude, loc.longitude, loc.timezone);
       const isDay = state.sun.isAboveHorizon || state.twilightState === 'day' || state.twilightState === 'golden_hour';
       
-      let timeStr = '';
+      let timeStr: string;
       try {
         timeStr = now.toLocaleTimeString('en-US', {
           timeZone: loc.timezone,
