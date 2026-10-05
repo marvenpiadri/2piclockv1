@@ -326,8 +326,8 @@ export class RadioService {
     const date = this.timeService.currentActiveDate();
     
     // Format local time in station timezone
-    let localTime = '--:--';
-    let utcOffset = 'UTC+0';
+    let localTime: string;
+    let utcOffset: string;
     try {
       localTime = date.toLocaleTimeString('en-US', {
         timeZone: station.timezone,
