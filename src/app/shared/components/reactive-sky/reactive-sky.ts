@@ -946,12 +946,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const sunX = this.projectAzimuthToScreenX(sunAz, w, isSouthern);
     const glowRadius = Math.max(w * 0.45, 280);
 
-    let intensity = 0;
-    if (sunAlt <= 0) {
-      intensity = Math.max(0, (sunAlt + 14) / 14) * 0.65;
-    } else {
-      intensity = Math.max(0, (25 - sunAlt) / 25) * 0.75;
-    }
+    let intensity = sunAlt <= 0 ? Math.max(0, (sunAlt + 14) / 14) * 0.65 : Math.max(0, (25 - sunAlt) / 25) * 0.75;
 
     intensity *= Math.max(0, 1 - (weather.cloudCoverPct / 100) * 0.55);
     if (intensity <= 0.01) return;
