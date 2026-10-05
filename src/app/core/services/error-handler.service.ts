@@ -33,12 +33,6 @@ export class ErrorHandlerService implements ErrorHandler {
   handleError(error: unknown): void {
     const errorObj = this.normalizeError(error);
     
-    // Handle transient network aborts or drops gracefully without treating them as app crashes
-    if (this.isTransientNetworkError(errorObj.message)) {
-      console.warn('[2PiClock Network Notice]', errorObj.message);
-      return;
-    }
-
     // 1. Log to browser/server console
     console.error('[2PiClock Application Error]', {
       id: errorObj.id,
@@ -56,19 +50,6 @@ export class ErrorHandlerService implements ErrorHandler {
     this.ngZone.run(() => {
       this.notifyUser(errorObj);
     });
-  }
-
-  private isTransientNetworkError(message: string): boolean {
-    const lower = (message || '').toLowerCase();
-    return (
-      lower.includes('failed to fetch') ||
-      lower.includes('networkerror') ||
-      lower.includes('aborterror') ||
-      lower.includes('aborted a request') ||
-      lower.includes('load failed') ||
-      lower.includes('net::err_') ||
-      lower.includes('connection refused')
-    );
   }
 
   showNotification(message: string, type: 'error' | 'warning' | 'info' = 'error', durationMs = 6000): void {
