@@ -406,9 +406,9 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
     const sunTimes = calculateSolarEvents(date, loc.latitude, loc.longitude);
 
-    let timeStr: string;
-    let timeSecStr: string;
-    let utcOffset: string;
+    let timeStr = '--:--';
+    let timeSecStr = '--:--:--';
+    let utcOffset = 'UTC';
 
     try {
       timeStr = new Intl.DateTimeFormat('en-US', {
