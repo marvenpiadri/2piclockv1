@@ -38,9 +38,9 @@ const staticSitemapUrls = [
   '/time/converter', '/time/difference', '/time/duration',
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
   '/time/unix-timestamp', '/time/world-matrix',
-  '/widget',
+  '/widget', '/dashboard',
   '/sleep-calculator',
-  '/radio/stations', '/radio/map', '/radio/favorites', '/radio/recent',
+  '/radio/stations', '/radio/map',
   '/atmosphere', '/ephemeris', '/planner', '/space',
   '/stargazing', '/eclipses', '/satellites'
 ];
@@ -77,6 +77,7 @@ const locationSitemapChunkSize = 40000;
 
 
 const apiHeaders = (res: express.Response) => {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
@@ -597,7 +598,8 @@ app.get('/robots.txt', (_req, res) => {
 app.get('/sitemap.xml', async (_req, res) => {
   try {
     const locations = await getLocationIndex();
-    const locationSitemapCount = Math.ceil(locations.length * 4 / locationSitemapChunkSize);
+    const locationSitemapPagesPerLocation = 7;
+    const locationSitemapCount = Math.ceil(locations.length * locationSitemapPagesPerLocation / locationSitemapChunkSize);
     res.type('application/xml').send(buildSitemapIndex(locationSitemapCount));
   } catch {
     res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
@@ -618,7 +620,7 @@ app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
   try {
     const locations = await getLocationIndex();
     const chunk = Number(chunkParam);
-    const pagesPerChunk = Math.floor(locationSitemapChunkSize / 4);
+    const pagesPerChunk = Math.floor(locationSitemapChunkSize / locationSitemapPagesPerLocation);
     const start = chunk * pagesPerChunk;
     const end = Math.min(locations.length, start + pagesPerChunk);
     if (start >= locations.length) {
@@ -629,7 +631,15 @@ app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
     const paths: string[] = [];
     for (const location of locations.slice(start, end)) {
       const base = '/' + locationSlug(location);
-      paths.push(base, base + '/weather', base + '/astronomy', base + '/tonight');
+      paths.push(
+        base,
+        base + '/time',
+        base + '/weather',
+        base + '/astronomy',
+        base + '/tonight',
+        base + '/sun',
+        base + '/moon'
+      );
     }
     res.type('application/xml').send(buildUrlSet(paths));
   } catch {
