@@ -579,8 +579,8 @@ export function getCelestialState(
   const daylightProgress = hours / 24;
 
   // Formatted local & UTC strings
-  let localTimeString = '';
-  let utcTimeString = '';
+  let localTimeString: string;
+  const utcTimeString = date.toISOString().slice(11, 19) + ' UTC';
   try {
     localTimeString = date.toLocaleTimeString('en-US', {
       timeZone: timezone,
@@ -593,7 +593,6 @@ export function getCelestialState(
     localTimeString = date.toTimeString().slice(0, 8);
   }
 
-  utcTimeString = date.toISOString().slice(11, 19) + ' UTC';
 
   // Day of year and season follow the selected location's civil date.
   const localYear = localValue('year');
@@ -604,18 +603,12 @@ export function getCelestialState(
   const dayOfYear = Math.floor((localDateCarrier.getTime() - startOfYear.getTime()) / 86400000) + 1;
 
   const month = localMonth - 1; // 0 to 11
-  let season: 'spring' | 'summer' | 'autumn' | 'winter' = 'spring';
   const isNorthern = lat >= 0;
-
-  if (month >= 2 && month <= 4) {
-    season = isNorthern ? 'spring' : 'autumn';
-  } else if (month >= 5 && month <= 7) {
-    season = isNorthern ? 'summer' : 'winter';
-  } else if (month >= 8 && month <= 10) {
-    season = isNorthern ? 'autumn' : 'spring';
-  } else {
-    season = isNorthern ? 'winter' : 'summer';
-  }
+  const season: 'spring' | 'summer' | 'autumn' | 'winter' =
+    month >= 2 && month <= 4 ? (isNorthern ? 'spring' : 'autumn') :
+    month >= 5 && month <= 7 ? (isNorthern ? 'summer' : 'winter') :
+    month >= 8 && month <= 10 ? (isNorthern ? 'autumn' : 'spring') :
+    (isNorthern ? 'winter' : 'summer');
 
   // Solar Hour Angle relative to solar noon
   const noonTime = solarEvents.solarNoon ? solarEvents.solarNoon.getTime() : date.getTime();
@@ -692,7 +685,7 @@ export function get24HourSolarCurve(
       timezone
     );
     const sunPos = calculateSolarPosition(sampleDate, lat, lng);
-    let timeLabel = '';
+    let timeLabel: string;
     try {
       timeLabel = sampleDate.toLocaleTimeString('en-US', {
         timeZone: timezone,
@@ -874,7 +867,7 @@ export function calculateRadianTimeOverlap(
     const citySlots: CityWorkHourSlot[] = [];
 
     for (const city of cities) {
-      let localHour = 0;
+      let localHour: number;
       try {
         const timeStr = sampleDate.toLocaleTimeString('en-US', {
           timeZone: city.timezone,
