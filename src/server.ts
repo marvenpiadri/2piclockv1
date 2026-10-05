@@ -504,7 +504,9 @@ app.get('/api/v1/locations/nearest', async (req, res) => {
       }
     }
 
-    if (!nearest) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'No nearby city was found.');
+    if (!nearest) {
+      return apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The city catalogue is temporarily unavailable.');
+    }
     res.json({ version: '1', location: nearest, distanceKm: Math.round(nearestDistanceKm * 10) / 10 });
   } catch {
     apiError(res, 503, 'LOCATION_DATA_UNAVAILABLE', 'The internal city catalogue is temporarily unavailable.');
