@@ -427,13 +427,12 @@ export class WeatherService {
 
     const total = Math.min(100, Math.round(base + windScore + precipScore + freezeScore));
 
-    let label: WeatherAggressivenessLevel = 'Calm';
-    if (total >= 85) label = cond === 'blizzard' || cond === 'heavy_snow' || tempC < -5 ? 'Violent Blizzard' : 'Severe Storm';
-    else if (total >= 65) label = 'Severe Storm';
-    else if (total >= 45) label = 'Vigorous';
-    else if (total >= 30) label = 'Active';
-    else if (total >= 15) label = 'Gentle';
-    else label = 'Calm';
+    const label: WeatherAggressivenessLevel = total >= 85
+      ? (cond === 'blizzard' || cond === 'heavy_snow' || tempC < -5 ? 'Violent Blizzard' : 'Severe Storm')
+      : total >= 65 ? 'Severe Storm'
+        : total >= 45 ? 'Vigorous'
+          : total >= 30 ? 'Active'
+            : total >= 15 ? 'Gentle' : 'Calm';
 
     return { score: total, label };
   }
