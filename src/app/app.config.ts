@@ -20,20 +20,20 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideRouter(routes),
     { provide: ErrorHandler, useClass: ErrorHandlerService },
-    provideAppInitializer(async () => {
+    provideAppInitializer(() => {
+      const seoService = inject(SeoService);
       try {
-        inject(SeoService).init();
+        seoService.init();
       } catch {
-        // Non-fatal SEO init
+        // Non-fatal SEO init.
       }
+
       const locationService = inject(LocationService);
       const platformId = inject(PLATFORM_ID);
       if (isPlatformBrowser(platformId)) {
-        try {
-          await locationService.ensureInitialLocation();
-        } catch {
-          // Non-fatal initial location discovery
-        }
+        // Do not block application bootstrap on GPS. The root route guard
+        // shares this promise and waits only when it actually needs a location.
+        void locationService.ensureInitialLocation().catch(() => undefined);
       }
     }),
   ],
