@@ -74,6 +74,7 @@ ${entries}
 };
 
 const locationSitemapChunkSize = 40000;
+const locationSitemapPagesPerLocation = 7;
 
 
 const apiHeaders = (res: express.Response) => {
@@ -598,7 +599,6 @@ app.get('/robots.txt', (_req, res) => {
 app.get('/sitemap.xml', async (_req, res) => {
   try {
     const locations = await getLocationIndex();
-    const locationSitemapPagesPerLocation = 7;
     const locationSitemapCount = Math.ceil(locations.length * locationSitemapPagesPerLocation / locationSitemapChunkSize);
     res.type('application/xml').send(buildSitemapIndex(locationSitemapCount));
   } catch {
