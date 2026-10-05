@@ -627,9 +627,11 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
 
   private installCountryPins(): void {
     if (!this.map) return;
+
     this.geocodingService.getCountries().subscribe({
       next: countries => {
         if (!this.map) return;
+
         const data = {
           type: 'FeatureCollection',
           features: countries.map(loc => ({
@@ -638,35 +640,39 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
             properties: { id: loc.id, name: loc.country, flag: loc.flag }
           }))
         };
+
         if (!this.map.getSource('weather-country-pins')) {
-          this.map.addSource('weather-country-pins', { type: 'geojson', data: data as any });
+          this.map.addSource('weather-country-pins', {
+            type: 'geojson',
+            data: data as any
+          });
+
+          this.map.addLayer({
+            id: 'weather-country-pins',
+            type: 'circle',
+            source: 'weather-country-pins',
+            minzoom: 1,
+            maxzoom: 4,
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 2, 3.5, 3],
+              'circle-color': '#fbbf24',
+              'circle-opacity': 0.72,
+              'circle-stroke-color': '#0a1628',
+              'circle-stroke-width': 1
+            }
+          });
+
+          this.map.on('click', 'weather-country-pins', event => {
+            const id = event.features?.[0]?.properties?.['id'];
+            const loc = countries.find(country => country.id === id);
+            if (loc) this.selectSearchLocation(loc);
+          });
+        } else {
+          (this.map.getSource('weather-country-pins') as GeoJSONSource).setData(data as any);
         }
       },
       error: () => {
         // Non-fatal pins load
-      }
-    });
-        this.map.addLayer({
-          id: 'weather-country-pins',
-          type: 'circle',
-          source: 'weather-country-pins',
-          minzoom: 1,
-          maxzoom: 4,
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 2, 3.5, 3],
-            'circle-color': '#fbbf24',
-            'circle-opacity': 0.72,
-            'circle-stroke-color': '#0a1628',
-            'circle-stroke-width': 1
-          }
-        });
-        this.map.on('click', 'weather-country-pins', event => {
-          const id = event.features?.[0]?.properties?.['id'];
-          const loc = countries.find(country => country.id === id);
-          if (loc) this.selectSearchLocation(loc);
-        });
-      } else {
-        (this.map.getSource('weather-country-pins') as GeoJSONSource).setData(data as any);
       }
     });
   }
