@@ -17,7 +17,7 @@ export class LocationService {
   private resolvedInitialLocation?: GeoLocation;
   private geolocationPromise?: Promise<GeoLocation | null>;
   readonly randomLocations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
-  readonly locations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
+  readonly locations = signal<GeoLocation[]>([]);
   readonly selectedLocation = signal<GeoLocation>(DEFAULT_LOCATIONS[0]);
   readonly watchlist = signal<GeoLocation[]>([]);
   readonly isLocating = signal<boolean>(false);
@@ -30,7 +30,7 @@ export class LocationService {
   }
 
   async loadLocations(): Promise<GeoLocation[]> {
-    if (this.locations().length > 0 && this.locations() !== DEFAULT_LOCATIONS) return this.locations();
+    if (this.locations().length > 0) return this.locations();
     if (this.locationLoadPromise) return this.locationLoadPromise;
     this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl))
       .then(async response => {
