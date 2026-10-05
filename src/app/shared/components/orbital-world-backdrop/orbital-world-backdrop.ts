@@ -194,14 +194,9 @@ export class OrbitalWorldBackdropComponent implements OnInit, OnDestroy {
 
     for (let lng = -180; lng <= 180; lng += step) {
       const dLngRad = ((lng - lng0) * Math.PI) / 180;
-      let lat = 0;
-      if (Math.abs(subsolar.latitude) < 0.08) {
-        lat = 0;
-      } else {
-        const tanLat = -Math.cos(dLngRad) / Math.tan(decRad);
-        lat = (Math.atan(tanLat) * 180) / Math.PI;
-      }
-      lat = Math.max(-89.9, Math.min(89.9, lat));
+      const lat = Math.max(-89.9, Math.min(89.9,
+        Math.abs(subsolar.latitude) < 0.08 ? 0 :
+          (Math.atan(-Math.cos(dLngRad) / Math.tan(decRad)) * 180) / Math.PI));
       points.push([lng, lat]);
     }
 
