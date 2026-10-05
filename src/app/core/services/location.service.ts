@@ -131,8 +131,8 @@ export class LocationService {
     }
 
     const timezone = this.isBrowser ? (Intl.DateTimeFormat().resolvedOptions().timeZone || '') : '';
-    const fallback = (timezone ? locations.find(location => location.timezone === timezone) : null) ??
-      locations.find(l => l.id === 'gb-london') ??
+    const fallback = (timezone ? locations.find((location: GeoLocation) => location.timezone === timezone) : null) ??
+      locations.find((l: GeoLocation) => l.id === 'gb-london') ??
       locations[0] ??
       DEFAULT_LOCATIONS[0] ??
       current;
