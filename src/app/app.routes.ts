@@ -30,6 +30,7 @@ const resolveRootLocation: CanActivateFn = async () => {
   const platformId = inject(PLATFORM_ID);
   if (!isPlatformBrowser(platformId)) return true;
   const location = await locationService.ensureInitialLocation();
+  if (location.isCustom) return true;
   const slug = locationService.getLocationSlug(location);
   return router.createUrlTree(['/', ...slug.split('/')]);
 };
