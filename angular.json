@@ -45,10 +45,7 @@
             "ssr": {
               "entry": "src/server.ts"
             },
-            "index": {
-              "input": "src/index.ssr.html",
-              "output": "index.html"
-            }
+            "index": "src/index.html"
           },
           "configurations": {
             "production": {
