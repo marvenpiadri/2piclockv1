@@ -66,13 +66,7 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
-              "externalDependencies": [
-                "node:module",
-                "node:path",
-                "node:fs",
-                "express"
-              ]
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
