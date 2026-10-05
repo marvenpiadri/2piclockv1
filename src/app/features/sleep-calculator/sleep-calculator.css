@@ -1,4 +1,1683 @@
-.sleep-page{min-height:calc(100vh - 90px);padding:48px 0 80px;color:var(--color-text-main);background:transparent}.sleep-content{width:min(1100px,100%);margin:0 auto;display:flex;flex-direction:column;align-items:stretch}.sleep-hero{width:100%;max-width:none;margin:0 0 28px;padding:0 clamp(18px,4vw,64px);box-sizing:border-box}.sleep-kicker,.insight-label{color:var(--color-accent-strong);font:700 10px/1.4 monospace;letter-spacing:.14em;text-transform:uppercase}.sleep-hero h1{margin:8px 0 10px;font:800 clamp(38px,6vw,72px)/1 system-ui,sans-serif;letter-spacing:-.045em}.sleep-hero p{max-width:700px;margin:0;color:var(--color-text-secondary);font-size:16px;line-height:1.6}.sleep-context{display:flex;gap:8px;margin-top:16px;color:var(--color-text-secondary);font:600 11px monospace;flex-wrap:wrap}.sleep-shell{width:100%;max-width:none;margin:0;display:grid;grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr);gap:16px}.sleep-controls,.sleep-result,.sleep-insight-grid article,.sleep-history,.astronomy-panel{background:color-mix(in srgb,var(--color-midnight-900) 28%,transparent);border:1px solid color-mix(in srgb,var(--color-midnight-500) 48%,transparent);border-radius:20px;padding:22px;backdrop-filter:blur(3px)}.mode-row{display:flex;gap:6px;padding:4px;border:1px solid color-mix(in srgb,var(--color-midnight-500) 48%,transparent);border-radius:12px;margin-bottom:20px}.mode-row button,.history-head button{flex:1;border:0;background:transparent;color:var(--color-text-secondary);padding:10px 8px;border-radius:9px;cursor:pointer;font:700 11px system-ui}.mode-row button.active{background:var(--color-amber-gradient);color:var(--color-text-on-accent)}.sleep-controls label{display:flex;flex-direction:column;gap:7px;color:var(--color-text-secondary);font:700 10px monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}.sleep-controls input,.sleep-controls select{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:11px;border:1px solid color-mix(in srgb,var(--color-midnight-500) 55%,transparent);background:color-mix(in srgb,var(--color-midnight-950) 42%,transparent);color:var(--color-text-main);font:700 15px monospace}.sleep-controls select{appearance:none;-webkit-appearance:none;padding-right:40px;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--color-accent-strong) 50%),linear-gradient(135deg,var(--color-accent-strong) 50%,transparent 50%),linear-gradient(to right,color-mix(in srgb,var(--color-midnight-500) 35%,transparent),color-mix(in srgb,var(--color-midnight-500) 35%,transparent));background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%,calc(100% - 32px) 50%;background-size:5px 5px,5px 5px,1px 18px;background-repeat:no-repeat}.sleep-controls select:hover{border-color:var(--color-accent-border);background-color:color-mix(in srgb,var(--color-midnight-950) 55%,transparent)}.sleep-controls select:focus-visible{border-color:var(--color-accent-strong);background-color:color-mix(in srgb,var(--color-midnight-950) 60%,transparent)}.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.now-panel{padding:14px;margin-bottom:14px;border-radius:12px;background:color-mix(in srgb,var(--color-accent) 7%,transparent);border:1px solid var(--color-accent-border);display:flex;flex-direction:column;gap:5px}.now-panel span{color:var(--color-text-secondary);font:11px monospace}.calculate-btn{width:100%;margin-top:5px;border:0;border-radius:12px;padding:13px;cursor:pointer;background:var(--color-amber-gradient);color:var(--color-text-on-accent);font:800 12px monospace}.method-note{color:var(--color-text-secondary);font-size:11px;line-height:1.5;margin:13px 0 0}.result-heading{padding:18px;border-radius:15px;background:color-mix(in srgb,var(--color-accent) 8%,transparent);border:1px solid var(--color-accent-border)}.result-heading span{color:var(--color-accent-strong);font:700 10px monospace;text-transform:uppercase;letter-spacing:.1em}.result-heading strong{display:block;margin:7px 0 4px;font:800 clamp(22px,4vw,34px) monospace}.result-heading small{color:var(--color-text-secondary);font:11px monospace}.plan-list{display:flex;flex-direction:column;gap:7px;margin-top:14px}.plan-row{display:grid;grid-template-columns:90px 1fr 75px;align-items:center;gap:10px;padding:13px;border:1px solid color-mix(in srgb,var(--color-midnight-500) 40%,transparent);background:transparent;color:var(--color-text-main);border-radius:11px;text-align:left;cursor:pointer}.plan-row:hover,.plan-row.recommended{border-color:var(--color-accent-border);background:color-mix(in srgb,var(--color-accent) 6%,transparent)}.plan-row span{color:var(--color-text-secondary);font:11px monospace}.plan-row b{color:var(--color-text-main)}.cycle{color:var(--color-accent-strong)!important;font-weight:800!important}.science-strip{margin-top:15px;color:var(--color-text-secondary);display:flex;gap:7px;flex-wrap:wrap;font:10px monospace}.astronomy-panel{width:100%;max-width:none;margin:16px 0}.astronomy-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.astronomy-heading h2{margin:6px 0 7px;font:800 26px system-ui}.astronomy-heading p{max-width:720px;color:var(--color-text-secondary);line-height:1.6;font-size:12px;margin:0}.moon-badge{min-width:92px;text-align:center;border:1px solid var(--color-accent-border);border-radius:16px;padding:12px;background:color-mix(in srgb,var(--color-accent) 7%,transparent)}.moon-badge span,.moon-badge small{display:block;color:var(--color-text-secondary);font:9px monospace}.moon-badge strong{display:block;margin:3px 0;font:800 24px monospace}.astronomy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.astronomy-grid article{min-width:0;padding:15px;border:1px solid color-mix(in srgb,var(--color-midnight-500) 35%,transparent);border-radius:13px;background:color-mix(in srgb,var(--color-midnight-950) 18%,transparent)}.astronomy-label{display:block;color:var(--color-accent-strong);font:700 9px monospace;letter-spacing:.1em}.astronomy-grid strong{display:block;margin:8px 0 2px;font:800 19px monospace}.astronomy-grid small{color:var(--color-text-secondary);font:9px monospace}.astronomy-grid p{margin:10px 0 0;color:var(--color-text-secondary);font-size:10px;line-height:1.5}.astronomy-footnote{margin-top:13px;color:var(--color-text-secondary);font:10px/1.5 monospace}.sleep-insight-grid{width:100%;max-width:none;margin:16px 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}.sleep-insight-grid h2,.sleep-history h2{margin:6px 0 7px;font:800 22px system-ui}.sleep-insight-grid p,.empty-history{color:var(--color-text-secondary);line-height:1.6;font-size:12px;margin:0}.sleep-history{width:100%;max-width:none;margin:16px 0}.history-head{display:flex;justify-content:space-between;align-items:center;gap:15px}.history-head button{flex:0 0 auto;border:1px solid color-mix(in srgb,var(--color-midnight-500) 50%,transparent)}.history-list{display:flex;flex-direction:column;gap:5px;margin-top:15px}.history-row{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;padding:11px 12px;border-top:1px solid color-mix(in srgb,var(--color-midnight-500) 30%,transparent);color:var(--color-text-secondary);font:10px monospace}.history-row span:last-child{color:var(--color-text-main)}.sleep-disclaimer{width:100%;max-width:none;margin:18px 0 0;padding:0 clamp(18px,4vw,64px);box-sizing:border-box;color:var(--color-text-secondary);font-size:10px;line-height:1.6}@media(max-width:900px){.astronomy-grid{grid-template-columns:1fr 1fr}}@media(max-width:800px){.sleep-shell,.sleep-insight-grid{grid-template-columns:1fr}.astronomy-heading{flex-direction:column}.moon-badge{align-self:flex-start}.plan-row{grid-template-columns:80px 1fr}.plan-row span:last-child{grid-column:2}.history-row{grid-template-columns:1fr}.sleep-page{padding-top:30px}}
-.plan-row em{display:block;margin-top:3px;color:var(--color-accent-strong);font-style:normal;font:700 9px monospace}.plan-row:not(.recommended) em{color:var(--color-text-secondary)}.plan-row:focus-visible,.mode-row button:focus-visible,.calculate-btn:focus-visible,.history-head button:focus-visible{outline:2px solid var(--color-accent-strong);outline-offset:2px}.sleep-controls input:focus-visible,.sleep-controls select:focus-visible{outline:2px solid var(--color-accent-strong);outline-offset:1px}.sleep-context span:first-child{color:var(--color-text-main)}@media(max-width:520px){.sleep-page{padding-inline:0}.sleep-hero{padding-inline:14px}.sleep-disclaimer{padding-inline:14px}.sleep-controls,.sleep-result,.sleep-insight-grid article,.sleep-history,.astronomy-panel{padding:16px;border-radius:16px}.control-grid{grid-template-columns:1fr}.mode-row button{padding-inline:5px;font-size:10px}.plan-row{grid-template-columns:72px 1fr;padding:11px}.plan-row span:last-child{grid-column:2}.result-heading{padding:15px;padding-right:125px}.share-plan-btn{top:15px;right:15px}.result-heading strong{font-size:23px}.astronomy-grid{grid-template-columns:1fr}.sleep-hero h1{font-size:42px}}
+/* ==========================================================================
+   2piClock Astronomical Sleep & Circadian Calculator
+   ========================================================================== */
 
-.result-heading{position:relative;padding-right:150px}.share-plan-btn{position:absolute;top:18px;right:18px;margin-top:0;display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--color-accent-border);border-radius:9px;background:transparent;color:var(--color-accent-strong);font:700 10px var(--font-mono);cursor:pointer}.share-plan-btn:hover{background:color-mix(in srgb,var(--color-accent) 9%,transparent)}.share-plan-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.sleep-page {
+  min-height: calc(100vh - 90px);
+  padding: 36px 0 80px;
+  color: var(--color-text-main, #f8fafc);
+  background: transparent;
+}
+
+.sleep-content {
+  width: min(1200px, 94vw);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Hero Section
+   -------------------------------------------------------------------------- */
+.sleep-hero {
+  padding: 0 4px;
+}
+
+.sleep-kicker {
+  display: inline-block;
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 11px/1.2 var(--font-mono, monospace);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.sleep-hero h1 {
+  margin: 0 0 10px;
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--color-text-main, #f8fafc);
+  text-wrap: balance;
+}
+
+.sleep-hero p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.sleep-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--color-text-secondary, #94a3b8);
+  font: 500 12px/1 var(--font-mono, monospace);
+  flex-wrap: wrap;
+}
+
+.context-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.context-item mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: var(--color-accent, #f59e0b);
+}
+
+.context-sep {
+  opacity: 0.4;
+}
+
+/* --------------------------------------------------------------------------
+   Calculator Two-Column Split Console
+   -------------------------------------------------------------------------- */
+.sleep-shell {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(440px, 1.4fr);
+  gap: 20px;
+}
+
+.sleep-controls-card,
+.sleep-results-card,
+.simulation-master-section,
+.astronomy-context-section,
+.sleep-history-section {
+  background: rgba(10, 15, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.card-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 11px/1 var(--font-mono, monospace);
+  letter-spacing: 0.12em;
+  margin-bottom: 18px;
+}
+
+.card-section-label mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Segmented Mode Selector */
+.mode-segmented-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  background: rgba(3, 7, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.mode-segmented-bar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #94a3b8);
+  border-radius: 10px;
+  cursor: pointer;
+  font: 700 12px/1 system-ui, sans-serif;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.mode-segmented-bar button mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.mode-segmented-bar button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-segmented-bar button.active {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #b45309 100%);
+  color: #050811;
+  font-weight: 800;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.35);
+}
+
+/* Time Target Box */
+.time-target-box {
+  margin-bottom: 22px;
+}
+
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.control-label span {
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 11px/1 var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+}
+
+.control-label small {
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 11px;
+}
+
+.time-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-input-wrap input[type="time"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(3, 7, 18, 0.7);
+  color: #fff;
+  font: 800 24px/1 var(--font-mono, monospace);
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.time-input-wrap input[type="time"]:focus-visible {
+  border-color: var(--color-accent, #f59e0b);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.quick-presets-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-time-shortcut {
+  flex: 1;
+  min-width: 60px;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary, #94a3b8);
+  font: 600 11px var(--font-mono, monospace);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-time-shortcut:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fff;
+}
+
+/* Now & Nap Banners */
+.now-active-banner,
+.nap-active-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.now-indicator-pulse {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  animation: pulse-ring 1.8s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.now-active-banner div,
+.nap-active-banner div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.now-active-banner strong,
+.nap-active-banner strong {
+  font-size: 13px;
+  color: #fff;
+}
+
+.now-active-banner span,
+.nap-active-banner span {
+  font-size: 11px;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.nap-active-banner mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* Control Fields Grid */
+.control-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-group select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(3, 7, 18, 0.6);
+  color: var(--color-text-main, #f8fafc);
+  font: 600 12px system-ui, sans-serif;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.field-group select:focus-visible {
+  border-color: var(--color-accent, #f59e0b);
+}
+
+.science-quick-facts {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.science-quick-facts mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #fbbf24;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   Results Card & Featured Plan Hero
+   -------------------------------------------------------------------------- */
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.results-header .card-section-label {
+  margin-bottom: 0;
+}
+
+.target-quota-badge {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 600 11px/1 var(--font-mono, monospace);
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Featured Plan Hero Box */
+.featured-plan-hero {
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.15) 0%, rgba(13, 20, 36, 0.8) 70%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  margin-bottom: 22px;
+}
+
+.hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.score-pill-tag {
+  font: 700 11px/1 var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.score-pill-tag.optimal {
+  color: #34d399;
+}
+
+.score-pill-tag.short {
+  color: #f87171;
+}
+
+.score-pill-tag.long {
+  color: #38bdf8;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-main, #f8fafc);
+  font: 600 11px/1 system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-action mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: #fbbf24;
+}
+
+.btn-icon-action:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fff;
+}
+
+/* Hero Time Readout */
+.hero-time-readout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 12px;
+  background: rgba(3, 7, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+
+.time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.time-caption {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 700 9px/1 var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.time-digits {
+  font: 800 clamp(26px, 3.5vw, 36px)/1 var(--font-mono, monospace);
+  color: #fff;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-sub {
+  color: #64748b;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.time-arrow-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #f59e0b;
+}
+
+.time-arrow-divider mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.cycle-pill {
+  font: 700 10px/1 var(--font-mono, monospace);
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+/* Hero Stats Row */
+.hero-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+}
+
+.hero-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hero-stat-item span {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 700 9px/1 var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+}
+
+.hero-stat-item strong {
+  font: 700 16px/1.2 var(--font-mono, monospace);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.inertia-low {
+  color: #34d399 !important;
+}
+
+.hero-footer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.stage-summary-text {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 500 11px/1.4 var(--font-mono, monospace);
+}
+
+.btn-simulate-featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #b45309 100%);
+  color: #050811;
+  font: 800 12px/1 system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-simulate-featured:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(245, 158, 11, 0.5);
+}
+
+/* Alternative Plans Table */
+.alternative-plans-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sub-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--color-text-secondary, #94a3b8);
+  font: 700 10px/1 var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.sub-header-row small {
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: normal;
+}
+
+.plans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-card-row {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(3, 7, 18, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  transition: all 0.15s ease;
+}
+
+.plan-card-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.plan-card-row.is-best {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.plan-card-row.is-simulating {
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
+}
+
+.plan-cycle-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.plan-cycle-num {
+  font: 800 18px/1 var(--font-mono, monospace);
+  color: #fbbf24;
+}
+
+.plan-cycle-col small {
+  font: 600 9px/1 var(--font-mono, monospace);
+  color: var(--color-text-secondary, #94a3b8);
+  margin-top: 2px;
+}
+
+.plan-times-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.plan-times-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 700 15px/1.2 var(--font-mono, monospace);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.arrow-sep {
+  color: #f59e0b;
+  font-size: 13px;
+}
+
+.plan-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 11px/1 var(--font-mono, monospace);
+  color: var(--color-text-secondary, #94a3b8);
+  flex-wrap: wrap;
+}
+
+.dot-sep {
+  opacity: 0.35;
+}
+
+.plan-score-badge {
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.plan-score-badge.optimal {
+  color: #34d399;
+}
+
+.plan-score-badge.short {
+  color: #f87171;
+}
+
+.plan-score-badge.long {
+  color: #38bdf8;
+}
+
+.plan-actions-col {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-plan-sim {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 10px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.08);
+  color: #38bdf8;
+  font: 700 11px/1 system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-plan-sim mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.btn-plan-sim:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
+  color: #fff;
+}
+
+.btn-plan-save,
+.btn-plan-cal,
+.btn-plan-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary, #94a3b8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-plan-save mat-icon,
+.btn-plan-cal mat-icon,
+.btn-plan-copy mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}
+
+.btn-plan-save:hover,
+.btn-plan-cal:hover,
+.btn-plan-copy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Simulation Theater (Circadian Hypnogram & Night Flight)
+   -------------------------------------------------------------------------- */
+.simulation-master-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.simulation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.simulation-header h2 {
+  margin: 0 0 6px;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+.simulation-header p {
+  margin: 0;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 780px;
+}
+
+.sim-speed-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(3, 7, 18, 0.6);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.control-label-text {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 700 10px var(--font-mono, monospace);
+  padding: 0 6px;
+}
+
+.sim-speed-controls button {
+  padding: 5px 9px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #94a3b8);
+  border-radius: 6px;
+  cursor: pointer;
+  font: 700 11px var(--font-mono, monospace);
+  transition: all 0.15s ease;
+}
+
+.sim-speed-controls button.active {
+  background: #38bdf8;
+  color: #030712;
+  font-weight: 800;
+}
+
+/* Simulator Dashboard */
+.sim-dashboard {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(440px, 1.3fr);
+  gap: 18px;
+}
+
+.sim-telemetry-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: rgba(3, 7, 18, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.sim-label {
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 9px/1 var(--font-mono, monospace);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.telemetry-time-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sim-clock {
+  font: 800 36px/1 var(--font-mono, monospace);
+  color: #fff;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.telemetry-time-display small {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 500 11px var(--font-mono, monospace);
+}
+
+.telemetry-stage-display {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.stage-name-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.stage-tag-badge {
+  font: 800 10px/1 var(--font-mono, monospace);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.stage-tag-badge.latency { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+.stage-tag-badge.n1 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+.stage-tag-badge.n2 { background: rgba(14, 165, 233, 0.25); color: #0284c7; }
+.stage-tag-badge.n3 { background: rgba(99, 102, 241, 0.3); color: #818cf8; }
+.stage-tag-badge.rem { background: rgba(236, 72, 153, 0.25); color: #f472b6; }
+
+.stage-name-row strong {
+  display: block;
+  font-size: 13px;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.brainwave-text {
+  display: block;
+  color: #38bdf8;
+  font: 600 11px var(--font-mono, monospace);
+  margin-top: 3px;
+}
+
+.telemetry-biomarkers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.biomarker-card {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.biomarker-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-secondary, #94a3b8);
+  font: 700 8px/1 var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+}
+
+.biomarker-label mat-icon {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+  color: #fbbf24;
+}
+
+.biomarker-card strong {
+  font: 800 16px/1 var(--font-mono, monospace);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.biomarker-sub {
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.meter-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width 0.15s ease;
+}
+
+.meter-fill.melatonin {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+}
+
+.meter-fill.cortisol {
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+.meter-fill.adenosine {
+  background: linear-gradient(90deg, #10b981, #06b6d4);
+}
+
+/* Hypnogram Canvas Container */
+.hypnogram-canvas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: rgba(3, 7, 18, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.hypnogram-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--color-text-secondary, #94a3b8);
+  font: 600 10px var(--font-mono, monospace);
+}
+
+.hypnogram-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.awake { background: #94a3b8; }
+.dot.rem { background: #f472b6; }
+.dot.light { background: #38bdf8; }
+.dot.deep { background: #818cf8; }
+
+.hypnogram-svg-box {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background: rgba(2, 6, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.hypnogram-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.grid-line {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 2;
+}
+
+.hypnogram-line-path {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+}
+
+.simulation-playhead-line {
+  stroke: #fbbf24;
+  stroke-width: 1.2;
+}
+
+.simulation-playhead-orb {
+  fill: #fff;
+  stroke: #f59e0b;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.9));
+}
+
+.stage-axis-labels {
+  position: absolute;
+  top: 0;
+  left: 6px;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.3);
+  font: 700 8px var(--font-mono, monospace);
+  text-transform: uppercase;
+}
+
+/* Scrubber Range */
+.simulation-scrubber-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scrub-time-label {
+  font: 700 11px var(--font-mono, monospace);
+  color: var(--color-accent-strong, #fbbf24);
+  white-space: nowrap;
+}
+
+.sim-range-scrubber {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sim-range-scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fbbf24;
+  border: 2px solid #030712;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+  cursor: pointer;
+}
+
+/* Milestones Bar */
+.sim-milestones-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.milestone-label {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 700 9px var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.btn-milestone {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary, #94a3b8);
+  font: 600 10px var(--font-mono, monospace);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-milestone:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Playback Toolbar */
+.sim-playback-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-sim-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-main, #f8fafc);
+  font: 600 11px system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sim-action mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.btn-sim-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.btn-sim-play-master {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: #030712;
+  font: 800 13px system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 3px 14px rgba(2, 132, 199, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-sim-play-master mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-sim-play-master:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(2, 132, 199, 0.55);
+}
+
+/* --------------------------------------------------------------------------
+   Astronomical Night Section
+   -------------------------------------------------------------------------- */
+.astronomy-context-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.astronomy-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.astronomy-heading h2 {
+  margin: 0 0 6px;
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 800;
+  color: #fff;
+}
+
+.astronomy-heading p {
+  margin: 0;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 750px;
+}
+
+.moon-phase-card {
+  min-width: 110px;
+  text-align: center;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: rgba(245, 158, 11, 0.06);
+  flex-shrink: 0;
+}
+
+.moon-name {
+  display: block;
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 9px var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+}
+
+.moon-pct {
+  display: block;
+  margin: 3px 0;
+  font: 800 24px/1 var(--font-mono, monospace);
+  color: #fff;
+}
+
+.moon-phase-card small {
+  display: block;
+  color: var(--color-text-secondary, #94a3b8);
+  font: 500 10px var(--font-mono, monospace);
+}
+
+.astronomy-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.astro-intel-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(3, 7, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+}
+
+.intel-card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 9px/1 var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.intel-card-top mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.intel-val {
+  font: 800 19px/1.2 var(--font-mono, monospace);
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.astro-intel-card small {
+  color: var(--color-text-secondary, #94a3b8);
+  font: 500 10px var(--font-mono, monospace);
+  margin-bottom: 8px;
+}
+
+.astro-intel-card p {
+  margin: 0;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Sleep History Panel
+   -------------------------------------------------------------------------- */
+.sleep-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.history-header h2 {
+  margin: 0 0 4px;
+  font-size: clamp(20px, 2.5vw, 26px);
+  font-weight: 800;
+  color: #fff;
+}
+
+.history-header p {
+  margin: 0;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 12px;
+}
+
+.btn-clear-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  font: 700 11px system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-clear-history mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}
+
+.btn-clear-history:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #f87171;
+  color: #fff;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.history-item-card {
+  padding: 14px 16px;
+  background: rgba(3, 7, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item-card:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.04);
+  transform: translateY(-1px);
+}
+
+.history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-mode-tag {
+  color: var(--color-accent-strong, #fbbf24);
+  font: 700 9px var(--font-mono, monospace);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.history-date {
+  color: #64748b;
+  font: 500 10px var(--font-mono, monospace);
+}
+
+.btn-del-item {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  padding: 2px;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.btn-del-item mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.btn-del-item:hover {
+  color: #f87171;
+}
+
+.history-main-times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 800 18px/1 var(--font-mono, monospace);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary, #94a3b8);
+  font: 500 11px var(--font-mono, monospace);
+}
+
+.history-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+  font: 600 10px system-ui, sans-serif;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-footer-actions mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.empty-history-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.empty-history-box mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.empty-history-box h3 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 15px;
+}
+
+.empty-history-box p {
+  margin: 0;
+  font-size: 12px;
+  max-width: 440px;
+}
+
+/* --------------------------------------------------------------------------
+   Research & Clinical Protocol Footer
+   -------------------------------------------------------------------------- */
+.sleep-research-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.science-quote strong {
+  display: block;
+  color: #fff;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.science-quote p {
+  margin: 0;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.disclaimer-text {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Floating Toast
+   -------------------------------------------------------------------------- */
+.notification-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(13, 19, 33, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 158, 11, 0.15);
+  backdrop-filter: blur(12px);
+  animation: toast-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 400px;
+}
+
+@keyframes toast-slide-up {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.toast-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.toast-icon-wrap mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toast-content strong {
+  font-size: 13px;
+  color: #fff;
+}
+
+.toast-content p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-secondary, #94a3b8);
+  line-height: 1.4;
+}
+
+.toast-close-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+}
+
+.toast-close-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.toast-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .sleep-shell {
+    grid-template-columns: 1fr;
+  }
+  .sim-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .astronomy-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .astronomy-heading {
+    flex-direction: column;
+  }
+  .moon-phase-card {
+    align-self: flex-start;
+  }
+  .simulation-header {
+    flex-direction: column;
+  }
+  .notification-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .mode-segmented-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+  .control-fields-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-time-readout {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .time-arrow-divider {
+    transform: rotate(90deg);
+    margin: 4px 0;
+  }
+  .astronomy-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .plan-card-row {
+    grid-template-columns: 48px 1fr;
+  }
+  .plan-actions-col {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}

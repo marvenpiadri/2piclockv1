@@ -294,7 +294,7 @@ app.get('/api/v1/weather', async (req, res) => {
       return apiError(res, 400, 'MISSING_COORDINATES', 'Provide latitude and longitude, or a location id.');
     }
 
-    const allowed = ['current', 'hourly', 'forecast_days', 'timezone'];
+    const allowed = ['current', 'hourly', 'forecast_days', 'timezone', 'wind_speed_unit', 'precipitation_unit'];
     const search = new URLSearchParams();
     search.set('latitude', latitude);
     search.set('longitude', longitude);
@@ -381,16 +381,16 @@ app.get('/api/v1/timezone', (req, res) => {
     }).formatToParts(date);
 
     const offsetLabel = parts.find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
-    const match = offsetLabel.match(/^GMT(?:(\\+|-)\\d{2}:?\\d{2})?$/);
-    if (!match) return apiError(res, 422, 'TIMEZONE_OFFSET_UNAVAILABLE', 'The timezone offset could not be resolved.');
-
-    const signedOffset = match[1] ?? '';
-    const offsetMinutes = signedOffset
-      ? (signedOffset.startsWith('+') ? 1 : -1) * (
-          Number(signedOffset.slice(1, 3)) * 60 +
-          Number(signedOffset.slice(-2))
-        )
-      : 0;
+    const match = offsetLabel.match(/^GMT([+-])(\d{2}):?(\d{2})$/);
+    let offsetMinutes = 0;
+    if (match) {
+      const sign = match[1] === '+' ? 1 : -1;
+      const hours = Number(match[2]);
+      const minutes = Number(match[3]);
+      offsetMinutes = sign * (hours * 60 + minutes);
+    } else if (offsetLabel !== 'GMT' && offsetLabel !== 'UTC') {
+      return apiError(res, 422, 'TIMEZONE_OFFSET_UNAVAILABLE', 'The timezone offset could not be resolved.');
+    }
 
     res.json({
       version: '1',

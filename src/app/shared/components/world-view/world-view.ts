@@ -391,9 +391,15 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     }
     this.remoteSearchTimer = setTimeout(() => {
       this.isRemoteSearching.set(true);
-      this.geocodingService.search(value, 50).subscribe(results => {
-        this.remoteSearchResults.set(results);
-        this.isRemoteSearching.set(false);
+      this.geocodingService.search(value, 50).subscribe({
+        next: results => {
+          this.remoteSearchResults.set(results);
+          this.isRemoteSearching.set(false);
+        },
+        error: () => {
+          this.remoteSearchResults.set([]);
+          this.isRemoteSearching.set(false);
+        }
       });
     }, 250);
   }
@@ -1070,7 +1076,8 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private initGlobalCityCatalogue(): void {
     if (!this.map) return;
 
-    this.geocodingService.getMapLocations().subscribe(locations => {
+    this.geocodingService.getMapLocations().subscribe({
+      next: locations => {
       if (!this.map || !locations.length) return;
 
       this.allMapLocations = locations;
@@ -1193,7 +1200,11 @@ export class WorldViewComponent implements OnInit, OnDestroy {
           if (this.map) this.map.getCanvas().style.cursor = '';
         });
       }
-    });
+    },
+    error: () => {
+      // Non-fatal map load
+    }
+  });
   }
 
   private initCityMarkers(): void {

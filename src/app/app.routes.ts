@@ -29,8 +29,15 @@ const resolveRootLocation: CanActivateFn = async () => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
   if (!isPlatformBrowser(platformId)) return true;
-  const location = await locationService.ensureInitialLocation();
-  return router.createUrlTree(['/', ...locationService.getLocationSlug(location).split('/')]);
+  try {
+    const location = await locationService.ensureInitialLocation();
+    const slug = locationService.getLocationSlug(location);
+    return router.createUrlTree(['/', ...slug.split('/')]);
+  } catch {
+    const fallback = locationService.selectedLocation();
+    const slug = locationService.getLocationSlug(fallback);
+    return router.createUrlTree(['/', ...slug.split('/')]);
+  }
 };
 
 const validSeoLocationGuard: CanActivateFn = async (route) => {
@@ -39,16 +46,24 @@ const validSeoLocationGuard: CanActivateFn = async (route) => {
   const country = route.paramMap.get('country');
   const city = route.paramMap.get('city');
   if (!country || !city) return router.createUrlTree(['/']);
-  const location = await locationService.getLocation(country + '/' + city);
-  if (!location) return router.createUrlTree(['/']);
-  const canonical = locationService.getLocationSlug(location);
-  if (country + '/' + city !== canonical) {
-    return router.createUrlTree(['/', ...canonical.split('/')]);
+  try {
+    const location = await locationService.getLocation(country + '/' + city);
+    if (!location) {
+      const fallback = locationService.selectedLocation();
+      const slug = locationService.getLocationSlug(fallback);
+      return router.createUrlTree(['/', ...slug.split('/')]);
+    }
+    const canonical = locationService.getLocationSlug(location);
+    if (country + '/' + city !== canonical) {
+      return router.createUrlTree(['/', ...canonical.split('/')]);
+    }
+    if (locationService.selectedLocation().id !== location.id) {
+      locationService.selectLocation(location);
+    }
+    return true;
+  } catch {
+    return router.createUrlTree(['/']);
   }
-  if (locationService.selectedLocation().id !== location.id) {
-    locationService.selectLocation(location);
-  }
-  return true;
 };
 
 export const routes: Routes = [

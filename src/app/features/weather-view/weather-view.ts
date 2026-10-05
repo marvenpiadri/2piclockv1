@@ -396,9 +396,15 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     }
     this.isLocationSearching.set(true);
     this.locationSearchTimer = setTimeout(() => {
-      this.geocodingService.search(value, 8).subscribe(results => {
-        this.locationSearchResults.set(results);
-        this.isLocationSearching.set(false);
+      this.geocodingService.search(value, 8).subscribe({
+        next: results => {
+          this.locationSearchResults.set(results);
+          this.isLocationSearching.set(false);
+        },
+        error: () => {
+          this.locationSearchResults.set([]);
+          this.isLocationSearching.set(false);
+        }
       });
     }, 220);
   }
@@ -545,7 +551,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       .set('wind_speed_unit', 'kmh')
       .set('precipitation_unit', 'mm');
 
-    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params }).subscribe({
+    this.http.get<any>('/api/v1/weather', { params }).subscribe({
       next: data => {
         const rows: WeatherGridPoint[] = Array.isArray(data) ? data : [data];
 
@@ -621,18 +627,25 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
 
   private installCountryPins(): void {
     if (!this.map) return;
-    this.geocodingService.getCountries().subscribe(countries => {
-      if (!this.map) return;
-      const data = {
-        type: 'FeatureCollection',
-        features: countries.map(loc => ({
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
-          properties: { id: loc.id, name: loc.country, flag: loc.flag }
-        }))
-      };
-      if (!this.map.getSource('weather-country-pins')) {
-        this.map.addSource('weather-country-pins', { type: 'geojson', data: data as any });
+    this.geocodingService.getCountries().subscribe({
+      next: countries => {
+        if (!this.map) return;
+        const data = {
+          type: 'FeatureCollection',
+          features: countries.map(loc => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
+            properties: { id: loc.id, name: loc.country, flag: loc.flag }
+          }))
+        };
+        if (!this.map.getSource('weather-country-pins')) {
+          this.map.addSource('weather-country-pins', { type: 'geojson', data: data as any });
+        }
+      },
+      error: () => {
+        // Non-fatal pins load
+      }
+    });
         this.map.addLayer({
           id: 'weather-country-pins',
           type: 'circle',

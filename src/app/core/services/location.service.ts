@@ -1,6 +1,6 @@
 import { Injectable, signal, PLATFORM_ID, REQUEST, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { GeoLocation } from '../models/location.model';
+import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
 import { WeatherService } from './weather.service';
 
 @Injectable({ providedIn: 'root' })
@@ -13,33 +13,51 @@ export class LocationService {
   private readonly selectedLocationStore = 'selected-location';
   private readonly savedLocationsStore = 'saved-locations';
   private locationLoadPromise?: Promise<GeoLocation[]>;
-  readonly randomLocations = signal<GeoLocation[]>([]);
-  readonly locations = signal<GeoLocation[]>([]);
-  readonly selectedLocation = signal<GeoLocation>(this.createNeutralLocation());
+  readonly randomLocations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
+  readonly locations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
+  readonly selectedLocation = signal<GeoLocation>(DEFAULT_LOCATIONS[0]);
   readonly watchlist = signal<GeoLocation[]>([]);
   readonly isLocating = signal<boolean>(false);
   readonly locationError = signal<string | null>(null);
 
-  constructor() { if (this.isBrowser) void this.restoreStoredLocations(); }
+  constructor() {
+    if (this.isBrowser) {
+      void this.restoreStoredLocations().catch(() => undefined);
+    }
+  }
 
   async loadLocations(): Promise<GeoLocation[]> {
-    if (this.locations().length > 0) return this.locations();
+    if (this.locations().length > 0 && this.locations() !== DEFAULT_LOCATIONS) return this.locations();
     if (this.locationLoadPromise) return this.locationLoadPromise;
-    this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl)).then(async response => {
-      if (!response.ok) throw new Error('Location discovery unavailable');
-      const data = await response.json() as { locations?: GeoLocation[] };
-      const locations = Array.isArray(data.locations) ? data.locations : [];
-      if (!locations.length) throw new Error('Location discovery returned no cities');
-      this.locations.set(locations); this.randomLocations.set(locations); this.locationError.set(null); return locations;
-    }).catch(error => { this.locationLoadPromise = undefined; this.locationError.set(error instanceof Error ? error.message : 'Location discovery is temporarily unavailable.'); throw error; });
+    this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl))
+      .then(async response => {
+        if (!response.ok) return DEFAULT_LOCATIONS;
+        const data = await response.json() as { locations?: GeoLocation[] };
+        const locations = Array.isArray(data.locations) && data.locations.length ? data.locations : DEFAULT_LOCATIONS;
+        this.locations.set(locations);
+        this.randomLocations.set(locations);
+        this.locationError.set(null);
+        return locations;
+      })
+      .catch(() => {
+        this.locations.set(DEFAULT_LOCATIONS);
+        this.randomLocations.set(DEFAULT_LOCATIONS);
+        this.locationError.set(null);
+        return DEFAULT_LOCATIONS;
+      })
+      .finally(() => {
+        this.locationLoadPromise = undefined;
+      });
     return this.locationLoadPromise;
   }
 
   async getLocation(identifier: string): Promise<GeoLocation | null> {
-    const normalized = identifier.trim();
+    const normalized = identifier.trim().toLowerCase();
     if (!normalized) return null;
-    const local = this.locations().find(location =>
-      location.id === normalized || this.getLocationSlug(location) === normalized
+    const local = [...this.locations(), ...DEFAULT_LOCATIONS].find(location =>
+      location.id.toLowerCase() === normalized ||
+      this.getLocationSlug(location).toLowerCase() === normalized ||
+      location.name.toLowerCase() === normalized
     );
     if (local) return local;
     try {
@@ -72,11 +90,39 @@ export class LocationService {
 
   async ensureInitialLocation(): Promise<GeoLocation> {
     const current = this.selectedLocation();
-    if (this.isBrowser) { const saved = await this.readSelectedLocation(); if (saved) { this.selectedLocation.set(saved); return saved; } const detected = await this.detectUserLocation(); if (detected) return detected; }
-    const locations = await this.loadLocations();
-    const timezone = this.isBrowser ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
-    const fallback = locations.find(location => location.timezone === timezone) ?? locations[0] ?? current;
-    this.selectedLocation.set(fallback); if (this.isBrowser) await this.persistSelectedLocation(fallback); return fallback;
+    try {
+      if (this.isBrowser) {
+        const saved = await this.readSelectedLocation();
+        if (saved) {
+          this.selectedLocation.set(saved);
+          return saved;
+        }
+        const detected = await this.detectUserLocation();
+        if (detected) return detected;
+      }
+    } catch {
+      // Fall through to catalogue or timezone match
+    }
+
+    let locations = DEFAULT_LOCATIONS;
+    try {
+      locations = await this.loadLocations();
+    } catch {
+      locations = DEFAULT_LOCATIONS;
+    }
+
+    const timezone = this.isBrowser ? (Intl.DateTimeFormat().resolvedOptions().timeZone || '') : '';
+    const fallback = (timezone ? locations.find(location => location.timezone === timezone) : null) ??
+      locations.find(l => l.id === 'gb-london') ??
+      locations[0] ??
+      DEFAULT_LOCATIONS[0] ??
+      current;
+
+    this.selectedLocation.set(fallback);
+    if (this.isBrowser) {
+      void this.persistSelectedLocation(fallback).catch(() => undefined);
+    }
+    return fallback;
   }
 
   selectLocation(loc: GeoLocation): void { this.weatherService.clearOverride(); this.selectedLocation.set(loc); this.locationError.set(null); if (this.isBrowser) void this.persistSelectedLocation(loc); }
@@ -143,27 +189,31 @@ export class LocationService {
 
   private createNeutralLocation(): GeoLocation { return { id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true }; }
   private async restoreStoredLocations(): Promise<void> {
-    const [selected, saved] = await Promise.all([
-      this.readSelectedLocation(),
-      this.readSavedLocations()
-    ]);
+    try {
+      const [selected, saved] = await Promise.all([
+        this.readSelectedLocation(),
+        this.readSavedLocations()
+      ]);
 
-    if (selected) {
-      // Catalogue locations are re-resolved so persisted data cannot carry a
-      // stale timezone after the underlying city/timezone dataset changes.
-      const canonical = selected.isCustom ? null : await this.getLocation(selected.id);
-      const restored = canonical ?? selected;
-      this.selectedLocation.set(restored);
-      if (this.isBrowser) await this.persistSelectedLocation(restored);
+      if (selected) {
+        // Catalogue locations are re-resolved so persisted data cannot carry a
+        // stale timezone after the underlying city/timezone dataset changes.
+        const canonical = selected.isCustom ? null : await this.getLocation(selected.id);
+        const restored = canonical ?? selected;
+        this.selectedLocation.set(restored);
+        if (this.isBrowser) await this.persistSelectedLocation(restored);
+      }
+
+      const canonicalWatchlist = await Promise.all(
+        saved.map(async location => {
+          if (location.isCustom) return location;
+          return (await this.getLocation(location.id)) ?? location;
+        })
+      );
+      this.watchlist.set(canonicalWatchlist);
+    } catch {
+      // Ignore local storage / indexedDB restore errors
     }
-
-    const canonicalWatchlist = await Promise.all(
-      saved.map(async location => {
-        if (location.isCustom) return location;
-        return (await this.getLocation(location.id)) ?? location;
-      })
-    );
-    this.watchlist.set(canonicalWatchlist);
   }
   private openDatabase(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const request = indexedDB.open('2piClockLocations', 1); request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains(this.selectedLocationStore)) db.createObjectStore(this.selectedLocationStore); if (!db.objectStoreNames.contains(this.savedLocationsStore)) db.createObjectStore(this.savedLocationsStore, { keyPath: 'id' }); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error ?? new Error('IndexedDB unavailable')); }); }
   private async readSelectedLocation(): Promise<GeoLocation | null> { try { const db = await this.openDatabase(); return await new Promise(resolve => { const request = db.transaction(this.selectedLocationStore, 'readonly').objectStore(this.selectedLocationStore).get('current'); request.onsuccess = () => resolve((request.result as GeoLocation | undefined) ?? null); request.onerror = () => resolve(null); }); } catch { return null; } }

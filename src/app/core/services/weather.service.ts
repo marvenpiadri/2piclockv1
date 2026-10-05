@@ -61,6 +61,9 @@ export class WeatherService {
         });
         this.worldWeather.set(next);
         this.worldWeatherFetchedAt = Date.now();
+      },
+      error: () => {
+        // Non-fatal world weather fetch
       }
     });
   }
@@ -240,7 +243,7 @@ export class WeatherService {
       .set('forecast_days', '7')
       .set('timezone', 'UTC');
 
-    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params })
+    this.http.get<any>('/api/v1/weather', { params })
       .subscribe({
         next: (data) => {
           this.isLoading.set(false);

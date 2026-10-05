@@ -20,11 +20,21 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideRouter(routes),
     { provide: ErrorHandler, useClass: ErrorHandlerService },
-    provideAppInitializer(() => {
-      inject(SeoService).init();
+    provideAppInitializer(async () => {
+      try {
+        inject(SeoService).init();
+      } catch {
+        // Non-fatal SEO init
+      }
       const locationService = inject(LocationService);
       const platformId = inject(PLATFORM_ID);
-      return isPlatformBrowser(platformId) ? locationService.ensureInitialLocation() : undefined;
+      if (isPlatformBrowser(platformId)) {
+        try {
+          await locationService.ensureInitialLocation();
+        } catch {
+          // Non-fatal initial location discovery
+        }
+      }
     }),
   ],
 };

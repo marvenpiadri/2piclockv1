@@ -478,9 +478,15 @@ export class App {
     this.remoteSearchTimer = setTimeout(() => {
       this.remoteSearchSubscription?.unsubscribe();
       this.isRemoteSearching.set(true);
-      this.remoteSearchSubscription = this.geocodingService.search(query, 50).subscribe(results => {
-        this.remoteLocations.set(results);
-        this.isRemoteSearching.set(false);
+      this.remoteSearchSubscription = this.geocodingService.search(query, 50).subscribe({
+        next: results => {
+          this.remoteLocations.set(results);
+          this.isRemoteSearching.set(false);
+        },
+        error: () => {
+          this.remoteLocations.set([]);
+          this.isRemoteSearching.set(false);
+        }
       });
     }, 300);
   }
