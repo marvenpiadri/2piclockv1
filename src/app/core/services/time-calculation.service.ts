@@ -201,14 +201,11 @@ export class TimeCalculationService {
     const absMinutes = Math.abs(diffMinutes) % 60;
     const formattedDiff = absMinutes === 0 ? `${absHours}h` : `${absHours}h ${absMinutes}m`;
 
-    let relationText = '';
-    if (diffMinutes === 0) {
-      relationText = `${locB.name} is in the same time zone as ${locA.name}`;
-    } else if (diffMinutes > 0) {
-      relationText = `${locB.name} is ${formattedDiff} ahead of ${locA.name}`;
-    } else {
-      relationText = `${locB.name} is ${formattedDiff} behind ${locA.name}`;
-    }
+    const relationText = diffMinutes === 0
+      ? `${locB.name} is in the same time zone as ${locA.name}`
+      : diffMinutes > 0
+        ? `${locB.name} is ${formattedDiff} ahead of ${locA.name}`
+        : `${locB.name} is ${formattedDiff} behind ${locA.name}`;
 
     const timeA = date.toLocaleTimeString('en-US', { timeZone: locA.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     const dateA = date.toLocaleDateString('en-US', { timeZone: locA.timezone, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -495,19 +492,13 @@ export class TimeCalculationService {
 
     // Relative time calculation
     const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
-    let relativeTime = '';
-    if (Math.abs(diffSec) < 60) {
-      relativeTime = diffSec >= 0 ? `${diffSec}s ago` : `in ${Math.abs(diffSec)}s`;
-    } else if (Math.abs(diffSec) < 3600) {
-      const m = Math.floor(Math.abs(diffSec) / 60);
-      relativeTime = diffSec >= 0 ? `${m}m ago` : `in ${m}m`;
-    } else if (Math.abs(diffSec) < 86400) {
-      const h = Math.floor(Math.abs(diffSec) / 3600);
-      relativeTime = diffSec >= 0 ? `${h}h ago` : `in ${h}h`;
-    } else {
-      const d = Math.floor(Math.abs(diffSec) / 86400);
-      relativeTime = diffSec >= 0 ? `${d}d ago` : `in ${d}d`;
-    }
+    const relativeTime = Math.abs(diffSec) < 60
+      ? (diffSec >= 0 ? `${diffSec}s ago` : `in ${Math.abs(diffSec)}s`)
+      : Math.abs(diffSec) < 3600
+        ? `${Math.floor(Math.abs(diffSec) / 60)}m ${diffSec >= 0 ? 'ago' : 'from now'}`
+        : Math.abs(diffSec) < 86400
+          ? `${Math.floor(Math.abs(diffSec) / 3600)}h ${diffSec >= 0 ? 'ago' : 'from now'}`
+          : `${Math.floor(Math.abs(diffSec) / 86400)}d ${diffSec >= 0 ? 'ago' : 'from now'}`;
 
     const y = date.getUTCFullYear();
     const isLeapYear = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
@@ -574,14 +565,8 @@ export class TimeCalculationService {
       }
 
       // Daylight approximation
-      let daylightStatus: WorldComparisonRow['daylightStatus'] = 'day';
-      if (hour >= 6 && hour < 19) {
-        daylightStatus = 'day';
-      } else if ((hour >= 5 && hour < 6) || (hour >= 19 && hour < 20)) {
-        daylightStatus = 'twilight';
-      } else {
-        daylightStatus = 'night';
-      }
+      const daylightStatus: WorldComparisonRow['daylightStatus'] =
+        hour >= 6 && hour < 19 ? 'day' : (hour >= 5 && hour < 6) || (hour >= 19 && hour < 20) ? 'twilight' : 'night';
 
       // 24-hour strip visualization
       const hourBlocks = Array.from({ length: 24 }, (_, i) => {
