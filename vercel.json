@@ -14,7 +14,10 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "dist/**"
+      "includeFiles": [
+        "dist/**",
+        "node_modules/@countrystatecity/countries/dist/data/**"
+      ]
     }
   }
 }
