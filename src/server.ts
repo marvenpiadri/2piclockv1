@@ -79,7 +79,7 @@ ${entries}
 </urlset>`;
 };
 
-const buildSitemapIndex = (locationSitemapCount: number) => {
+const buildSitemapIndex = (locationSitemapCount: number, lastModified = siteContentLastModified) => {
   const sitemapUrls = [
     'https://2piclock.com/sitemap-pages.xml',
     ...Array.from(
@@ -88,7 +88,7 @@ const buildSitemapIndex = (locationSitemapCount: number) => {
     )
   ];
   const entries = sitemapUrls
-    .map(url => `  <sitemap><loc>${escapeXml(url)}</loc></sitemap>`)
+    .map(url => `  <sitemap><loc>${escapeXml(url)}</loc><lastmod>${lastModified}</lastmod></sitemap>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -98,7 +98,7 @@ ${entries}
 
 const locationSitemapChunkSize = 40000;
 const locationSitemapPagesPerLocation = 7;
-
+const siteContentLastModified = '2026-10-06';
 
 const apiHeaders = (res: express.Response) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
@@ -625,14 +625,14 @@ app.get('/sitemap.xml', async (_req, res) => {
   try {
     const locations = await getLocationIndex();
     const locationSitemapCount = Math.ceil(locations.length * locationSitemapPagesPerLocation / locationSitemapChunkSize);
-    res.type('application/xml').send(buildSitemapIndex(locationSitemapCount));
+    res.type('application/xml').set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600').send(buildSitemapIndex(locationSitemapCount));
   } catch {
     res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
   }
 });
 
 app.get('/sitemap-pages.xml', (_req, res) => {
-  res.type('application/xml').send(buildUrlSet(staticSitemapUrls));
+  res.type('application/xml').set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600').send(buildUrlSet(staticSitemapUrls));
 });
 
 app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
@@ -666,7 +666,7 @@ app.get('/sitemap-locations-:chunk.xml', async (req, res) => {
         base + '/moon'
       );
     }
-    res.type('application/xml').send(buildUrlSet(paths));
+    res.type('application/xml').set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600').send(buildUrlSet(paths));
   } catch {
     res.status(503).type('text/plain').send('Sitemap temporarily unavailable.');
   }
@@ -682,6 +682,23 @@ app.use(
     redirect: false,
   }),
 );
+
+/**
+ * Cache canonical location HTML briefly at Vercel's CDN. These pages are public,
+ * identical for all visitors, and expensive to SSR because they combine location,
+ * weather and astronomy data. Browser caching stays disabled so the edge controls
+ * freshness while stale-while-revalidate prevents repeated origin work.
+ */
+app.use((req, res, next) => {
+  const isCanonicalLocationPage = req.method === 'GET'
+    && /^\\/[a-z0-9-]+\\/[a-z0-9-]+(?:\\/[a-z0-9-]+)?$/.test(req.path)
+    && !req.path.startsWith('/api/');
+
+  if (isCanonicalLocationPage) {
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  }
+  next();
+});
 
 /**
  * Handle all other requests by rendering the Angular application.
