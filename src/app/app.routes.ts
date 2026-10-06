@@ -29,10 +29,15 @@ const resolveRootLocation: CanActivateFn = async () => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
   if (!isPlatformBrowser(platformId)) return true;
-  const location = await locationService.ensureInitialLocation();
-  if (location.isCustom) return true;
-  const slug = locationService.getLocationSlug(location);
-  return router.createUrlTree(['/', ...slug.split('/')]);
+  try {
+    const location = await locationService.ensureInitialLocation();
+    if (!location || location.isCustom) return true;
+    const slug = locationService.getLocationSlug(location);
+    if (!slug) return true;
+    return router.createUrlTree(['/', ...slug.split('/')]);
+  } catch {
+    return true;
+  }
 };
 
 const validSeoLocationGuard: CanActivateFn = async (route) => {
@@ -41,16 +46,20 @@ const validSeoLocationGuard: CanActivateFn = async (route) => {
   const country = route.paramMap.get('country');
   const city = route.paramMap.get('city');
   if (!country || !city) return router.createUrlTree(['/']);
-  const location = await locationService.getLocation(country + '/' + city);
-  if (!location) return router.createUrlTree(['/']);
-  const canonical = locationService.getLocationSlug(location);
-  if (country + '/' + city !== canonical) {
-    return router.createUrlTree(['/', ...canonical.split('/')]);
+  try {
+    const location = await locationService.getLocation(country + '/' + city);
+    if (!location) return router.createUrlTree(['/']);
+    const canonical = locationService.getLocationSlug(location);
+    if (country + '/' + city !== canonical) {
+      return router.createUrlTree(['/', ...canonical.split('/')]);
+    }
+    if (locationService.selectedLocation().id !== location.id) {
+      locationService.selectLocation(location);
+    }
+    return true;
+  } catch {
+    return router.createUrlTree(['/']);
   }
-  if (locationService.selectedLocation().id !== location.id) {
-    locationService.selectLocation(location);
-  }
-  return true;
 };
 
 export const routes: Routes = [

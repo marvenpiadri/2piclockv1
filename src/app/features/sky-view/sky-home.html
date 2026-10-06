@@ -5,16 +5,16 @@
     <div class="sky-header-left">
       @if (skyPage === 'time') {
         <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
-        <h1>{{ selectedLocation().name }} Time</h1>
-        <p>{{ localDate() }} · {{ timezoneDisplay() }} · {{ selectedLocation().country }}</p>
+        <h1>{{ selectedLocation().name }}</h1>
+        <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
       } @else if (skyPage === 'weather') {
         <span class="section-eyebrow">METEOROLOGY · {{ selectedLocation().name }}</span>
-        <h1>Weather in {{ selectedLocation().name }}</h1>
-        <p>Current conditions, local forecast and weather-aware sky data.</p>
+        <h1>Weather</h1>
+        <p>Current conditions and local forecast.</p>
       } @else if (skyPage === 'tonight') {
         <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
-        <h1>Tonight in {{ selectedLocation().name }}</h1>
-        <p>Moonlight, twilight, darkness and observing conditions.</p>
+        <h1>Tonight</h1>
+        <p>Moonlight, twilight and observing conditions.</p>
       } @else {
         <span class="section-eyebrow">GLOBAL CLOCKS</span>
         <h1>World Time</h1>
