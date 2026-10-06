@@ -33,7 +33,7 @@ app.use((req, res, next) => {
   if (shouldRedirectToHttps || isAliasHost || shouldRemoveTrailingSlash) {
     const cleanPath = shouldRemoveTrailingSlash ? pathname.slice(0, -1) : pathname;
     const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
-    return res.redirect(301, 'https://2piclock.com' + (cleanPath || '/') + query);
+    return res.redirect(308, 'https://2piclock.com' + (cleanPath || '/') + query);
   }
 
   next();
