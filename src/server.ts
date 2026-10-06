@@ -124,7 +124,7 @@ const apiError = (res: express.Response, status: number, code: string, message: 
 
 const normalizeLocationText = (value: string): string => value
   .normalize('NFKD')
-  .replace(/[\\u0300-\\u036f]/g, '')
+  .replace(/[\u0300-\u036f]/g, '')
   .toLocaleLowerCase()
   .trim();
 
@@ -468,10 +468,12 @@ app.get('/api/v1/locations/nearest', async (req, res) => {
   }
 });
 
-app.get('/api/v1/locations/:id', async (req, res) => {
+app.get('/api/v1/locations/{*id}', async (req, res) => {
   apiHeaders(res);
   try {
-    const location = await resolveLocation(req.params['id']);
+    const rawId = req.params['id'];
+    const locationId = Array.isArray(rawId) ? rawId.join('/') : String(rawId ?? '');
+    const location = await resolveLocation(locationId);
     if (!location) return apiError(res, 404, 'LOCATION_NOT_FOUND', 'The requested location was not found.');
     res.json({ version: '1', location, slug: locationSlug(location) });
   } catch {
