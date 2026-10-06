@@ -31,7 +31,7 @@ app.use((req, res, next) => {
   const shouldRemoveTrailingSlash = pathname.length > 1 && pathname.endsWith('/') && !pathname.startsWith('/api/');
 
   if (shouldRedirectToHttps || isAliasHost || shouldRemoveTrailingSlash) {
-    const cleanPath = shouldRemoveTrailingSlash ? pathname.replace(/\\/+$/, '') : pathname;
+    const cleanPath = shouldRemoveTrailingSlash ? pathname.slice(0, -1) : pathname;
     const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
     return res.redirect(301, 'https://2piclock.com' + (cleanPath || '/') + query);
   }
