@@ -5,9 +5,8 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import {dirname, join} from 'node:path';
-import {createRequire} from 'node:module';
-import {readdirSync, readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {readFileSync} from 'node:fs';
 import { GeoLocation } from './app/core/models/location.model';
 import { calculateSolarPosition, calculateLunarPosition, getCelestialState, calculateSolarEvents } from './app/core/astronomy/astronomy-engine';
 
@@ -122,6 +121,24 @@ const resolveApiDate = (value: unknown): Date | null => {
 const apiError = (res: express.Response, status: number, code: string, message: string) => {
   res.status(status).json({ error: { code, message } });
 };
+
+const normalizeLocationText = (value: string): string => value
+  .normalize('NFKD')
+  .replace(/[\\u0300-\\u036f]/g, '')
+  .toLocaleLowerCase()
+  .trim();
+
+const slugifyLocation = (value: string): string => normalizeLocationText(value)
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '');
+
+const locationSlug = (location: GeoLocation): string =>
+  slugifyLocation(location.country) + '/' + slugifyLocation(location.name);
+
+const locationById = new Map<string, GeoLocation>();
+const locationBySlug = new Map<string, GeoLocation>();
+const locationSearchCache = new Map<string, GeoLocation[]>();
+let locationIndexPromise: Promise<GeoLocation[]> | undefined;
 const readJsonFile = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
 
 const buildLocationIndex = async (): Promise<GeoLocation[]> => {
