@@ -1,4 +1,4 @@
-import { reqHandler } from '../../../src/server';
+import { reqHandler } from '../../src/server';
 
 /**
  * Vercel serverless entrypoint for the 2piClock API.
