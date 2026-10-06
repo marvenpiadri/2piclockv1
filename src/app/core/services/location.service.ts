@@ -2,7 +2,7 @@ import { Injectable, signal, PLATFORM_ID, REQUEST, inject } from '@angular/core'
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
+import { GeoLocation } from '../models/location.model';
 import { WeatherService } from './weather.service';
 
 @Injectable({ providedIn: 'root' })
@@ -19,9 +19,9 @@ export class LocationService {
   private initialLocationPromise?: Promise<GeoLocation>;
   private resolvedInitialLocation?: GeoLocation;
   private geolocationPromise?: Promise<GeoLocation | null>;
-  readonly randomLocations = signal<GeoLocation[]>(DEFAULT_LOCATIONS);
+  readonly randomLocations = signal<GeoLocation[]>([]);
   readonly locations = signal<GeoLocation[]>([]);
-  readonly selectedLocation = signal<GeoLocation>(DEFAULT_LOCATIONS[0]);
+  readonly selectedLocation = signal<GeoLocation>({ id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true });
   readonly watchlist = signal<GeoLocation[]>([]);
   readonly isLocating = signal<boolean>(false);
   readonly locationError = signal<string | null>(null);
@@ -37,17 +37,17 @@ export class LocationService {
     if (this.locationLoadPromise) return this.locationLoadPromise;
     this.locationLoadPromise = firstValueFrom(this.http.get<{ locations?: GeoLocation[] }>(this.apiUrl(this.randomLocationsUrl)))
       .then(data => {
-        const locations = Array.isArray(data.locations) && data.locations.length ? data.locations : DEFAULT_LOCATIONS;
+        const locations = Array.isArray(data.locations) ? data.locations : [];
         this.locations.set(locations);
         this.randomLocations.set(locations);
         this.locationError.set(null);
         return locations;
       })
       .catch(() => {
-        this.locations.set(DEFAULT_LOCATIONS);
-        this.randomLocations.set(DEFAULT_LOCATIONS);
+        this.locations.set([]);
+        this.randomLocations.set([]);
         this.locationError.set(null);
-        return DEFAULT_LOCATIONS;
+        return [];
       })
       .finally(() => {
         this.locationLoadPromise = undefined;
@@ -58,7 +58,7 @@ export class LocationService {
   async getLocation(identifier: string): Promise<GeoLocation | null> {
     const normalized = identifier.trim().toLowerCase();
     if (!normalized) return null;
-    const local = [...this.locations(), ...DEFAULT_LOCATIONS].find(location =>
+    const local = this.locations().find(location =>
       location.id.toLowerCase() === normalized ||
       this.getLocationSlug(location).toLowerCase() === normalized ||
       location.name.toLowerCase() === normalized
@@ -122,19 +122,17 @@ export class LocationService {
       // Fall through to catalogue or timezone match
     }
 
-    let locations = DEFAULT_LOCATIONS;
+    let locations: GeoLocation[] = [];
     try {
       locations = await this.loadLocations();
     } catch {
-      locations = DEFAULT_LOCATIONS;
+      locations = [];
     }
 
     const timezone = this.isBrowser ? (Intl.DateTimeFormat().resolvedOptions().timeZone || '') : '';
     const fallback = (timezone ? locations.find((location: GeoLocation) => location.timezone === timezone) : null) ??
       locations.find((l: GeoLocation) => l.id === 'gb-london') ??
-      locations[0] ??
-      DEFAULT_LOCATIONS[0] ??
-      current;
+      locations[0] ?? current;
 
     this.selectedLocation.set(fallback);
     if (this.isBrowser) {
