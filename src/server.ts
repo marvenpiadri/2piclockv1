@@ -16,6 +16,29 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+app.set('trust proxy', true);
+
+// Enforce the single public URL used by canonical tags and sitemaps.
+// Vercel terminates TLS before the function, so inspect forwarded protocol
+// rather than relying on req.protocol alone.
+app.use((req, res, next) => {
+  const host = req.get('host')?.split(':')[0].toLowerCase() ?? '';
+  const forwardedProto = String(req.get('x-forwarded-proto') ?? '').split(',')[0].trim().toLowerCase();
+  const isCanonicalHost = host === '2piclock.com';
+  const isAliasHost = host === 'www.2piclock.com';
+  const shouldRedirectToHttps = (isCanonicalHost || isAliasHost) && forwardedProto === 'http';
+  const pathname = req.path;
+  const shouldRemoveTrailingSlash = pathname.length > 1 && pathname.endsWith('/') && !pathname.startsWith('/api/');
+
+  if (shouldRedirectToHttps || isAliasHost || shouldRemoveTrailingSlash) {
+    const cleanPath = shouldRemoveTrailingSlash ? pathname.replace(/\\/+$/, '') : pathname;
+    const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    return res.redirect(301, 'https://2piclock.com' + (cleanPath || '/') + query);
+  }
+
+  next();
+});
+
 /**
  * Example Express Rest API endpoints can be defined here.
  * Uncomment and define endpoints as necessary.
