@@ -691,7 +691,7 @@ app.use(
  */
 app.use((req, res, next) => {
   const isCanonicalLocationPage = req.method === 'GET'
-    && /^\\/[a-z0-9-]+\\/[a-z0-9-]+(?:\\/[a-z0-9-]+)?$/.test(req.path)
+    && /^\/[a-z0-9-]+\/[a-z0-9-]+(?:\/[a-z0-9-]+)?$/.test(req.path)
     && !req.path.startsWith('/api/');
 
   if (isCanonicalLocationPage) {
