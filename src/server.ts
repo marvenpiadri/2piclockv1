@@ -122,104 +122,13 @@ const resolveApiDate = (value: unknown): Date | null => {
 const apiError = (res: express.Response, status: number, code: string, message: string) => {
   res.status(status).json({ error: { code, message } });
 };
-interface CityRecord {
-  id?: number;
-  name?: string;
-  country_code?: string;
-  countryCode?: string;
-  latitude?: string | number;
-  longitude?: string | number;
-  timezone?: string | null;
-}
-
-interface CountryRecord {
-  name?: string;
-  iso2?: string;
-  emoji?: string;
-}
-
-let locationIndexPromise: Promise<GeoLocation[]> | undefined;
-const locationById = new Map<string, GeoLocation>();
-const locationBySlug = new Map<string, GeoLocation>();
-const locationSearchCache = new Map<string, GeoLocation[]>();
-
-const normalizeLocationText = (value: string) =>
-  value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase()
-    .trim();
-
-const slugifyLocation = (value: string) =>
-  normalizeLocationText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-const locationSlug = (location: GeoLocation): string =>
-  slugifyLocation(location.country) + '/' + slugifyLocation(location.name);
-
-const packageDataDirectory = (): string => {
-  const require = createRequire(import.meta.url);
-  const countriesFile = require.resolve('@countrystatecity/countries/data/countries.json');
-  return dirname(countriesFile);
-};
-
 const readJsonFile = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
 
 const buildLocationIndex = async (): Promise<GeoLocation[]> => {
-  const dataDirectory = packageDataDirectory();
-  const countries = readJsonFile<CountryRecord[]>(join(dataDirectory, 'countries.json'));
-  const countryByCode = new Map(
-    countries.map(country => [
-      String(country.iso2 ?? '').toUpperCase(),
-      { name: String(country.name ?? ''), flag: String(country.emoji ?? '') }
-    ])
-  );
+  const locations = readJsonFile<GeoLocation[]>(join(browserDistFolder, 'data', 'locations.json'));
 
-  const locations: GeoLocation[] = [];
-  const countryDirectories = readdirSync(dataDirectory, { withFileTypes: true })
-    .filter(entry => entry.isDirectory());
+  if (!locations.length) throw new Error('The bundled location catalogue contains no cities.');
 
-  for (const countryDirectory of countryDirectories) {
-    const countryCode = countryDirectory.name.split('-').at(-1)?.toUpperCase() ?? '';
-    if (!countryByCode.has(countryCode)) continue;
-    const countryPath = join(dataDirectory, countryDirectory.name);
-    const stateDirectories = readdirSync(countryPath, { withFileTypes: true })
-      .filter(entry => entry.isDirectory());
-
-    for (const stateDirectory of stateDirectories) {
-      const citiesPath = join(countryPath, stateDirectory.name, 'cities.json');
-      try {
-        const cities = readJsonFile<CityRecord[]>(citiesPath);
-        for (const city of cities) {
-          const name = String(city.name ?? '').trim();
-          const cityCountryCode = String(city.country_code ?? city.countryCode ?? countryCode).toUpperCase();
-          const latitude = Number(city.latitude);
-          const longitude = Number(city.longitude);
-          if (!name || !cityCountryCode || !Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
-          const country = countryByCode.get(cityCountryCode);
-          const cityId = city.id != null ? String(city.id) : slugifyLocation(name) + '-' + latitude + '-' + longitude;
-          locations.push({
-            id: cityCountryCode.toLowerCase() + '-' + cityId,
-            name,
-            country: country?.name || cityCountryCode,
-            countryCode: cityCountryCode,
-            flag: country?.flag || '',
-            latitude,
-            longitude,
-            timezone: String(city.timezone || 'UTC'),
-            tier: 3
-          });
-        }
-      } catch {
-        // Administrative directories without city data are ignored.
-      }
-    }
-  }
-
-  if (!locations.length) throw new Error('The bundled country/city catalogue loaded but contained no cities.');
-
-  // The source dataset can contain the same city more than once under
-  // different administrative records. Keep one canonical record per
-  // city/country/coordinate combination so search never shows duplicates.
   const uniqueLocations = new Map<string, GeoLocation>();
   for (const location of locations) {
     const key = [
