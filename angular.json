@@ -3,9 +3,7 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "schematicCollections": [
-      "angular-eslint"
-    ]
+    "schematicCollections": ["angular-eslint"]
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -23,44 +21,24 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              },
-              {
-                "glob": "maplibre-gl-worker.mjs",
-                "input": "node_modules/maplibre-gl/dist",
-                "output": "."
-              },
-              {
-                "glob": "maplibre-gl-shared.mjs",
-                "input": "node_modules/maplibre-gl/dist",
-                "output": "."
-              }
+              {"glob": "**/*", "input": "public"},
+              {"glob": "maplibre-gl-worker.mjs", "input": "node_modules/maplibre-gl/dist", "output": "."},
+              {"glob": "maplibre-gl-shared.mjs", "input": "node_modules/maplibre-gl/dist", "output": "."}
             ],
-            "styles": [
-              "src/styles.css"
-            ],
+            "styles": ["src/styles.css"],
             "server": "src/main.server.ts",
             "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            },
-            "index": "src/index.html"
+            "ssr": {"entry": "src/server.ts"},
+            "index": "src/index.html",
+            "security": {
+              "allowedHosts": ["2piclock.com"]
+            }
           },
           "configurations": {
             "production": {
               "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "4MB",
-                  "maximumError": "6MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "40kB",
-                  "maximumError": "80kB"
-                }
+                {"type": "initial", "maximumWarning": "4MB", "maximumError": "6MB"},
+                {"type": "anyComponentStyle", "maximumWarning": "40kB", "maximumError": "80kB"}
               ],
               "outputHashing": "all"
             },
@@ -75,26 +53,15 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
-            "production": {
-              "buildTarget": "app:build:production"
-            },
-            "development": {
-              "buildTarget": "app:build:development"
-            }
+            "production": {"buildTarget": "app:build:production"},
+            "development": {"buildTarget": "app:build:development"}
           },
           "defaultConfiguration": "development"
         },
-        "test": {
-          "builder": "@angular/build:unit-test"
-        },
+        "test": {"builder": "@angular/build:unit-test"},
         "lint": {
           "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "src/**/*.ts",
-              "src/**/*.html"
-            ]
-          }
+          "options": {"lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]}
         }
       }
     }
