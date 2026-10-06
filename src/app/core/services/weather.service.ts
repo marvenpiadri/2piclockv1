@@ -41,7 +41,7 @@ export class WeatherService {
       .set('current', 'temperature_2m,precipitation,weather_code,cloud_cover,wind_speed_10m')
       .set('timezone', 'UTC');
 
-    this.http.get<any>('/api/v1/weather', { params }).subscribe({
+    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params }).subscribe({
       next: (data) => {
         const rows = Array.isArray(data) ? data : [data];
         const next: Record<string, WorldWeatherSnapshot> = {};
@@ -243,7 +243,7 @@ export class WeatherService {
       .set('forecast_days', '7')
       .set('timezone', 'UTC');
 
-    this.http.get<any>('/api/v1/weather', { params })
+    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params })
       .subscribe({
         next: (data) => {
           this.isLoading.set(false);
