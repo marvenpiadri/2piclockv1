@@ -68,10 +68,11 @@ const staticSitemapUrls = [
   '/stargazing', '/eclipses', '/satellites'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-const buildUrlSet = (paths: string[]) => {
+const siteContentLastModified = '2026-10-06';
+const buildUrlSet = (paths: string[], lastModified = siteContentLastModified) => {
   const uniqueUrls = [...new Set(paths)];
   const entries = uniqueUrls
-    .map(path => `  <url><loc>https://2piclock.com${escapeXml(path)}</loc></url>`)
+    .map(path => `  <url><loc>https://2piclock.com${escapeXml(path)}</loc><lastmod>${lastModified}</lastmod></url>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -98,7 +99,6 @@ ${entries}
 
 const locationSitemapChunkSize = 40000;
 const locationSitemapPagesPerLocation = 7;
-const siteContentLastModified = '2026-10-06';
 
 const apiHeaders = (res: express.Response) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
