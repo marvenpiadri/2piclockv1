@@ -9,6 +9,10 @@
   },
   "rewrites": [
     {
+      "source": "/data/locations.json",
+      "destination": "/browser/data/locations.json"
+    },
+    {
       "source": "/",
       "destination": "/api"
     },
