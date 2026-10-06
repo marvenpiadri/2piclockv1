@@ -6,6 +6,7 @@
 
 # Compiled output
 /dist
+/public/data/locations.json
 /tmp
 /out-tsc
 /bazel-out
