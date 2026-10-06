@@ -131,7 +131,6 @@ export class LocationService {
 
     const timezone = this.isBrowser ? (Intl.DateTimeFormat().resolvedOptions().timeZone || '') : '';
     const fallback = (timezone ? locations.find((location: GeoLocation) => location.timezone === timezone) : null) ??
-      locations.find((l: GeoLocation) => l.id === 'gb-london') ??
       locations[0] ?? current;
 
     this.selectedLocation.set(fallback);
@@ -211,7 +210,6 @@ export class LocationService {
     return requestUrl ? new URL(path, requestUrl).toString() : path;
   }
 
-  private createNeutralLocation(): GeoLocation { return { id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true }; }
   private async restoreStoredLocations(): Promise<void> {
     try {
       const [selected, saved] = await Promise.all([
