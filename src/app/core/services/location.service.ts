@@ -1,4 +1,4 @@
-import { Injectable, signal, PLATFORM_ID, REQUEST, inject } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
 import { WeatherService } from './weather.service';
@@ -7,9 +7,7 @@ import { WeatherService } from './weather.service';
 export class LocationService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
-  private readonly request = inject(REQUEST, { optional: true });
   private readonly weatherService = inject(WeatherService);
-  private readonly randomLocationsUrl = '/api/v1/locations/random?count=50';
   private readonly selectedLocationStore = 'selected-location';
   private readonly savedLocationsStore = 'saved-locations';
   private locationLoadPromise?: Promise<GeoLocation[]>;
@@ -30,28 +28,11 @@ export class LocationService {
   }
 
   async loadLocations(): Promise<GeoLocation[]> {
-    if (this.locations().length > 0) return this.locations();
-    if (this.locationLoadPromise) return this.locationLoadPromise;
-    this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl))
-      .then(async response => {
-        if (!response.ok) return DEFAULT_LOCATIONS;
-        const data = await response.json() as { locations?: GeoLocation[] };
-        const locations = Array.isArray(data.locations) && data.locations.length ? data.locations : DEFAULT_LOCATIONS;
-        this.locations.set(locations);
-        this.randomLocations.set(locations);
-        this.locationError.set(null);
-        return locations;
-      })
-      .catch(() => {
-        this.locations.set(DEFAULT_LOCATIONS);
-        this.randomLocations.set(DEFAULT_LOCATIONS);
-        this.locationError.set(null);
-        return DEFAULT_LOCATIONS;
-      })
-      .finally(() => {
-        this.locationLoadPromise = undefined;
-      });
-    return this.locationLoadPromise;
+    const locations = DEFAULT_LOCATIONS;
+    this.locations.set(locations);
+    this.randomLocations.set(locations);
+    this.locationError.set(null);
+    return locations;
   }
 
   async getLocation(identifier: string): Promise<GeoLocation | null> {
@@ -63,14 +44,7 @@ export class LocationService {
       location.name.toLowerCase() === normalized
     );
     if (local) return local;
-    try {
-      const response = await fetch(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalized)));
-      if (!response.ok) return null;
-      const data = await response.json() as { location?: GeoLocation };
-      return data.location ?? null;
-    } catch {
-      return null;
-    }
+    return null;
   }
 
   getLocationSlug(location: GeoLocation): string {
@@ -166,21 +140,6 @@ export class LocationService {
         const longitude = Math.round(pos.coords.longitude * 10000) / 10000;
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-        try {
-          const response = await fetch(this.apiUrl('/api/v1/locations/nearest?latitude=' + latitude + '&longitude=' + longitude));
-          if (response.ok) {
-            const data = await response.json() as { location?: GeoLocation };
-            if (data.location) {
-              this.isLocating.set(false);
-              this.selectLocation(data.location);
-              resolve(data.location);
-              return;
-            }
-          }
-        } catch {
-          // Fall back to the exact GPS coordinates when the city catalogue is unavailable.
-        }
-
         this.isLocating.set(false);
         const userLoc: GeoLocation = {
           id: 'current-location',
@@ -210,12 +169,6 @@ export class LocationService {
   addToWatchlist(loc: GeoLocation): void { if (!this.watchlist().some(item => item.id === loc.id)) { this.watchlist.update(list => [...list, loc]); void this.persistWatchlist(); } }
   removeFromWatchlist(locId: string): void { this.watchlist.update(list => list.filter(item => item.id !== locId)); void this.persistWatchlist(); }
   getCountryFlag(countryCode: string): string { if (!countryCode || countryCode.length !== 2) return countryCode === 'GPS' ? '📍' : '🌐'; try { return String.fromCodePoint(...countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0))); } catch { return '🏳️'; } }
-  private apiUrl(path: string): string {
-    if (this.isBrowser) return path;
-    const requestUrl = this.request?.url;
-    return requestUrl ? new URL(path, requestUrl).toString() : path;
-  }
-
   private createNeutralLocation(): GeoLocation { return { id: 'initializing', name: 'Current location', country: 'Location', countryCode: '', flag: '📍', latitude: 0, longitude: 0, timezone: 'UTC', isCustom: true }; }
   private async restoreStoredLocations(): Promise<void> {
     try {
