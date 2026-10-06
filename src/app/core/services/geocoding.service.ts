@@ -1,14 +1,27 @@
-import { Injectable } from '@angular/core';
-import { Observable, catchError, from, map, of } from 'rxjs';
+import { Injectable, REQUEST, inject } from '@angular/core';
+import { Observable, catchError, defer, from, map, of, shareReplay } from 'rxjs';
 import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
 
 interface LocationResponse { locations?: GeoLocation[]; }
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
+  private readonly request = inject(REQUEST, { optional: true });
+  private readonly isBrowser = typeof window !== 'undefined';
   private readonly cache = new Map<string, GeoLocation[]>();
 
-  private readonly randomLocations$ = of(DEFAULT_LOCATIONS);
+  private readonly randomLocations$ = defer(() => from(
+    fetch(this.apiUrl('/api/v1/locations/random?count=50'))
+      .then(async response => {
+        if (!response.ok) return DEFAULT_LOCATIONS;
+        const data = await response.json() as LocationResponse;
+        return (Array.isArray(data.locations) && data.locations.length > 0) ? data.locations : DEFAULT_LOCATIONS;
+      })
+      .catch(() => DEFAULT_LOCATIONS)
+  )).pipe(
+    catchError(() => of(DEFAULT_LOCATIONS)),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   search(query: string, count = 50): Observable<GeoLocation[]> {
     const term = query.trim();
@@ -19,22 +32,10 @@ export class GeocodingService {
     if (cached) return of(cached);
 
     return from(
-      fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(term) + '&count=' + limit + '&language=en&format=json')
+      fetch(this.apiUrl('/api/v1/locations/search?q=' + encodeURIComponent(term) + '&count=' + limit))
         .then(async response => {
-          if (!response.ok) return { results: [] };
-          const data = await response.json() as { results?: Array<Record<string, unknown>> };
-          return {
-            locations: (data.results ?? []).map((item, index): GeoLocation => ({
-              id: String(item['id'] ?? `geocoded-${index}-${String(item['latitude'])}-${String(item['longitude'])}`),
-              name: String(item['name'] ?? term),
-              country: String(item['country'] ?? ''),
-              countryCode: String(item['country_code'] ?? '').toUpperCase(),
-              flag: this.countryFlag(String(item['country_code'] ?? '')),
-              latitude: Number(item['latitude']),
-              longitude: Number(item['longitude']),
-              timezone: String(item['timezone'] ?? 'UTC')
-            }))
-          } as LocationResponse;
+          if (!response.ok) return { locations: [] } as LocationResponse;
+          return (await response.json()) as LocationResponse;
         })
         .catch(() => ({ locations: [] } as LocationResponse))
     ).pipe(
@@ -59,9 +60,10 @@ export class GeocodingService {
     );
   }
 
-  private countryFlag(countryCode: string): string {
-    if (!/^[a-z]{2}$/i.test(countryCode)) return '🌐';
-    return String.fromCodePoint(...countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0)));
+  private apiUrl(path: string): string {
+    if (this.isBrowser) return path;
+    const requestUrl = this.request?.url;
+    return requestUrl ? new URL(path, requestUrl).toString() : path;
   }
 
   getCountries(): Observable<GeoLocation[]> {
@@ -70,7 +72,18 @@ export class GeocodingService {
 
   getRandomLocations(): Observable<GeoLocation[]> { return this.randomLocations$; }
 
-  getMapLocations(_limit = 2500): Observable<GeoLocation[]> {
-    return of(DEFAULT_LOCATIONS);
+  getMapLocations(limit = 2500): Observable<GeoLocation[]> {
+    const safeLimit = Math.min(5000, Math.max(500, limit));
+    return from(
+      fetch(this.apiUrl('/api/v1/locations/map?count=' + safeLimit))
+        .then(async response => {
+          if (!response.ok) return { locations: DEFAULT_LOCATIONS } as LocationResponse;
+          return (await response.json()) as LocationResponse;
+        })
+        .catch(() => ({ locations: DEFAULT_LOCATIONS } as LocationResponse))
+    ).pipe(
+      map(data => (Array.isArray(data.locations) && data.locations.length > 0) ? data.locations : DEFAULT_LOCATIONS),
+      catchError(() => of(DEFAULT_LOCATIONS))
+    );
   }
 }
