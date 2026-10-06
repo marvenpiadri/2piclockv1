@@ -173,7 +173,8 @@ export class LocationService {
             resolve(data.location);
             return;
           }
-        } catch {
+        } catch (error) {
+          void error;
           // Fall back to the exact GPS coordinates when the city catalogue is unavailable.
         }
 
