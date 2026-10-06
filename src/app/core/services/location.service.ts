@@ -168,11 +168,10 @@ export class LocationService {
         try {
           const data = await firstValueFrom(this.http.get<{ location?: GeoLocation }>(this.apiUrl('/api/v1/locations/nearest?latitude=' + latitude + '&longitude=' + longitude)));
           if (data.location) {
-              this.isLocating.set(false);
-              this.selectLocation(data.location);
-              resolve(data.location);
-              return;
-            }
+            this.isLocating.set(false);
+            this.selectLocation(data.location);
+            resolve(data.location);
+            return;
           }
         } catch {
           // Fall back to the exact GPS coordinates when the city catalogue is unavailable.
