@@ -11,10 +11,5 @@
       "source": "/(.*)",
       "destination": "/api"
     }
-  ],
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "{dist/**,node_modules/@countrystatecity/countries/dist/data/**}"
-    }
-  }
+  ]
 }
