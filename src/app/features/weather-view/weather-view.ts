@@ -551,7 +551,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       .set('wind_speed_unit', 'kmh')
       .set('precipitation_unit', 'mm');
 
-    this.http.get<any>('/api/v1/weather', { params }).subscribe({
+    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params }).subscribe({
       next: data => {
         const rows: WeatherGridPoint[] = Array.isArray(data) ? data : [data];
 
