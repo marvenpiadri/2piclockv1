@@ -1,26 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Observable, catchError, defer, from, map, of, shareReplay } from 'rxjs';
+import { Observable, catchError, from, map, of } from 'rxjs';
 import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
 
 interface LocationResponse { locations?: GeoLocation[]; }
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
-  private readonly isBrowser = typeof window !== 'undefined';
   private readonly cache = new Map<string, GeoLocation[]>();
 
-  private readonly randomLocations$ = defer(() => from(
-    fetch(this.apiUrl('/api/v1/locations/random?count=50'))
-      .then(async response => {
-        if (!response.ok) return DEFAULT_LOCATIONS;
-        const data = await response.json() as LocationResponse;
-        return (Array.isArray(data.locations) && data.locations.length > 0) ? data.locations : DEFAULT_LOCATIONS;
-      })
-      .catch(() => DEFAULT_LOCATIONS)
-  )).pipe(
-    catchError(() => of(DEFAULT_LOCATIONS)),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+  private readonly randomLocations$ = of(DEFAULT_LOCATIONS);
 
   search(query: string, count = 50): Observable<GeoLocation[]> {
     const term = query.trim();
