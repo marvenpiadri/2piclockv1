@@ -1,4 +1,6 @@
 import { Injectable, signal, PLATFORM_ID, REQUEST, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
 import { WeatherService } from './weather.service';
@@ -9,6 +11,7 @@ export class LocationService {
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly request = inject(REQUEST, { optional: true });
   private readonly weatherService = inject(WeatherService);
+  private readonly http = inject(HttpClient);
   private readonly randomLocationsUrl = '/api/v1/locations/random?count=50';
   private readonly selectedLocationStore = 'selected-location';
   private readonly savedLocationsStore = 'saved-locations';
@@ -32,10 +35,8 @@ export class LocationService {
   async loadLocations(): Promise<GeoLocation[]> {
     if (this.locations().length > 0) return this.locations();
     if (this.locationLoadPromise) return this.locationLoadPromise;
-    this.locationLoadPromise = fetch(this.apiUrl(this.randomLocationsUrl))
-      .then(async response => {
-        if (!response.ok) return DEFAULT_LOCATIONS;
-        const data = await response.json() as { locations?: GeoLocation[] };
+    this.locationLoadPromise = firstValueFrom(this.http.get<{ locations?: GeoLocation[] }>(this.apiUrl(this.randomLocationsUrl)))
+      .then(data => {
         const locations = Array.isArray(data.locations) && data.locations.length ? data.locations : DEFAULT_LOCATIONS;
         this.locations.set(locations);
         this.randomLocations.set(locations);
@@ -64,9 +65,7 @@ export class LocationService {
     );
     if (local) return local;
     try {
-      const response = await fetch(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalized)));
-      if (!response.ok) return null;
-      const data = await response.json() as { location?: GeoLocation };
+      const data = await firstValueFrom(this.http.get<{ location?: GeoLocation }>(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalized))));
       return data.location ?? null;
     } catch {
       return null;
@@ -167,9 +166,8 @@ export class LocationService {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
         try {
-          const response = await fetch(this.apiUrl('/api/v1/locations/nearest?latitude=' + latitude + '&longitude=' + longitude));
-          if (response.ok) {
-            const data = await response.json() as { location?: GeoLocation };
+          const data = await firstValueFrom(this.http.get<{ location?: GeoLocation }>(this.apiUrl('/api/v1/locations/nearest?latitude=' + latitude + '&longitude=' + longitude)));
+          {
             if (data.location) {
               this.isLocating.set(false);
               this.selectLocation(data.location);
