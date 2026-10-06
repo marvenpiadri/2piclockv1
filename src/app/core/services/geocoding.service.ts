@@ -1,7 +1,7 @@
 import { Injectable, REQUEST, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, defer, map, of, shareReplay } from 'rxjs';
-import { GeoLocation, DEFAULT_LOCATIONS } from '../models/location.model';
+import { GeoLocation } from '../models/location.model';
 
 interface LocationResponse { locations?: GeoLocation[]; }
 
@@ -14,8 +14,8 @@ export class GeocodingService {
 
   private readonly randomLocations$ = defer(() =>
     this.http.get<LocationResponse>(this.apiUrl('/api/v1/locations/random?count=50')).pipe(
-      map(data => Array.isArray(data.locations) && data.locations.length > 0 ? data.locations : DEFAULT_LOCATIONS),
-      catchError(() => of(DEFAULT_LOCATIONS))
+      map(data => Array.isArray(data.locations) ? data.locations : []),
+      catchError(() => of([]))
     )
   ).pipe(
     shareReplay({ bufferSize: 1, refCount: true })
@@ -37,15 +37,6 @@ export class GeocodingService {
     return this.http.get<LocationResponse>(this.apiUrl('/api/v1/locations/search'), { params }).pipe(
       map(data => {
         const locations = data.locations ?? [];
-        if (!locations.length) {
-          const lower = term.toLowerCase();
-          const fallbackMatches = DEFAULT_LOCATIONS.filter(l =>
-            l.name.toLowerCase().includes(lower) ||
-            l.country.toLowerCase().includes(lower) ||
-            l.countryCode.toLowerCase().includes(lower)
-          );
-          if (fallbackMatches.length) return fallbackMatches.slice(0, limit);
-        }
         return locations;
       }),
       map(locations => {
@@ -75,8 +66,8 @@ export class GeocodingService {
     return this.http.get<LocationResponse>(
       this.apiUrl('/api/v1/locations/map?count=' + safeLimit)
     ).pipe(
-      map(data => Array.isArray(data.locations) && data.locations.length > 0 ? data.locations : DEFAULT_LOCATIONS),
-      catchError(() => of(DEFAULT_LOCATIONS))
+      map(data => Array.isArray(data.locations) ? data.locations : []),
+      catchError(() => of([]))
     );
   }
 }
