@@ -8,6 +8,7 @@ export class MapBackboneService {
   readonly style: StyleSpecification = {
     version: 8,
     name: '2PiClock World Map Backbone',
+    glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources: {
       openmaptiles: {
         type: 'vector',
@@ -51,6 +52,68 @@ export class MapBackboneService {
         'source-layer': 'boundary',
         filter: ['==', 'admin_level', 2],
         paint: { 'line-color': '#334863', 'line-width': 0.8, 'line-opacity': 0.55 }
+      },
+      {
+        id: 'country_labels',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        minzoom: 1.5,
+        filter: ['==', 'class', 'country'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name:latin'], ['get', 'name']],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 1.5, 9, 3.5, 12],
+          'text-max-width': 7,
+          'text-allow-overlap': false
+        },
+        paint: {
+          'text-color': '#d7e0eb',
+          'text-halo-color': '#0a1628',
+          'text-halo-width': 1.5,
+          'text-opacity': 0.9
+        }
+      },
+      {
+        id: 'city_labels',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        minzoom: 3.5,
+        filter: ['in', 'class', 'city', 'town'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name:latin'], ['get', 'name']],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 3.5, 9, 7, 13, 10, 15],
+          'text-offset': [0, 0.7],
+          'text-anchor': 'top',
+          'text-allow-overlap': false
+        },
+        paint: {
+          'text-color': '#f5c451',
+          'text-halo-color': '#0a1628',
+          'text-halo-width': 1.2,
+          'text-opacity': 0.95
+        }
+      },
+      {
+        id: 'village_labels',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        minzoom: 6,
+        filter: ['in', 'class', 'village', 'suburb'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name:latin'], ['get', 'name']],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': 10,
+          'text-allow-overlap': false
+        },
+        paint: {
+          'text-color': '#b9c7d8',
+          'text-halo-color': '#0a1628',
+          'text-halo-width': 1
+        }
       },
       {
         id: 'boundary_state',
