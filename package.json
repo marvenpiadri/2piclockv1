@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "dev": "cross-env PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}",
+    "start": "bun run generate:locations && ng serve",
+    "dev": "bun run generate:locations && cross-env PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}",
     "build": "bun run generate:locations && ng build",
     "generate:locations": "node scripts/generate-location-catalogue.mjs",
-    "watch": "ng build --watch --configuration development",
+    "watch": "bun run generate:locations && ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
     "serve:ssr:app": "node dist/app/server/server.mjs"
