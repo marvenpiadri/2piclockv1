@@ -56,7 +56,7 @@ app.use((req, res, next) => {
 // indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
   '/', '/api', '/weather', '/astronomy', '/tonight',
-  '/world', '/world-clocks', '/events',
+  '/world', '/world-clocks', '/events', '/alerts',
   '/maps/clocks', '/maps/radio',
   '/time/converter', '/time/difference', '/time/duration',
   '/time/date-difference', '/time/add-subtract', '/time/countdown',
