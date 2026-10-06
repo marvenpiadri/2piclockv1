@@ -2,6 +2,11 @@
   "version": 2,
   "buildCommand": "bun run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/browser/data/locations.json"
+    }
+  },
   "rewrites": [
     {
       "source": "/",
