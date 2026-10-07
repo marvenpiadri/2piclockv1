@@ -13,6 +13,10 @@
       "destination": "/browser/data/locations.json"
     },
     {
+      "source": "/(.*\\.(?:js|mjs|css|map|json|png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2|ttf|otf|webmanifest))",
+      "destination": "/browser/$1"
+    },
+    {
       "source": "/",
       "destination": "/api"
     },
