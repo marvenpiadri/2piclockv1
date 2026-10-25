@@ -1,17 +1,13 @@
-import type { GeoLocation } from '../../../src/app/core/models/location.model';
+import type { GeoLocation } from '../app/core/models/location.model';
 import {
   calculateSolarPosition,
   calculateLunarPosition,
   getCelestialState,
   calculateSolarEvents,
-} from '../../../src/app/core/astronomy/astronomy-engine';
+} from '../app/core/astronomy/astronomy-engine';
 
-interface Env {
+export interface CloudflareEnv {
   ASSETS: { fetch(request: Request): Promise<Response> };
-}
-interface PagesContext {
-  request: Request;
-  env: Env;
 }
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
@@ -34,7 +30,7 @@ const dateFrom = (value: string | null) => {
   return Number.isFinite(date.getTime()) ? date : null;
 };
 let cataloguePromise: Promise<GeoLocation[]> | undefined;
-async function locations(env: Env): Promise<GeoLocation[]> {
+async function locations(env: CloudflareEnv): Promise<GeoLocation[]> {
   if (!cataloguePromise) {
     cataloguePromise = env.ASSETS.fetch(new Request('https://pages-assets/data/locations.json'))
       .then(async response => {
@@ -54,7 +50,7 @@ async function resolveLocation(env: Env, value: string | null) {
 }
 const apiHeaders = { 'X-Robots-Tag': 'noindex, nofollow', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60, s-maxage=60' };
 
-export const onRequest = async ({ request, env }: PagesContext): Promise<Response> => {
+export const handleApiRequest = async (request: Request, env: CloudflareEnv): Promise<Response> => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: apiHeaders });
   if (request.method !== 'GET') return error(405, 'METHOD_NOT_ALLOWED', 'Only GET requests are supported.');
 

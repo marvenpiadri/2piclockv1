@@ -44,7 +44,8 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
-              "entry": "src/server.ts"
+              "entry": "src/server.ts",
+              "platform": "neutral"
             },
             "index": "src/index.html",
             "security": {
@@ -81,19 +82,14 @@
               ]
             },
             "cloudflare": {
-              "outputPath": {
-                "base": "dist/cloudflare",
-                "browser": "."
-              },
-              "outputMode": "static",
-              "fileReplacements": [
-                {
-                  "replace": "src/app/app.routes.server.ts",
-                  "with": "src/app/app.routes.cloudflare.ts"
-                }
-              ],
+              "outputPath": "dist",
+              "outputMode": "server",
               "optimization": true,
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "ssr": {
+                "entry": "src/server.ts",
+                "platform": "neutral"
+              }
             }
           },
           "defaultConfiguration": "cloudflare"
