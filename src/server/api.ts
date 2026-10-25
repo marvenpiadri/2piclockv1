@@ -22,7 +22,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 });
 const error = (status: number, code: string, message: string) =>
   json({ error: { code, message } }, status);
-const normalize = (value: string) => value.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
+const normalize = (value: string) => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const slugify = (value: string) => normalize(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const dateFrom = (value: string | null) => {
   if (!value) return new Date();
@@ -42,7 +42,7 @@ async function locations(env: CloudflareEnv): Promise<GeoLocation[]> {
   return cataloguePromise;
 }
 const locationSlug = (location: GeoLocation) => slugify(location.country) + '/' + slugify(location.name);
-async function resolveLocation(env: Env, value: string | null) {
+async function resolveLocation(env: CloudflareEnv, value: string | null) {
   if (!value) return undefined;
   const all = await locations(env);
   const key = value.trim().toLowerCase().replace(/^\\/+|\\/+$/g, '');
