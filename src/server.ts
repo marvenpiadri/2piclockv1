@@ -79,7 +79,7 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
   // Browser bundles, fonts, icons and other files must bypass Angular's
   // HTML fallback. Otherwise a missing asset can receive index HTML with a
   // 200 response, which browsers reject for JavaScript module scripts.
-  if (/\\.[a-zA-Z0-9]+$/.test(path)) {
+  if (/\.[a-zA-Z0-9]+$/.test(path)) {
     const assetResponse = await env.ASSETS.fetch(request);
     if (assetResponse.status !== 404) return assetResponse;
     return new Response('Asset not found.', { status: 404 });
