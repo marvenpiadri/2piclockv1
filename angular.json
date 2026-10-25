@@ -96,7 +96,7 @@
               "outputHashing": "all"
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "cloudflare"
         },
         "serve": {
           "builder": "@angular/build:dev-server",
