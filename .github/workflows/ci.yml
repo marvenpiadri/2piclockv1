@@ -29,3 +29,5 @@ jobs:
         run: bun run lint
       - name: Production build
         run: bun run build
+      - name: Cloudflare Pages build
+        run: bun run build:cloudflare
