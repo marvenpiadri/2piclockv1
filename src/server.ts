@@ -10,8 +10,9 @@ const staticSitemapPages = [
   '/events', '/alerts', '/maps/clocks', '/maps/radio', '/time/converter',
   '/time/difference', '/time/duration', '/time/date-difference', '/time/add-subtract',
   '/time/countdown', '/time/unix-timestamp', '/time/world-matrix', '/widget',
-  '/dashboard', '/sleep-calculator', '/radio/stations', '/radio/map', '/atmosphere',
-  '/ephemeris', '/planner', '/space', '/stargazing', '/eclipses', '/satellites'
+  '/dashboard', '/sleep-calculator', '/radio/stations', '/radio/map', '/radio/favorites',
+  '/radio/recent', '/atmosphere', '/ephemeris', '/planner', '/space', '/stargazing',
+  '/eclipses', '/satellites'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const xmlResponse = (body: string) => new Response(body, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=86400' } });
@@ -44,19 +45,23 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
   if (path === '/sitemap.xml' || /^\/sitemap-locations-\d+\.xml$/.test(path)) {
     try {
       const all = await getLocationCatalogue(env);
-      const chunkCount = Math.ceil(all.length * 7 / 40000);
+      const urlsPerLocation = 12;
+      const chunkCount = Math.ceil(all.length * urlsPerLocation / 40000);
       if (path === '/sitemap.xml') {
         const urls = ['https://2piclock.com/sitemap-pages.xml', ...Array.from({ length: chunkCount }, (_, i) => 'https://2piclock.com/sitemap-locations-' + i + '.xml')];
         const body = '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(value => '  <sitemap><loc>' + escapeXml(value) + '</loc></sitemap>').join('\n') + '\n</sitemapindex>';
         return xmlResponse(body);
       }
       const chunk = Number(path.match(/(\d+)\.xml$/)?.[1]);
-      const perChunk = Math.floor(40000 / 7);
+      const perChunk = Math.floor(40000 / urlsPerLocation);
       const start = chunk * perChunk;
       if (!Number.isInteger(chunk) || start >= all.length) return new Response('Sitemap not found.', { status: 404 });
       const urls = all.slice(start, start + perChunk).flatMap(location => {
         const base = '/' + locationSlug(location);
-        return [base, base + '/time', base + '/weather', base + '/astronomy', base + '/tonight', base + '/sun', base + '/moon'];
+        return [
+          base,
+          ...['time', 'weather', 'tonight', 'sun', 'moon', 'astronomy', 'events', 'alerts', 'stargazing', 'eclipses', 'satellites'].map(page => base + '/' + page),
+        ];
       });
       return sitemapResponse(urls);
     } catch {
