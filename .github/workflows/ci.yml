@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - launch-audit-holiday-support
   pull_request:
     branches:
       - main
-      - launch-audit-holiday-support
 
 jobs:
   verify:
@@ -23,11 +21,11 @@ jobs:
           node-version: 24
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
       - name: Lint
         run: bun run lint
-      - name: Production build
+      - name: Build Cloudflare Pages
         run: bun run build
-      - name: Cloudflare Pages build
-        run: bun run build:cloudflare
