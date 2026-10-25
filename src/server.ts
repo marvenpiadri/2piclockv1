@@ -18,8 +18,8 @@ const angularApp = new AngularNodeAppEngine();
 app.set('trust proxy', true);
 
 // Enforce the single public URL used by canonical tags and sitemaps.
-// Vercel terminates TLS before the function, so inspect forwarded protocol
-// rather than relying on req.protocol alone.
+// Cloudflare terminates TLS before the application, so inspect the forwarded
+// protocol rather than relying on req.protocol alone.
 app.use((req, res, next) => {
   const host = req.get('host')?.split(':')[0].toLowerCase() ?? '';
   const forwardedProto = String(req.get('x-forwarded-proto') ?? '').split(',')[0].trim().toLowerCase();
