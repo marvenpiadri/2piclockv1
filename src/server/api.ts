@@ -45,7 +45,7 @@ const locationSlug = (location: GeoLocation) => slugify(location.country) + '/' 
 async function resolveLocation(env: CloudflareEnv, value: string | null) {
   if (!value) return undefined;
   const all = await locations(env);
-  const key = value.trim().toLowerCase().replace(/^\\/+|\\/+$/g, '');
+  const key = value.trim().toLowerCase().replace(/^\/+|\/+$/g, '');
   return all.find(item => item.id.toLowerCase() === key || locationSlug(item) === key);
 }
 const apiHeaders = { 'X-Robots-Tag': 'noindex, nofollow', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60, s-maxage=60' };
@@ -55,7 +55,7 @@ export const handleApiRequest = async (request: Request, env: CloudflareEnv): Pr
   if (request.method !== 'GET') return error(405, 'METHOD_NOT_ALLOWED', 'Only GET requests are supported.');
 
   const url = new URL(request.url);
-  const path = url.pathname.replace(/^\\/api\\/v1\\/?/, '').split('/').filter(Boolean);
+  const path = url.pathname.replace(/^\/api\/v1\/?/, '').split('/').filter(Boolean);
   const [resource, action, extra] = path;
   try {
     if (resource === 'assets' && action === 'meteocon' && extra) {
@@ -103,7 +103,7 @@ export const handleApiRequest = async (request: Request, env: CloudflareEnv): Pr
       try {
         const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'longOffset', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(date);
         const label = parts.find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
-        const match = label.match(/^GMT([+-])(\\d{2}):?(\\d{2})$/);
+        const match = label.match(/^GMT([+-])(\d{2}):?(\d{2})$/);
         const offsetMinutes = match ? (match[1] === '+' ? 1 : -1) * (Number(match[2]) * 60 + Number(match[3])) : 0;
         return json({ version: '1', timezone, instant: date.toISOString(), offsetMinutes, offset: offsetMinutes === 0 ? 'UTC+0' : 'UTC' + (offsetMinutes > 0 ? '+' : '-') + String(Math.floor(Math.abs(offsetMinutes) / 60)).padStart(2, '0') + ':' + String(Math.abs(offsetMinutes) % 60).padStart(2, '0') });
       } catch { return error(400, 'INVALID_TIMEZONE', 'Use a valid IANA timezone.'); }
