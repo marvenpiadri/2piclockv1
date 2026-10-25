@@ -6,14 +6,14 @@
     "ng": "ng",
     "start": "bun run generate:locations && ng serve",
     "dev": "bun run generate:locations && cross-env PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}",
-    "build": "bun run generate:locations && ng build",
+    "build": "bun run build:cloudflare",
     "generate:locations": "node scripts/generate-location-catalogue.mjs",
     "watch": "bun run generate:locations && ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "serve:ssr:app": "node dist/app/server/server.mjs",
     "build:cloudflare": "bun run generate:locations && ng build --configuration cloudflare",
-    "preview:cloudflare": "bunx wrangler pages dev dist/cloudflare"
+    "preview:cloudflare": "bunx wrangler pages dev dist/cloudflare",
+    "deploy:cloudflare": "bun run build:cloudflare && bunx wrangler pages deploy dist/cloudflare"
   },
   "dependencies": {
     "@angular/cdk": "22.2.1",
