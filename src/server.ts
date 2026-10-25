@@ -1,5 +1,7 @@
 import { AngularAppEngine, createRequestHandler } from '@angular/ssr';
-import { handleApiRequest, type CloudflareEnv } from './server/api';
+import { handleApiRequest } from './server/api';
+import { getLocationCatalogue, type CloudflareEnv } from './server/location-catalogue';
+import type { GeoLocation } from './app/core/models/location.model';
 
 const angularApp = new AngularAppEngine();
 
@@ -11,22 +13,12 @@ const staticSitemapPages = [
   '/dashboard', '/sleep-calculator', '/radio/stations', '/radio/map', '/atmosphere',
   '/ephemeris', '/planner', '/space', '/stargazing', '/eclipses', '/satellites'
 ];
-type LocationEntry = { id: string; name: string; country: string; countryCode: string; latitude: number; longitude: number; timezone: string };
-let locationCatalogue: Promise<LocationEntry[]> | undefined;
-async function getLocationCatalogue(env: CloudflareEnv): Promise<LocationEntry[]> {
-  if (!locationCatalogue) {
-    locationCatalogue = env.ASSETS.fetch(new Request('https://2piclock-assets/data/locations.json'))
-      .then(async response => { if (!response.ok) throw new Error('Location catalogue unavailable'); return await response.json() as LocationEntry[]; })
-      .catch(error => { locationCatalogue = undefined; throw error; });
-  }
-  return locationCatalogue;
-}
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const xmlResponse = (body: string) => new Response(body, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=86400' } });
 const sitemapResponse = (paths: string[]) => xmlResponse('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + [...new Set(paths)].map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n') + '\n</urlset>');
 const normalize = (value: string) => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const slugify = (value: string) => normalize(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const locationSlug = (location: Pick<LocationEntry, 'country' | 'name'>) => slugify(location.country) + '/' + slugify(location.name);
+const locationSlug = (location: Pick<GeoLocation, 'country' | 'name'>) => slugify(location.country) + '/' + slugify(location.name);
 
 async function handleRequest(request: Request, env: CloudflareEnv): Promise<Response> {
   const url = new URL(request.url);
