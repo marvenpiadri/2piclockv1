@@ -22,3 +22,29 @@
 - **Styling**: Tailwind CSS 4 & Custom Glassmorphism UI
 - **Build System**: Angular Application Builder (`@angular/build`) & Vite
 - **Astronomy & Math**: Astronomical algorithms based on NOAA and Meeus ephemeris formulas.
+
+
+---
+
+## Cloudflare Pages deployment
+
+This repository has a dedicated static build target for Cloudflare Pages. The existing Vercel SSR build and `vercel.json` remain unchanged.
+
+### Cloudflare Pages settings
+
+- **Production branch:** `main`
+- **Build command:** `bun run build:cloudflare`
+- **Build output directory:** `dist/cloudflare`
+- **Build environment:** Node.js 24 and Bun 1.4.2
+
+The Pages build uses Angular's static output and client-side routing. API routes under `/api/v1/*` run as Cloudflare Pages Functions from the root `functions/` directory. Static assets are excluded from Function invocations through the generated `_routes.json` file.
+
+### Local preview
+
+```bash
+bun install
+bun run build:cloudflare
+bun run preview:cloudflare
+```
+
+The Cloudflare target currently uses client-side rendering. The original Node/Express SSR entry is retained for Vercel; it is not executed by Pages. If request-time HTML rendering is required on Cloudflare, migrate that server to a Cloudflare Worker-compatible Angular SSR runtime rather than attempting to run the Express server inside Pages Functions.
