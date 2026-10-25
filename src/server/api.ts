@@ -1,14 +1,11 @@
 import type { GeoLocation } from '../app/core/models/location.model';
+import { getLocationCatalogue, type CloudflareEnv } from './location-catalogue';
 import {
   calculateSolarPosition,
   calculateLunarPosition,
   getCelestialState,
   calculateSolarEvents,
 } from '../app/core/astronomy/astronomy-engine';
-
-export interface CloudflareEnv {
-  ASSETS: { fetch(request: Request): Promise<Response> };
-}
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -29,22 +26,10 @@ const dateFrom = (value: string | null) => {
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : null;
 };
-let cataloguePromise: Promise<GeoLocation[]> | undefined;
-async function locations(env: CloudflareEnv): Promise<GeoLocation[]> {
-  if (!cataloguePromise) {
-    cataloguePromise = env.ASSETS.fetch(new Request('https://2piclock-assets/data/locations.json'))
-      .then(async response => {
-        if (!response.ok) throw new Error('Location catalogue unavailable');
-        return await response.json() as GeoLocation[];
-      })
-      .catch(error => { cataloguePromise = undefined; throw error; });
-  }
-  return cataloguePromise;
-}
 const locationSlug = (location: GeoLocation) => slugify(location.country) + '/' + slugify(location.name);
 async function resolveLocation(env: CloudflareEnv, value: string | null) {
   if (!value) return undefined;
-  const all = await locations(env);
+  const all = await getLocationCatalogue(env);
   const key = value.trim().toLowerCase().replace(/^\/+|\/+$/g, '');
   return all.find(item => item.id.toLowerCase() === key || locationSlug(item) === key);
 }
@@ -109,7 +94,7 @@ export const handleApiRequest = async (request: Request, env: CloudflareEnv): Pr
       } catch { return error(400, 'INVALID_TIMEZONE', 'Use a valid IANA timezone.'); }
     }
     if (resource === 'locations') {
-      const all = await locations(env);
+      const all = await getLocationCatalogue(env);
       if (action === 'search') {
         const raw = url.searchParams.get('q') ?? '';
         const q = normalize(raw);
