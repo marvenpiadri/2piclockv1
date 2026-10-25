@@ -81,8 +81,7 @@
               "externalDependencies": [
                 "node:module",
                 "node:path",
-                "node:fs",
-                "express"
+                "node:fs"
               ]
             },
             "cloudflare": {
