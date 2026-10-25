@@ -32,7 +32,7 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
     return Response.redirect('https://2piclock.com' + cleanPath + url.search, 308);
   }
   if (cleanPath !== path) return Response.redirect(new URL(cleanPath + url.search, url.origin), 308);
-  if (path.startsWith('/api/v1')) return handleApiRequest(request, env);
+  if (path === '/api/v1' || path.startsWith('/api/v1/')) return handleApiRequest(request, env);
 
   if (path === '/robots.txt') {
     return new Response('User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n', {
