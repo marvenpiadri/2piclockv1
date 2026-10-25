@@ -76,7 +76,8 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
       if (location) return Response.redirect(new URL('/' + locationSlug(location) + (legacy[2] ? '/' + legacy[2] : '') + url.search, url.origin), 301);
     } catch { /* Preserve the normal app fallback if the catalogue is unavailable. */ }
   }
-  return await angularApp.handle(request) ?? new Response('Not found', { status: 404 });
+  const response = await angularApp.handle(request);
+  return response ?? env.ASSETS.fetch(request);
 }
 
 // Angular CLI's local SSR adapter; Cloudflare requests use the Worker entry below.
