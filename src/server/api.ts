@@ -32,7 +32,7 @@ const dateFrom = (value: string | null) => {
 let cataloguePromise: Promise<GeoLocation[]> | undefined;
 async function locations(env: CloudflareEnv): Promise<GeoLocation[]> {
   if (!cataloguePromise) {
-    cataloguePromise = env.ASSETS.fetch(new Request('https://pages-assets/data/locations.json'))
+    cataloguePromise = env.ASSETS.fetch(new Request('https://2piclock-assets/data/locations.json'))
       .then(async response => {
         if (!response.ok) throw new Error('Location catalogue unavailable');
         return await response.json() as GeoLocation[];
