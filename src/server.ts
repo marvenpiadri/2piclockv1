@@ -76,6 +76,15 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
       if (location) return Response.redirect(new URL('/' + locationSlug(location) + (legacy[2] ? '/' + legacy[2] : '') + url.search, url.origin), 301);
     } catch { /* Preserve the normal app fallback if the catalogue is unavailable. */ }
   }
+  // Browser bundles, fonts, icons and other files must bypass Angular's
+  // HTML fallback. Otherwise a missing asset can receive index HTML with a
+  // 200 response, which browsers reject for JavaScript module scripts.
+  if (/\\.[a-zA-Z0-9]+$/.test(path)) {
+    const assetResponse = await env.ASSETS.fetch(request);
+    if (assetResponse.status !== 404) return assetResponse;
+    return new Response('Asset not found.', { status: 404 });
+  }
+
   const response = await angularApp.handle(request);
   return response ?? env.ASSETS.fetch(request);
 }
