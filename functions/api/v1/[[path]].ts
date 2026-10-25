@@ -158,7 +158,10 @@ export const onRequest = async ({ request, env }: PagesContext): Promise<Respons
     if (['solar','lunar','celestial','events'].includes(resource)) {
       const location = await resolveLocation(env, url.searchParams.get('location'));
       if (!location) return error(400, 'INVALID_LOCATION', 'Use a valid preset location id.');
-      const date = dateFrom(url.searchParams.get(resource === 'events' ? 'date' : 'at'));
+      const eventDate = url.searchParams.get('date');
+      const date = resource === 'events' && eventDate
+        ? (Number.isFinite(new Date(eventDate + 'T12:00:00Z').getTime()) ? new Date(eventDate + 'T12:00:00Z') : null)
+        : dateFrom(url.searchParams.get('at'));
       if (!date) return error(400, 'INVALID_TIMESTAMP', 'Use a valid ISO date or timestamp.');
       const meta = { id:location.id, name:location.name, country:location.country, timezone:location.timezone };
       if (resource === 'solar') return json({ version:'1', instant:date.toISOString(), location:meta, solar:calculateSolarPosition(date,location.latitude,location.longitude) });
