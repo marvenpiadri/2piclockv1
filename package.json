@@ -13,7 +13,7 @@
     "lint": "ng lint",
     "serve:ssr:app": "node dist/app/server/server.mjs",
     "build:cloudflare": "bun run generate:locations && ng build --configuration cloudflare",
-    "preview:cloudflare": "wrangler pages dev dist/cloudflare/browser"
+    "preview:cloudflare": "bunx wrangler pages dev dist/cloudflare"
   },
   "dependencies": {
     "@angular/cdk": "22.2.1",
