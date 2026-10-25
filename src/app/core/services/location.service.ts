@@ -65,7 +65,7 @@ export class LocationService {
     );
     if (local) return local;
     try {
-      const data = await firstValueFrom(this.http.get<{ location?: GeoLocation }>(this.apiUrl('/api/v1/locations/' + encodeURIComponent(normalized))));
+      const data = await firstValueFrom(this.http.get<{ location?: GeoLocation }>(this.apiUrl('/api/v1/locations/' + normalized.split('/').map(segment => encodeURIComponent(segment)).join('/'))));
       return data.location ?? null;
     } catch {
       return null;
