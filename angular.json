@@ -81,7 +81,10 @@
               ]
             },
             "cloudflare": {
-              "outputPath": "dist/cloudflare",
+              "outputPath": {
+                "base": "dist/cloudflare",
+                "browser": "."
+              },
               "outputMode": "static",
               "fileReplacements": [
                 {
