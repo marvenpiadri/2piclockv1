@@ -50,7 +50,11 @@
             "index": "src/index.html",
             "security": {
               "allowedHosts": [
-                "2piclock.com"
+                "2piclock.com",
+                "www.2piclock.com",
+                "localhost",
+                "127.0.0.1",
+                "*.workers.dev"
               ]
             }
           },
