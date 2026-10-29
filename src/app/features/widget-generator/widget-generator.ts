@@ -29,7 +29,7 @@ type WidgetTheme = 'dark' | 'light';
         <section class="controls">
           <div class="section">
             <label>Location</label>
-            <select [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event)">
+            <select [ngModel]="activeLoc().id" (ngModelChange)="selectedLocationId.set($event)">
               @for (loc of allLocations(); track loc.id) { <option [value]="loc.id">{{ loc.name }} · {{ loc.country }}</option> }
             </select>
           </div>
@@ -128,13 +128,18 @@ export class WidgetGeneratorComponent {
   private readonly timeControl = inject(TimeControlService);
 
   readonly activeDate = this.timeControl.currentActiveDate;
-  readonly allLocations = this.locationService.locations;
-  readonly selectedLocationId = signal('tokyo');
+  // The active city leads the list so the generator never depends on the random catalogue sample.
+  readonly allLocations = computed(() => {
+    const current = this.locationService.selectedLocation();
+    return [current, ...this.locationService.locations().filter(l => l.id !== current.id)];
+  });
+  readonly selectedLocationId = signal('');
   readonly style = signal<WidgetStyle>('analog');
   readonly theme = signal<WidgetTheme>('dark');
   readonly copied = signal(false);
 
   readonly activeLoc = computed(() => this.allLocations().find(p => p.id === this.selectedLocationId()) ?? this.allLocations()[0]);
+  constructor() { void this.locationService.loadLocations().catch(() => undefined); }
   readonly previewTime = computed(() => {
     try { return this.activeDate().toLocaleTimeString('en-US',{timeZone:this.activeLoc().timezone,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}); }
     catch { return '00:00:00'; }
@@ -145,7 +150,9 @@ export class WidgetGeneratorComponent {
   });
   readonly embedSnippet = computed(() => {
     const loc=this.activeLoc();
-    return `<iframe src="https://2piclock.com/widget/embed/${loc.id}?style=${this.style()}&theme=${this.theme()}" width="360" height="300" style="border:0;border-radius:16px;overflow:hidden" loading="lazy" title="2piClock ${loc.name}"></iframe>`;
+    // tz/name let the embed render GPS or uncatalogued places that a third-party page cannot resolve by id.
+    const query = new URLSearchParams({ style: this.style(), theme: this.theme(), tz: loc.timezone, name: loc.name });
+    return `<iframe src="https://2piclock.com/widget/embed/${encodeURIComponent(loc.id)}?${query.toString().replace(/&/g, '&amp;')}" width="360" height="300" style="border:0;border-radius:16px;overflow:hidden" loading="lazy" title="2piClock ${loc.name.replace(/"/g, '&quot;')}"></iframe>`;
   });
   copySnippet():void {
     if(typeof navigator !== 'undefined' && navigator.clipboard) {

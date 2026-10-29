@@ -13,6 +13,8 @@ import { CelestialService } from '../../../core/services/celestial.service';
 import { CelestialState } from '../../../core/models/celestial.model';
 import { WeatherData, AtmosphericState } from '../../../core/models/weather.model';
 import { PlanetaryPosition } from '../../../core/services/precision-astronomy.service';
+import { getGMST, getJulianCenturies, getJulianDate } from '../../../core/astronomy/astronomy-engine';
+import * as Astronomy from 'astronomy-engine';
 
 interface Star {
   x: number; // 0 to 1 normalized
@@ -22,8 +24,11 @@ interface Star {
   flickerSpeed: number;
   flickerPhase: number;
   color: string;
-  raDeg?: number;
+  name?: string;
+  raDeg?: number;   // J2000 catalogue position
   decDeg?: number;
+  raNowDeg?: number; // precessed to the rendered instant
+  decNowDeg?: number;
   magnitude?: number;
 }
 
@@ -115,6 +120,10 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     auroraActivity: 0,
     eclipseObscuration: 0
   };
+
+  // Per-frame sky frame: sidereal time is computed once, catalogue precessed once per minute.
+  private lstDeg = 0;
+  private precessionMinute = NaN;
 
   private reducedMotion = false;
   private resizeHandler: (() => void) | null = null;
@@ -253,8 +262,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         flickerSpeed: 0.0015,
         flickerPhase: Math.random() * Math.PI * 2,
         color: star.color,
+        name: star.name,
         raDeg: star.raDeg,
         decDeg: star.decDeg,
+        raNowDeg: star.raDeg,
+        decNowDeg: star.decDeg,
         magnitude: star.magnitude
       });
     }
@@ -362,6 +374,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const sunAz = celestial.sun.azimuthDeg;
     const moonAlt = celestial.moon.altitudeDeg;
 
+    this.updateSkyFrame();
+
     // 1. Draw Layered Atmospheric Sky Gradient
     this.drawSkyGradient(ctx, w, h, sunAlt, sunAz, weather, atmos);
 
@@ -399,62 +413,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     this.drawWeatherEffects(ctx, w, h, weather, atmos, delta, time);
 
     // Keep the horizon visually clean; the astronomical details belong to the UI surfaces, not the atmosphere.
-  }
-
-  /**
-   * Astrolabe Celestial Coordinates & Cardinal Compass Datum Lines
-   */
-  private drawAstrolabeGrid(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    sunAlt: number,
-    celestial: CelestialState,
-    isSouthern: boolean
-  ): void {
-    const horizonY = h * 0.90;
-    const isNight = sunAlt < -6;
-    const gridAlpha = isNight ? 0.018 : 0.008;
-
-    ctx.save();
-    ctx.strokeStyle = `rgba(245, 158, 11, ${gridAlpha})`;
-    ctx.lineWidth = 0.75;
-    ctx.setLineDash([3, 6]);
-
-    // Altitude Circles (15°, 30°, 45°, 60°, 75°)
-    const maxZenithY = horizonY * 0.05;
-    const altSteps = [15, 30, 45, 60, 75];
-    for (const alt of altSteps) {
-      const normAlt = alt / 90;
-      const y = horizonY - normAlt * (horizonY - maxZenithY);
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
-    }
-
-    // Azimuth Meridian Lines (every 45°: N, NE, E, SE, S, SW, W, NW)
-    for (let az = 0; az < 360; az += 45) {
-      const x = this.projectAzimuthToScreenX(az, w, isSouthern);
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, horizonY);
-      ctx.stroke();
-    }
-
-    // Declination curve
-    const declination = celestial.sun.declinationDeg;
-    const declRatio = (declination + 23.44) / 46.88;
-    const declY = horizonY * 0.35 + (1 - declRatio) * horizonY * 0.3;
-
-    ctx.strokeStyle = `rgba(251, 191, 36, ${(gridAlpha * 2).toFixed(3)})`;
-    ctx.setLineDash([6, 6]);
-    ctx.beginPath();
-    ctx.moveTo(0, declY);
-    ctx.bezierCurveTo(w * 0.25, declY - 20, w * 0.75, declY - 20, w, declY);
-    ctx.stroke();
-
-    ctx.restore();
   }
 
   /**
@@ -742,7 +700,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       // Bright reference stars use their actual equatorial coordinates.
       let projectedAltitude = 90;
       if (star.raDeg !== undefined && star.decDeg !== undefined) {
-        const projected = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
+        const projected = this.projectStarToSky(star.raNowDeg ?? star.raDeg, star.decNowDeg ?? star.decDeg, w, horizonY);
         if (!projected || projected.altitude < -8) continue;
         sx = projected.x;
         sy = projected.y;
@@ -772,7 +730,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     if (sunAlt > -6) return;
 
     const horizonY = h * 0.90;
-    const starByName = new Map(this.brightStarCatalog.map(star => [star.name, star]));
+    const starByName = new Map(this.stars.filter(star => star.name).map(star => [star.name!, star]));
     const groups: { stars: string[] }[] = [
       { stars: ['Betelgeuse', 'Bellatrix', 'Rigel', 'Procyon'] },
       { stars: ['Vega', 'Deneb', 'Altair'] },
@@ -785,7 +743,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       for (const name of group.stars) {
         const star = starByName.get(name);
         if (!star) continue;
-        const p = this.projectStarToSky(star.raDeg, star.decDeg, w, horizonY);
+        const p = this.projectStarToSky(star.raNowDeg!, star.decNowDeg!, w, horizonY);
         if (p && p.altitude > 8) points.set(name, p);
       }
       if (group.stars.some(name => !points.has(name))) continue;
@@ -807,23 +765,35 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Local sidereal time for this frame, plus J2000 -> of-date precession of the catalogue. */
+  private updateSkyFrame(): void {
+    const date = this.celestialService.activeDate();
+    const jd = getJulianDate(date);
+    this.lstDeg = (getGMST(jd, getJulianCenturies(jd)) + this.celestialService.selectedLocation().longitude + 360) % 360;
+
+    const minute = Math.floor(date.getTime() / 60000);
+    if (minute === this.precessionMinute) return;
+    this.precessionMinute = minute;
+    const rotation = Astronomy.Rotation_EQJ_EQD(date);
+    for (const star of this.stars) {
+      if (star.raDeg === undefined || star.decDeg === undefined) continue;
+      const vector = Astronomy.VectorFromSphere(new Astronomy.Spherical(star.decDeg, star.raDeg, 1), date);
+      const now = Astronomy.EquatorFromVector(Astronomy.RotateVector(rotation, vector));
+      star.raNowDeg = now.ra * 15;
+      star.decNowDeg = now.dec;
+    }
+  }
+
   private projectStarToSky(
     raDeg: number,
     decDeg: number,
     w: number,
     horizonY: number
   ): { x: number; y: number; altitude: number } | null {
-    const date = this.celestialService.activeDate();
     const location = this.celestialService.selectedLocation();
-    const jd = date.getTime() / 86400000 + 2440587.5;
-    const t = (jd - 2451545.0) / 36525;
-    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)
-      + 0.000387933 * t * t - (t * t * t) / 38710000) % 360;
-    const lst = (gmst + location.longitude + 360) % 360;
-
     const lat = location.latitude * Math.PI / 180;
     const dec = decDeg * Math.PI / 180;
-    const hourAngle = (((lst - raDeg) + 540) % 360) - 180;
+    const hourAngle = (((this.lstDeg - raDeg) + 540) % 360) - 180;
     const ha = hourAngle * Math.PI / 180;
 
     const sinAlt = Math.sin(lat) * Math.sin(dec)
@@ -836,13 +806,10 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       Math.cos(ha) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
     ) * 180 / Math.PI + 180 + 360) % 360;
 
-    // Use the same wide azimuth/altitude projection as the Sun, Moon and planets.
-    // Stars should inhabit the whole visible dome, not cluster around the center.
-    const isSouthern = location.latitude < 0;
-    const x = this.projectAzimuthToScreenX(azimuth, w, isSouthern);
+    // Same wide azimuth/altitude projection as the Sun, Moon and planets.
+    const x = this.projectAzimuthToScreenX(azimuth, w, location.latitude < 0);
     const maxZenithY = horizonY * 0.05;
-    const normalizedAltitude = Math.max(-8, Math.min(90, altitude)) / 90;
-    const y = horizonY - normalizedAltitude * (horizonY - maxZenithY);
+    const y = horizonY - (Math.max(-8, Math.min(90, altitude)) / 90) * (horizonY - maxZenithY);
     return { x, y, altitude };
   }
 
@@ -1443,69 +1410,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     }
 
     ctx.restore();
-  }
-
-  /**
-   * Minimalist Pure Horizon Datum Baseline with Hemisphere-Aware Compass Bearings & Heat Shimmer
-   */
-  private drawHorizonLine(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    sunAlt: number,
-    _weather: WeatherData,
-    atmos: AtmosphericState,
-    isSouthern: boolean,
-    time: number
-  ): void {
-    const horizonY = h * 0.90;
-    const isSunset = sunAlt >= -6 && sunAlt <= 6;
-
-    // Clean, crisp datum stroke line with heat shimmer displacement
-    ctx.strokeStyle = isSunset ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-
-    if (this.interp.heatShimmer > 0.05 && !this.reducedMotion) {
-      // Convective horizon distortion wave
-      const shimmerAmp = this.interp.heatShimmer * 2.5;
-      ctx.moveTo(0, horizonY);
-      for (let x = 0; x <= w; x += 10) {
-        const wave = Math.sin(x * 0.03 + time * 0.005) * shimmerAmp;
-        ctx.lineTo(x, horizonY + wave);
-      }
-    } else {
-      ctx.moveTo(0, horizonY);
-      ctx.lineTo(w, horizonY);
-    }
-    ctx.stroke();
-
-    // Cardinal Azimuth Compass marks along horizon
-    const cardinalLabels: { text: string; az: number }[] = [
-      { text: 'N', az: 0 },
-      { text: 'NE', az: 45 },
-      { text: 'E', az: 90 },
-      { text: 'SE', az: 135 },
-      { text: 'S', az: 180 },
-      { text: 'SW', az: 225 },
-      { text: 'W', az: 270 },
-      { text: 'NW', az: 315 },
-      { text: 'N', az: 360 }
-    ];
-
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
-    ctx.font = '10px monospace';
-    ctx.textAlign = 'center';
-
-    for (const card of cardinalLabels) {
-      const x = this.projectAzimuthToScreenX(card.az, w, isSouthern);
-      if (x < -10 || x > w + 10) continue;
-      ctx.beginPath();
-      ctx.moveTo(x, horizonY - 4);
-      ctx.lineTo(x, horizonY + 4);
-      ctx.stroke();
-      ctx.fillText(card.text, x, horizonY + 16);
-    }
   }
 
   private projectCelestialToScreen(

@@ -6,6 +6,7 @@ import {
   SolarPosition,
   TwilightState
 } from '../models/celestial.model';
+import * as Astronomy from 'astronomy-engine';
 
 const RAD2DEG = 180 / Math.PI;
 const DEG2RAD = Math.PI / 180;
@@ -16,23 +17,6 @@ const DEG2RAD = Math.PI / 180;
 function normalizeDeg(deg: number): number {
   const mod = deg % 360;
   return mod < 0 ? mod + 360 : mod;
-}
-
-/**
- * Recover the Sun's apparent ecliptic longitude from its equatorial
- * coordinates. This keeps lunar phase geometry in the correct coordinate
- * system without changing the public SolarPosition model.
- */
-function trueSolarEclipticLongitude(sun: SolarPosition, t: number): number {
-  const omega = (125.04 - 1934.136 * t) * DEG2RAD;
-  const eps0 = 23 + (26 + (21.448 - t * (46.815 + t * (0.00059 - t * 0.001813))) / 60) / 60;
-  const eps = eps0 + 0.00256 * Math.cos(omega);
-  const alpha = sun.rightAscensionDeg * DEG2RAD;
-  const delta = sun.declinationDeg * DEG2RAD;
-  return normalizeDeg(Math.atan2(
-    Math.sin(alpha) * Math.cos(eps) + Math.tan(delta) * Math.sin(eps),
-    Math.cos(alpha)
-  ) * RAD2DEG);
 }
 
 /**
@@ -360,7 +344,9 @@ export function calculateSolarEvents(
 }
 
 /**
- * Calculates high-precision Lunar coordinates and phase geometry (Meeus algorithm)
+ * Lunar coordinates and phase geometry, backed by the astronomy-engine
+ * ephemeris (full lunar theory) instead of a truncated Meeus series.
+ * RA/Dec are geocentric of-date; altitude/azimuth are topocentric and refracted.
  */
 export function calculateLunarPosition(
   date: Date,
@@ -369,156 +355,55 @@ export function calculateLunarPosition(
   sunPos?: SolarPosition
 ): LunarPosition {
   const actualSun = sunPos ?? calculateSolarPosition(date, lat, lng);
-  const jd = getJulianDate(date);
-  const t = getJulianCenturies(jd);
+  const observer = new Astronomy.Observer(lat, lng, 0);
 
-  // Fundamental arguments of Moon's motion (deg)
-  const Lp = normalizeDeg(218.3164477 + 481267.88123421 * t); // Mean Longitude
-  const D  = normalizeDeg(297.8501921 + 445267.1114034 * t);  // Mean Elongation
-  const M  = normalizeDeg(357.5291092 + 35999.0502909 * t);   // Sun Mean Anomaly
-  const Mp = normalizeDeg(134.9633964 + 477198.8675055 * t);  // Moon Mean Anomaly
-  const F  = normalizeDeg(93.2720950 + 483202.0175233 * t);   // Moon Argument of Latitude
+  const topo = Astronomy.Equator(Astronomy.Body.Moon, date, observer, true, true);
+  const horizontal = Astronomy.Horizon(date, observer, topo.ra, topo.dec, 'normal');
 
-  const Drad = D * DEG2RAD;
-  const Mrad = M * DEG2RAD;
-  const Mprad = Mp * DEG2RAD;
-  const Frad = F * DEG2RAD;
+  const geo = Astronomy.EquatorFromVector(
+    Astronomy.RotateVector(Astronomy.Rotation_EQJ_EQD(date), Astronomy.GeoMoon(date))
+  );
+  const raMoonDeg = normalizeDeg(geo.ra * 15);
+  const declMoonDeg = geo.dec;
+  const distanceKm = geo.dist * Astronomy.KM_PER_AU;
 
-  // Periodic terms for Longitude (deg)
-  const deltaL =
-    6.288774 * Math.sin(Mprad) +
-    1.274027 * Math.sin(2 * Drad - Mprad) +
-    0.658314 * Math.sin(2 * Drad) +
-    0.213618 * Math.sin(2 * Mprad) -
-    0.185116 * Math.sin(Mrad) -
-    0.114332 * Math.sin(2 * Frad) +
-    0.058793 * Math.sin(2 * Drad - 2 * Mprad) +
-    0.057066 * Math.sin(2 * Drad - Mrad - Mprad) +
-    0.053322 * Math.sin(2 * Drad + Mprad) +
-    0.045758 * Math.sin(2 * Drad - Mrad);
+  const altitudeDeg = horizontal.altitude;
+  const parallaxDeg = Math.asin(6378.137 / distanceKm) * RAD2DEG * Math.cos(altitudeDeg * DEG2RAD);
 
-  // Periodic terms for Latitude (deg)
-  const deltaB =
-    5.128122 * Math.sin(Frad) +
-    0.280606 * Math.sin(Mprad + Frad) +
-    0.277693 * Math.sin(Mprad - Frad) +
-    0.173238 * Math.sin(2 * Drad - Frad) +
-    0.055413 * Math.sin(2 * Drad - Mprad + Frad) +
-    0.046271 * Math.sin(2 * Drad - Mprad - Frad);
+  // Elongation: 0 = new, 90 = first quarter, 180 = full, 270 = third quarter.
+  const elongationDeg = Astronomy.MoonPhase(date);
+  const illum = Astronomy.Illumination(Astronomy.Body.Moon, date);
+  const ageDays = (elongationDeg / 360) * 29.530588853;
 
-  // Periodic terms for Earth-Moon Distance (km)
-  const deltaDistance =
-    -20905.355 * Math.cos(Mprad) -
-    3699.111 * Math.cos(2 * Drad - Mprad) -
-    2955.968 * Math.cos(2 * Drad) -
-    569.925 * Math.cos(2 * Mprad);
-  const distanceKm = 385000.56 + deltaDistance;
-
-  // Ecliptic Longitude and Latitude
-  const lambdaMoonDeg = normalizeDeg(Lp + deltaL);
-  const betaMoonDeg = deltaB;
-  const lambdaMoonRad = lambdaMoonDeg * DEG2RAD;
-  const betaMoonRad = betaMoonDeg * DEG2RAD;
-
-  // Obliquity of Ecliptic
-  const eps = 23.439291 - t * 0.0130042;
-  const epsRad = eps * DEG2RAD;
-
-  // Equatorial Coordinates (Right Ascension and Declination)
-  const sinAlphaM = Math.sin(lambdaMoonRad) * Math.cos(epsRad) - Math.tan(betaMoonRad) * Math.sin(epsRad);
-  const cosAlphaM = Math.cos(lambdaMoonRad);
-  const raMoonDeg = normalizeDeg(Math.atan2(sinAlphaM, cosAlphaM) * RAD2DEG);
-
-  const sinDeltaM = Math.sin(betaMoonRad) * Math.cos(epsRad) + Math.cos(betaMoonRad) * Math.sin(epsRad) * Math.sin(lambdaMoonRad);
-  const declMoonRad = Math.asin(Math.max(-1, Math.min(1, sinDeltaM)));
-  const _declMoonDeg = declMoonRad * RAD2DEG;
-  void _declMoonDeg;
-
-  // Sidereal Time & Local Hour Angle
-  const gmst = getGMST(jd, t);
-  const lst = normalizeDeg(gmst + lng);
-  let hourAngle = normalizeDeg(lst - raMoonDeg);
-  if (hourAngle > 180) hourAngle -= 360;
-  const hourAngleRad = hourAngle * DEG2RAD;
-
-  // Topocentric Altitude and Azimuth
-  const latRad = lat * DEG2RAD;
-  const sinAltM = Math.sin(latRad) * Math.sin(declMoonRad) + Math.cos(latRad) * Math.cos(declMoonRad) * Math.cos(hourAngleRad);
-  const rawAltRad = Math.asin(Math.max(-1, Math.min(1, sinAltM)));
-  let altitudeDeg = rawAltRad * RAD2DEG;
-
-  // Lunar parallax correction (~0.95° maximum at horizon)
-  const piRad = Math.asin(6378.137 / distanceKm);
-  const parallaxDeg = piRad * RAD2DEG * Math.cos(rawAltRad);
-  altitudeDeg -= parallaxDeg;
-
-  // Atmospheric Refraction
-  if (altitudeDeg > -1) {
-    const r = 1.02 / Math.tan((altitudeDeg + 10.3 / (altitudeDeg + 5.11)) * DEG2RAD);
-    altitudeDeg += r / 60;
-  }
-
-  const cosAzM = (Math.sin(declMoonRad) - Math.sin(latRad) * Math.sin(rawAltRad)) /
-                 (Math.cos(latRad) * Math.cos(rawAltRad));
-  let azimuthDeg = Math.acos(Math.max(-1, Math.min(1, cosAzM))) * RAD2DEG;
-  if (Math.sin(hourAngleRad) > 0) {
-    azimuthDeg = 360 - azimuthDeg;
-  }
-
-  // Lunar Phase Angle (i) & Illuminated Fraction (k)
-  // Use the Sun's apparent ecliptic longitude here. Right ascension is an
-  // equatorial coordinate and cannot be substituted for ecliptic longitude.
-  const sunLambda = normalizeDeg(trueSolarEclipticLongitude(actualSun, t));
-  const elongRad = Math.abs((lambdaMoonDeg - sunLambda) * DEG2RAD);
-  const cosPhaseAngle = -Math.cos(elongRad) * Math.cos(betaMoonRad);
-  const phaseAngleDeg = Math.acos(Math.max(-1, Math.min(1, cosPhaseAngle))) * RAD2DEG;
-  const illuminationFraction = (1 + Math.cos(phaseAngleDeg * DEG2RAD)) / 2;
-
-  // Moon Age (days in 29.530589d synodic month)
-  const synodicMonthDays = 29.530588853;
-  const ageDays = (normalizeDeg(D) / 360) * synodicMonthDays;
-
-  // Moon Phase Name Assignment
   let phaseName: MoonPhaseName;
-  const normAge = normalizeDeg(D); // elongation: 0 = new, 90 = first quarter, 180 = full, 270 = third quarter
+  if (elongationDeg >= 350 || elongationDeg < 10) phaseName = 'New Moon';
+  else if (elongationDeg < 80) phaseName = 'Waxing Crescent';
+  else if (elongationDeg < 100) phaseName = 'First Quarter';
+  else if (elongationDeg < 170) phaseName = 'Waxing Gibbous';
+  else if (elongationDeg < 190) phaseName = 'Full Moon';
+  else if (elongationDeg < 260) phaseName = 'Waning Gibbous';
+  else if (elongationDeg < 280) phaseName = 'Third Quarter';
+  else phaseName = 'Waning Crescent';
 
-  if (normAge >= 350 || normAge < 10) {
-    phaseName = 'New Moon';
-  } else if (normAge >= 10 && normAge < 80) {
-    phaseName = 'Waxing Crescent';
-  } else if (normAge >= 80 && normAge < 100) {
-    phaseName = 'First Quarter';
-  } else if (normAge >= 100 && normAge < 170) {
-    phaseName = 'Waxing Gibbous';
-  } else if (normAge >= 170 && normAge < 190) {
-    phaseName = 'Full Moon';
-  } else if (normAge >= 190 && normAge < 260) {
-    phaseName = 'Waning Gibbous';
-  } else if (normAge >= 260 && normAge < 280) {
-    phaseName = 'Third Quarter';
-  } else {
-    phaseName = 'Waning Crescent';
-  }
-
-  // Position Angle of Bright Limb (chi): Tilt orientation of illuminated crescent
+  // Position angle of the bright limb (chi): tilt of the illuminated crescent.
   const sunDecRad = actualSun.declinationDeg * DEG2RAD;
+  const moonDecRad = declMoonDeg * DEG2RAD;
   const deltaRA = (actualSun.rightAscensionDeg - raMoonDeg) * DEG2RAD;
   const yLimb = Math.cos(sunDecRad) * Math.sin(deltaRA);
-  const xLimb = Math.sin(sunDecRad) * Math.cos(declMoonRad) - Math.cos(sunDecRad) * Math.sin(declMoonRad) * Math.cos(deltaRA);
-  const brightLimbAngleDeg = normalizeDeg(Math.atan2(yLimb, xLimb) * RAD2DEG);
+  const xLimb = Math.sin(sunDecRad) * Math.cos(moonDecRad) - Math.cos(sunDecRad) * Math.sin(moonDecRad) * Math.cos(deltaRA);
 
   return {
     altitudeDeg,
-    azimuthDeg: normalizeDeg(azimuthDeg),
+    azimuthDeg: normalizeDeg(horizontal.azimuth),
     phaseName,
-    illuminationFraction: Math.max(0, Math.min(1, illuminationFraction)),
-    phaseAngleDeg,
+    illuminationFraction: Math.max(0, Math.min(1, illum.phase_fraction)),
+    phaseAngleDeg: illum.phase_angle,
     ageDays,
-    brightLimbAngleDeg,
+    brightLimbAngleDeg: normalizeDeg(Math.atan2(yLimb, xLimb) * RAD2DEG),
     parallaxDeg,
     distanceKm,
     isAboveHorizon: altitudeDeg > -0.5,
-    declinationDeg: declMoonRad * RAD2DEG,
+    declinationDeg: declMoonDeg,
     rightAscensionDeg: raMoonDeg
   };
 }

@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { LocationService } from '../../core/services/location.service';
+import { TimeControlService } from '../../core/services/time-control.service';
+import { GeoLocation } from '../../core/models/location.model';
 import { CountryFlagComponent } from '../../shared/components';
 import { getCelestialState } from '../../core/astronomy/astronomy-engine';
 
@@ -52,7 +54,7 @@ import { getCelestialState } from '../../core/astronomy/astronomy-engine';
           <div class="city-card p-5 rounded-3xl bg-slate-900/80 border border-white/10 backdrop-blur-xl hover:border-amber-500/30 transition shadow-xl relative group">
             
             <!-- Remove Button on Hover -->
-            @if (cityCards().length > 1) {
+            @if (card.removable) {
               <button 
                 type="button" 
                 (click)="removeCity(card.loc.id)" 
@@ -108,7 +110,7 @@ import { getCelestialState } from '../../core/astronomy/astronomy-engine';
 
             <!-- Link to Explore City -->
             <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
-              <a [routerLink]="['/', card.loc.id]" class="text-xs text-amber-300 hover:text-amber-200 font-semibold flex items-center gap-1">
+              <a [routerLink]="cityPath(card.loc)" class="text-xs text-amber-300 hover:text-amber-200 font-semibold flex items-center gap-1">
                 <span>Open Observatory</span>
                 <mat-icon class="text-sm">arrow_forward</mat-icon>
               </a>
@@ -131,21 +133,34 @@ import { getCelestialState } from '../../core/astronomy/astronomy-engine';
 })
 export class DashboardComponent {
   private locationService = inject(LocationService);
+  private timeControl = inject(TimeControlService);
 
   readonly allLocations = this.locationService.locations;
-  readonly pinnedIds = signal<string[]>(['tokyo', 'london', 'newyork', 'paris', 'reykjavik', 'casablanca']);
   readonly selectedAddId = signal<string>('');
 
+  // The active city is always shown; the persisted watchlist supplies the rest.
+  readonly pinned = computed(() => {
+    const current = this.locationService.selectedLocation();
+    return [current, ...this.locationService.watchlist().filter(l => l.id !== current.id)];
+  });
+
   readonly availableToAdd = computed(() => {
-    const pinned = new Set(this.pinnedIds());
+    const pinned = new Set(this.pinned().map(l => l.id));
     return this.allLocations().filter(p => !pinned.has(p.id));
   });
 
+  constructor() {
+    void this.locationService.loadLocations().catch(() => undefined);
+  }
+
+  cityPath(loc: GeoLocation): string[] {
+    return ['/', ...this.locationService.getLocationPath(loc)];
+  }
+
   readonly cityCards = computed(() => {
-    const ids = this.pinnedIds();
-    const now = new Date();
-    return ids.map(id => {
-      const loc = this.allLocations().find(p => p.id === id) || this.allLocations()[0];
+    const now = this.timeControl.currentActiveDate();
+    const currentId = this.locationService.selectedLocation().id;
+    return this.pinned().map(loc => {
       const state = getCelestialState(now, loc.latitude, loc.longitude, loc.timezone);
       const isDay = state.sun.isAboveHorizon || state.twilightState === 'day' || state.twilightState === 'golden_hour';
       
@@ -170,6 +185,7 @@ export class DashboardComponent {
 
       return {
         loc,
+        removable: loc.id !== currentId,
         timeStr,
         isDay,
         solarAlt: state.sun.altitudeDeg,
@@ -181,12 +197,12 @@ export class DashboardComponent {
   });
 
   addCityById(id: string): void {
-    if (!id) return;
-    this.pinnedIds.update(ids => ids.includes(id) ? ids : [...ids, id]);
+    const loc = this.allLocations().find(l => l.id === id);
+    if (loc) this.locationService.addToWatchlist(loc);
     this.selectedAddId.set('');
   }
 
   removeCity(id: string): void {
-    this.pinnedIds.update(ids => ids.filter(i => i !== id));
+    this.locationService.removeFromWatchlist(id);
   }
 }

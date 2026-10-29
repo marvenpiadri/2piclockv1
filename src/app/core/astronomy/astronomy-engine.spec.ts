@@ -113,6 +113,18 @@ describe('Astronomy Engine Mathematics Foundation', () => {
       expect(moon.ageDays).toBeGreaterThanOrEqual(0);
       expect(moon.ageDays).toBeLessThanOrEqual(30);
     });
+
+    it('should match historical new and full moon instants', () => {
+      const newMoon = calculateLunarPosition(new Date('2000-01-06T18:14:00Z'), 0, 0);
+      expect(newMoon.illuminationFraction).toBeLessThan(0.005);
+      expect(newMoon.phaseName).toBe('New Moon');
+
+      const fullMoon = calculateLunarPosition(new Date('2000-01-21T04:40:00Z'), 0, 0);
+      expect(fullMoon.illuminationFraction).toBeGreaterThan(0.995);
+      expect(fullMoon.phaseName).toBe('Full Moon');
+      expect(fullMoon.ageDays).toBeGreaterThan(14.5);
+      expect(fullMoon.ageDays).toBeLessThan(15);
+    });
   });
 
   describe('Terminator & Subsolar Geometry', () => {

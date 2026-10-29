@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
+import { GeoLocation } from '../../core/models/location.model';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 
@@ -60,10 +61,26 @@ export class WidgetEmbedComponent {
   private readonly timeControl = inject(TimeControlService);
 
   readonly activeDate = this.timeControl.currentActiveDate;
+  // Resolve the embedded city through the catalogue API; the random sample would miss most ids.
+  private readonly resolved = signal<GeoLocation | null>(null);
   readonly location = computed(() => {
-    const id = this.route.snapshot.paramMap.get('location');
-    return this.locationService.locations().find(x => x.id === id) ?? this.locationService.selectedLocation();
+    const found = this.resolved();
+    if (found) return found;
+    // Fallback for ids a third-party page cannot resolve (GPS, uncatalogued): trust only a valid IANA zone.
+    const q = this.route.snapshot.queryParamMap;
+    const tz = q.get('tz');
+    if (tz) {
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: tz });
+        return { ...this.locationService.selectedLocation(), timezone: tz, name: (q.get('name') ?? tz).slice(0, 60) };
+      } catch { /* invalid zone: use the default below */ }
+    }
+    return this.locationService.selectedLocation();
   });
+  constructor() {
+    const id = this.route.snapshot.paramMap.get('location');
+    if (id) void this.locationService.getLocation(id).then(loc => this.resolved.set(loc)).catch(() => undefined);
+  }
   readonly style = computed<'analog'|'digital'>(() =>
     this.route.snapshot.queryParamMap.get('style') === 'analog' ? 'analog' : 'digital'
   );

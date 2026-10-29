@@ -968,3 +968,13 @@
   background-color: transparent !important;
   box-shadow: none !important;
 }
+
+/* Phone header: the location pill and brand block must share 390px without overlapping. */
+@media (max-width: 639px) {
+  .universal-top-header { padding: 0 10px; gap: 6px; }
+  .header-left, .header-right { gap: 4px; }
+  .brand-text-col, .location-pill-btn .loc-time-row, .location-pill-btn .loc-country-label { display: none; }
+  .header-right { min-width: 0; }
+  .location-pill-btn { min-width: 0; max-width: 150px; padding: 6px; gap: 6px; }
+  .location-pill-btn .loc-name-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

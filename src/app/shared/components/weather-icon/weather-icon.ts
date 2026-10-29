@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 export type WeatherIconSize = 'sm' | 'md' | 'lg' | 'xl';
 export type WeatherIconStyle = 'fill' | 'flat' | 'line' | 'monochrome';
@@ -63,26 +63,30 @@ export class WeatherIconComponent {
     return this.resolveMeteoconSlug(raw, this.isDay());
   });
 
+  // Bundled icons first (no third-party dependency); CDNs only cover non-default styles.
   readonly currentSrc = computed(() => {
-    const attempt = this.fallbackAttempt();
     const style = this.iconStyle();
     const slug = this.resolvedSlug();
-
-    if (attempt === 0) {
-      // Primary: jsDelivr CDN for @meteocons/svg
-      return `https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/${style}/${slug}.svg`;
-    }
-    if (attempt === 1) {
-      // Secondary CDN: unpkg CDN for @meteocons/svg
-      return `https://unpkg.com/@meteocons/svg@0.1.0/${style}/${slug}.svg`;
-    }
-    // Final fallback: clear-day or clear-night from jsDelivr CDN
-    const fallbackSlug = this.isDay() ? 'clear-day' : 'clear-night';
-    return `https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/${style}/${fallbackSlug}.svg`;
+    const cdn = `@meteocons/svg@0.1.0/${style}/${slug}.svg`;
+    const sources = [
+      ...(style === 'fill' ? [`/meteocons/fill/${slug}.svg`] : []),
+      `https://cdn.jsdelivr.net/npm/${cdn}`,
+      `https://unpkg.com/${cdn}`,
+      `/meteocons/fill/${this.isDay() ? 'clear-day' : 'clear-night'}.svg`
+    ];
+    return sources[Math.min(this.fallbackAttempt(), sources.length - 1)];
   });
 
+  constructor() {
+    // A new condition starts from the best source again instead of inheriting an earlier failure.
+    effect(() => {
+      this.resolvedSlug();
+      this.fallbackAttempt.set(0);
+    });
+  }
+
   handleImageError(): void {
-    if (this.fallbackAttempt() < 2) {
+    if (this.fallbackAttempt() < 3) {
       this.fallbackAttempt.update(n => n + 1);
     }
   }
