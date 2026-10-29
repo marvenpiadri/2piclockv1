@@ -54,9 +54,10 @@ export class PrecisionAstronomyService {
       sunCalcAzimuthDeg,
       altitudeDeltaDeg,
       azimuthDeltaDeg,
-      // Validate both coordinates. Azimuth gets a modestly wider tolerance
-      // because it becomes numerically unstable near the zenith/poles.
-      isValidated: altitudeDeltaDeg < 0.25 && azimuthDeltaDeg < 0.5
+      // Azimuth gets a modestly wider tolerance because it becomes numerically
+      // unstable near the zenith/poles. SunCalc applies horizon refraction at every
+      // altitude below the horizon, so altitude is only comparable while the Sun is up.
+      isValidated: (astronomyEngine.altitude < 0 || altitudeDeltaDeg < 0.25) && azimuthDeltaDeg < 0.5
     };
   }
 

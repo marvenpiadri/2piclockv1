@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Injector, PLATFORM_ID, provideZonelessChangeDetection, NgZone } from '@angular/core';
+import { Injector, PLATFORM_ID, NgZone } from '@angular/core';
 import { ErrorHandlerService } from './error-handler.service';
 
 describe('ErrorHandlerService Unit Tests (Jasmine / Karma compliant)', () => {
@@ -15,7 +15,6 @@ describe('ErrorHandlerService Unit Tests (Jasmine / Karma compliant)', () => {
 
     const injector = Injector.create({
       providers: [
-        provideZonelessChangeDetection(),
         { provide: PLATFORM_ID, useValue: 'browser' },
         { 
           provide: NgZone, 

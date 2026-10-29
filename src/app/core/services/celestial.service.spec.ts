@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Injector, PLATFORM_ID, provideZonelessChangeDetection, runInInjectionContext } from '@angular/core';
+import { Injector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
 import { CelestialService } from './celestial.service';
 import { LocationService } from './location.service';
 import { TimeControlService } from './time-control.service';
@@ -19,7 +19,6 @@ describe('CelestialService Unit Tests (Jasmine / Karma compliant)', () => {
   beforeEach(() => {
     injector = Injector.create({
       providers: [
-        provideZonelessChangeDetection(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: HttpClient, useValue: { get: () => of({}) } },
         LocationService,

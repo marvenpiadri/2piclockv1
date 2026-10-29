@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Injector, PLATFORM_ID, provideZonelessChangeDetection, runInInjectionContext } from '@angular/core';
+import { Injector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { AlertsService } from './alerts.service';
@@ -17,7 +17,6 @@ describe('AlertsService Unit Tests', () => {
   beforeEach(() => {
     injector = Injector.create({
       providers: [
-        provideZonelessChangeDetection(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: HttpClient, useValue: { get: () => of({}), post: () => of({}) } },
         LocationService,

@@ -68,14 +68,6 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
       return new Response('Sitemap temporarily unavailable.', { status: 503 });
     }
   }
-  const legacy = path.match(/^\/([a-z]{2}-\d+)(?:\/([a-z0-9-]+))?$/i);
-  if (legacy) {
-    try {
-      const all = await getLocationCatalogue(env);
-      const location = all.find(item => item.id.toLowerCase() === legacy[1].toLowerCase());
-      if (location) return Response.redirect(new URL('/' + locationSlug(location) + (legacy[2] ? '/' + legacy[2] : '') + url.search, url.origin), 301);
-    } catch { /* Preserve the normal app fallback if the catalogue is unavailable. */ }
-  }
   // Browser bundles, fonts, icons and other files must bypass Angular's
   // HTML fallback. Otherwise a missing asset can receive index HTML with a
   // 200 response, which browsers reject for JavaScript module scripts.

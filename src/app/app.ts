@@ -88,11 +88,9 @@ export class App {
     if (this.showDeepSpace()) return false;
     const url = this.currentRoute();
     return (
-      url === '/now' ||
       url === '/weather' ||
       url === '/sleep-calculator' ||
-      /^\/[a-z0-9-]+(?:\/(?:weather|time|sun|moon))?(?:\?.*)?$/.test(url) ||
-      url.startsWith('/sky')
+      /^\/[a-z0-9-]+(?:\/(?:weather|time|sun|moon))?(?:\?.*)?$/.test(url)
     );
   });
 
