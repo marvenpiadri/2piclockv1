@@ -15,6 +15,7 @@ import { WeatherData, AtmosphericState } from '../../../core/models/weather.mode
 import { PlanetaryPosition } from '../../../core/services/precision-astronomy.service';
 import { getGMST, getJulianCenturies, getJulianDate } from '../../../core/astronomy/astronomy-engine';
 import * as Astronomy from 'astronomy-engine';
+import { CONSTELLATIONS, STARS } from '../../../core/astronomy/sky-catalogue';
 
 interface Star {
   x: number; // 0 to 1 normalized
@@ -179,38 +180,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     window.addEventListener('resize', this.resizeHandler, { passive: true });
   }
 
-  private readonly brightStarCatalog: { name: string; raDeg: number; decDeg: number; magnitude: number; color: string }[] = [
-    { name: 'Sirius', raDeg: 101.287, decDeg: -16.716, magnitude: -1.46, color: 'rgba(235,245,255,' },
-    { name: 'Canopus', raDeg: 95.988, decDeg: -52.696, magnitude: -0.74, color: 'rgba(255,245,225,' },
-    { name: 'Arcturus', raDeg: 213.915, decDeg: 19.182, magnitude: -0.05, color: 'rgba(255,225,190,' },
-    { name: 'Vega', raDeg: 279.235, decDeg: 38.784, magnitude: 0.03, color: 'rgba(225,240,255,' },
-    { name: 'Capella', raDeg: 79.172, decDeg: 45.998, magnitude: 0.08, color: 'rgba(255,245,215,' },
-    { name: 'Rigel', raDeg: 78.634, decDeg: -8.202, magnitude: 0.13, color: 'rgba(215,235,255,' },
-    { name: 'Procyon', raDeg: 114.826, decDeg: 5.225, magnitude: 0.34, color: 'rgba(245,245,255,' },
-    { name: 'Achernar', raDeg: 24.429, decDeg: -57.237, magnitude: 0.46, color: 'rgba(225,240,255,' },
-    { name: 'Betelgeuse', raDeg: 88.793, decDeg: 7.407, magnitude: 0.50, color: 'rgba(255,205,175,' },
-    { name: 'Hadar', raDeg: 210.956, decDeg: -60.373, magnitude: 0.61, color: 'rgba(220,235,255,' },
-    { name: 'Altair', raDeg: 297.696, decDeg: 8.868, magnitude: 0.77, color: 'rgba(235,245,255,' },
-    { name: 'Aldebaran', raDeg: 69.996, decDeg: 16.509, magnitude: 0.85, color: 'rgba(255,220,185,' },
-    { name: 'Spica', raDeg: 201.298, decDeg: -11.161, magnitude: 0.97, color: 'rgba(220,235,255,' },
-    { name: 'Antares', raDeg: 247.352, decDeg: -26.432, magnitude: 1.06, color: 'rgba(255,205,180,' },
-    { name: 'Pollux', raDeg: 116.329, decDeg: 28.026, magnitude: 1.14, color: 'rgba(255,240,205,' },
-    { name: 'Fomalhaut', raDeg: 344.413, decDeg: -29.622, magnitude: 1.16, color: 'rgba(225,240,255,' },
-    { name: 'Deneb', raDeg: 310.358, decDeg: 45.280, magnitude: 1.25, color: 'rgba(225,240,255,' },
-    { name: 'Regulus', raDeg: 152.093, decDeg: 11.967, magnitude: 1.35, color: 'rgba(245,245,255,' },
-    { name: 'Castor', raDeg: 113.650, decDeg: 31.888, magnitude: 1.58, color: 'rgba(230,240,255,' },
-    { name: 'Bellatrix', raDeg: 81.283, decDeg: 6.350, magnitude: 1.64, color: 'rgba(220,235,255,' },
-    { name: 'Alnilam', raDeg: 84.053, decDeg: -1.202, magnitude: 1.69, color: 'rgba(220,235,255,' },
-    { name: 'Alnitak', raDeg: 85.190, decDeg: -1.943, magnitude: 1.74, color: 'rgba(220,235,255,' },
-    { name: 'Mirfak', raDeg: 51.080, decDeg: 49.861, magnitude: 1.79, color: 'rgba(245,235,215,' },
-    { name: 'Dubhe', raDeg: 165.932, decDeg: 61.751, magnitude: 1.79, color: 'rgba(255,235,205,' },
-    { name: 'Kochab', raDeg: 222.676, decDeg: 74.155, magnitude: 2.08, color: 'rgba(255,220,185,' },
-    { name: 'Denebola', raDeg: 177.265, decDeg: 14.572, magnitude: 2.14, color: 'rgba(235,245,255,' },
-    { name: 'Mintaka', raDeg: 83.001, decDeg: -0.299, magnitude: 2.23, color: 'rgba(225,240,255,' },
-    { name: 'Merak', raDeg: 165.460, decDeg: 56.382, magnitude: 2.37, color: 'rgba(225,240,255,' },
-    { name: 'Alnair', raDeg: 332.058, decDeg: -46.961, magnitude: 1.74, color: 'rgba(225,240,255,' }
-  ];
-
   private initStars(): void {
     // Keep the procedural field sparse; the real catalogue supplies the astronomical identity.
     const starCount = 180;
@@ -253,7 +222,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     // Overlay real bright-star references. Their screen positions are resolved
     // every frame from the selected observer/date, while the procedural field
     // preserves the quiet density of a natural night sky.
-    for (const star of this.brightStarCatalog) {
+    for (const star of STARS) {
       this.stars.push({
         x: 0,
         y: 0,
@@ -261,7 +230,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
         baseBrightness: 0.95,
         flickerSpeed: 0.0015,
         flickerPhase: Math.random() * Math.PI * 2,
-        color: star.color,
+        color: `rgba(${star.tint},`,
         name: star.name,
         raDeg: star.raDeg,
         decDeg: star.decDeg,
@@ -731,38 +700,30 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
     const horizonY = h * 0.90;
     const starByName = new Map(this.stars.filter(star => star.name).map(star => [star.name!, star]));
-    const groups: { stars: string[] }[] = [
-      { stars: ['Betelgeuse', 'Bellatrix', 'Rigel', 'Procyon'] },
-      { stars: ['Vega', 'Deneb', 'Altair'] },
-      { stars: ['Aldebaran', 'Capella', 'Pollux', 'Castor'] },
-      { stars: ['Antares', 'Spica', 'Arcturus'] }
-    ];
-
     const points = new Map<string, { x: number; y: number; altitude: number }>();
-    for (const group of groups) {
-      for (const name of group.stars) {
-        const star = starByName.get(name);
-        if (!star) continue;
-        const p = this.projectStarToSky(star.raNowDeg!, star.decNowDeg!, w, horizonY);
-        if (p && p.altitude > 8) points.set(name, p);
-      }
-      if (group.stars.some(name => !points.has(name))) continue;
-
-      ctx.save();
-      ctx.strokeStyle = 'rgba(226,232,240,0.065)';
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-
-      for (let i = 1; i < group.stars.length; i++) {
-        const a = points.get(group.stars[i - 1])!;
-        const b = points.get(group.stars[i])!;
+    const project = (name: string) => {
+      if (points.has(name)) return points.get(name)!;
+      const star = starByName.get(name);
+      const p = star ? this.projectStarToSky(star.raNowDeg!, star.decNowDeg!, w, horizonY) : null;
+      if (!p || p.altitude <= 8) return null;
+      points.set(name, p);
+      return p;
+    };
+    ctx.save();
+    ctx.strokeStyle = 'rgba(226,232,240,0.065)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (const figure of CONSTELLATIONS) {
+      for (const [from, to] of figure.lines) {
+        const a = project(from);
+        const b = project(to);
+        if (!a || !b) continue;
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
       }
-
-      ctx.stroke();
-      ctx.restore();
     }
+    ctx.stroke();
+    ctx.restore();
   }
 
   /** Local sidereal time for this frame, plus J2000 -> of-date precession of the catalogue. */

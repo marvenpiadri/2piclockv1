@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import * as Astronomy from 'astronomy-engine';
 import {
   calculateSolarPosition,
   calculateSolarEvents,
@@ -95,6 +96,9 @@ export interface AstronomicalEventItem {
   significance: string;
   isUpcoming: boolean;
 }
+
+/** Full Moons closer than this count as supermoons (within ~90% of mean perigee). */
+const SUPERMOON_KM = 361000;
 
 @Injectable({ providedIn: 'root' })
 export class AstronomicalCalculatorService {
@@ -352,11 +356,11 @@ export class AstronomicalCalculatorService {
 
     // 2. Major Lunar Phases for the year
     const startOfYear = new Date(Date.UTC(year, 0, 1));
-    const yearPhases = this.getUpcomingLunarPhases(startOfYear, 48).filter((p: { phaseName: MoonPhaseName; date: Date }) => p.date.getUTCFullYear() === year);
+    const yearPhases = this.getUpcomingLunarPhases(startOfYear, 52).filter((p: { phaseName: MoonPhaseName; date: Date }) => p.date.getUTCFullYear() === year);
 
     yearPhases.forEach((p: { phaseName: MoonPhaseName; date: Date }, idx: number) => {
       if (p.phaseName === 'Full Moon' || p.phaseName === 'New Moon') {
-        const isSupermoon = p.phaseName === 'Full Moon' && (p.date.getUTCMonth() === 7 || p.date.getUTCMonth() === 8 || p.date.getUTCMonth() === 9);
+        const isSupermoon = p.phaseName === 'Full Moon' && Astronomy.GeoVector(Astronomy.Body.Moon, p.date, true).Length() * Astronomy.KM_PER_AU <= SUPERMOON_KM;
         const name = isSupermoon ? `Super Full Moon` : p.phaseName;
 
         events.push({
@@ -375,32 +379,73 @@ export class AstronomicalCalculatorService {
       }
     });
 
-    // 3. Perihelion & Aphelion
-    const perihelion = new Date(Date.UTC(year, 0, 3, 14, 0, 0));
-    const aphelion = new Date(Date.UTC(year, 6, 5, 20, 0, 0));
+    // 3. Eclipses
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = Date.UTC(year + 1, 0, 1);
+    let lunar = Astronomy.SearchLunarEclipse(yearStart);
+    while (lunar.peak.date.getTime() < yearEnd) {
+      if (lunar.kind !== Astronomy.EclipseKind.Penumbral) {
+        const kind = lunar.kind === Astronomy.EclipseKind.Total ? 'Total' : 'Partial';
+        events.push({
+          id: `lunar-eclipse-${lunar.peak.date.getTime()}`,
+          title: `${kind} Lunar Eclipse`,
+          category: 'eclipse',
+          date: lunar.peak.date,
+          formattedDate: this.formatDate(lunar.peak.date, location.timezone),
+          formattedTime: this.formatTime(lunar.peak.date, location.timezone),
+          description: `The Moon passes through Earth's shadow. Time shown is the middle of the eclipse. Visible wherever the Moon is above the horizon.`,
+          significance: kind === 'Total' ? 'The whole Moon turns coppery red.' : 'Part of the Moon darkens in the umbra.',
+          isUpcoming: lunar.peak.date.getTime() > now.getTime()
+        });
+      }
+      lunar = Astronomy.NextLunarEclipse(lunar.peak);
+    }
+
+    let solar = Astronomy.SearchGlobalSolarEclipse(yearStart);
+    while (solar.peak.date.getTime() < yearEnd) {
+      const kind = ({ [Astronomy.EclipseKind.Total]: 'Total', [Astronomy.EclipseKind.Annular]: 'Annular', [Astronomy.EclipseKind.Partial]: 'Partial' } as Record<string, string>)[solar.kind] ?? 'Hybrid';
+      events.push({
+        id: `solar-eclipse-${solar.peak.date.getTime()}`,
+        title: `${kind} Solar Eclipse`,
+        category: 'eclipse',
+        date: solar.peak.date,
+        formattedDate: this.formatDate(solar.peak.date, location.timezone),
+        formattedTime: this.formatTime(solar.peak.date, location.timezone),
+        description: 'The Moon passes in front of the Sun. Time shown is greatest eclipse anywhere on Earth; it is visible only along and near its path.',
+        significance: 'Never look at the Sun without certified eclipse glasses.',
+        isUpcoming: solar.peak.date.getTime() > now.getTime()
+      });
+      solar = Astronomy.NextGlobalSolarEclipse(solar.peak);
+    }
+
+    // 4. Perihelion & Aphelion
+    const perihelion = Astronomy.SearchPlanetApsis(Astronomy.Body.Earth, new Date(Date.UTC(year, 0, 1)));
+    const aphelion = Astronomy.NextPlanetApsis(Astronomy.Body.Earth, perihelion);
+    const perihelionDate = perihelion.time.date;
+    const aphelionDate = aphelion.time.date;
 
     events.push({
       id: `perihelion-${year}`,
       title: `Earth at Perihelion (${year})`,
       category: 'solar',
-      date: perihelion,
-      formattedDate: this.formatDate(perihelion, location.timezone),
-      formattedTime: this.formatTime(perihelion, location.timezone),
-      description: 'Earth reaches its closest point to the Sun (approx. 147.1 million km / 0.983 AU).',
+      date: perihelionDate,
+      formattedDate: this.formatDate(perihelionDate, location.timezone),
+      formattedTime: this.formatTime(perihelionDate, location.timezone),
+      description: `Earth reaches its closest point to the Sun (${(perihelion.dist_au * Astronomy.KM_PER_AU / 1e6).toFixed(1)} million km).`,
       significance: 'Maximum solar flux intensity across the upper atmosphere.',
-      isUpcoming: perihelion.getTime() > now.getTime()
+      isUpcoming: perihelionDate.getTime() > now.getTime()
     });
 
     events.push({
       id: `aphelion-${year}`,
       title: `Earth at Aphelion (${year})`,
       category: 'solar',
-      date: aphelion,
-      formattedDate: this.formatDate(aphelion, location.timezone),
-      formattedTime: this.formatTime(aphelion, location.timezone),
-      description: 'Earth reaches its farthest point from the Sun (approx. 152.1 million km / 1.017 AU).',
+      date: aphelionDate,
+      formattedDate: this.formatDate(aphelionDate, location.timezone),
+      formattedTime: this.formatTime(aphelionDate, location.timezone),
+      description: `Earth reaches its farthest point from the Sun (${(aphelion.dist_au * Astronomy.KM_PER_AU / 1e6).toFixed(1)} million km).`,
       significance: 'Minimum orbital speed and solar irradiance.',
-      isUpcoming: aphelion.getTime() > now.getTime()
+      isUpcoming: aphelionDate.getTime() > now.getTime()
     });
 
     // Sort chronologically
@@ -515,42 +560,23 @@ export class AstronomicalCalculatorService {
     autumnEquinox: Date;
     winterSolstice: Date;
   } {
-    // High-precision astronomical approximation for equinoxes and solstices
+    const s = Astronomy.Seasons(year);
     return {
-      springEquinox: new Date(Date.UTC(year, 2, 20, 9, 24, 0)),
-      summerSolstice: new Date(Date.UTC(year, 5, 21, 3, 42, 0)),
-      autumnEquinox: new Date(Date.UTC(year, 8, 22, 18, 54, 0)),
-      winterSolstice: new Date(Date.UTC(year, 11, 21, 15, 20, 0))
+      springEquinox: s.mar_equinox.date,
+      summerSolstice: s.jun_solstice.date,
+      autumnEquinox: s.sep_equinox.date,
+      winterSolstice: s.dec_solstice.date
     };
   }
 
   private getUpcomingLunarPhases(startDate: Date, count = 8): { phaseName: MoonPhaseName; date: Date }[] {
+    const names: MoonPhaseName[] = ['New Moon', 'First Quarter', 'Full Moon', 'Third Quarter'];
     const phases: { phaseName: MoonPhaseName; date: Date }[] = [];
-    const synodicMonth = 29.53058867 * 86400000;
-    const quarterPeriod = synodicMonth / 4;
-
-    // Reference known New Moon: Jan 18, 2026 18:52 UTC
-    const refNewMoonMs = Date.UTC(2026, 0, 18, 18, 52, 0);
-    const diffFromRef = startDate.getTime() - refNewMoonMs;
-    const completedCycles = Math.floor(diffFromRef / synodicMonth);
-    let curCycleBase = refNewMoonMs + completedCycles * synodicMonth;
-
-    const phaseNames: MoonPhaseName[] = ['New Moon', 'First Quarter', 'Full Moon', 'Third Quarter'];
-
+    let quarter = Astronomy.SearchMoonQuarter(startDate);
     while (phases.length < count) {
-      for (let q = 0; q < 4; q++) {
-        const phaseDate = new Date(curCycleBase + q * quarterPeriod);
-        if (phaseDate.getTime() >= startDate.getTime()) {
-          phases.push({
-            phaseName: phaseNames[q],
-            date: phaseDate
-          });
-          if (phases.length >= count) break;
-        }
-      }
-      curCycleBase += synodicMonth;
+      phases.push({ phaseName: names[quarter.quarter], date: quarter.time.date });
+      quarter = Astronomy.NextMoonQuarter(quarter);
     }
-
     return phases;
   }
 

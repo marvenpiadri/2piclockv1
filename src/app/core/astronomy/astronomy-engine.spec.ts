@@ -7,7 +7,8 @@ import {
   calculateRadianTimeOverlap,
   getJulianDate,
   getJulianCenturies,
-  getCelestialState
+  getCelestialState,
+  equatorialJ2000ToHorizontal
 } from './astronomy-engine';
 
 describe('Astronomy Engine Mathematics Foundation', () => {
@@ -162,6 +163,16 @@ describe('Astronomy Engine Mathematics Foundation', () => {
       expect(state.twilightState).toBeDefined();
       expect(state.starVisibilityFraction).toBeGreaterThanOrEqual(0);
       expect(state.starVisibilityFraction).toBeLessThanOrEqual(1);
+    });
+  });
+  describe('Catalogue projection', () => {
+    it('keeps Polaris near the observer latitude and due north', () => {
+      for (const hour of [0, 6, 12, 18]) {
+        const when = new Date(Date.UTC(2026, 5, 1, hour));
+        const p = equatorialJ2000ToHorizontal(37.95, 89.264, when, 40, -74);
+        expect(Math.abs(p.altitudeDeg - 40)).toBeLessThan(1.6);
+        expect(Math.min(p.azimuthDeg, 360 - p.azimuthDeg)).toBeLessThan(3);
+      }
     });
   });
 });

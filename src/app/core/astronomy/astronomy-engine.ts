@@ -43,6 +43,23 @@ export function getGMST(jd: number, t: number): number {
 }
 
 /**
+ * Alt/az of a J2000 catalogue position for an observer: precesses to the date, then projects.
+ * Azimuth is degrees clockwise from north; altitude is geometric (no refraction).
+ */
+export function equatorialJ2000ToHorizontal(
+  raDeg: number,
+  decDeg: number,
+  date: Date,
+  lat: number,
+  lng: number
+): { altitudeDeg: number; azimuthDeg: number } {
+  const vector = Astronomy.VectorFromSphere(new Astronomy.Spherical(decDeg, raDeg, 1), date);
+  const now = Astronomy.EquatorFromVector(Astronomy.RotateVector(Astronomy.Rotation_EQJ_EQD(date), vector));
+  const h = Astronomy.Horizon(date, new Astronomy.Observer(lat, lng, 0), now.ra, now.dec);
+  return { altitudeDeg: h.altitude, azimuthDeg: h.azimuth };
+}
+
+/**
  * Calculates high-precision solar coordinates (NOAA / Meeus algorithm)
  */
 export function calculateSolarPosition(
