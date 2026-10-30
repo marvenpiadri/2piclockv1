@@ -74,6 +74,7 @@ export class App {
     return (
       url.includes('tonight') ||
       url.includes('astronomy') ||
+      /^\/[a-z0-9-]+\/[a-z0-9-]+\/(?:sun|moon)(?:\?.*)?$/.test(url) ||
       url.includes('stargazing') ||
       url.includes('eclipses') ||
       url.includes('satellites') ||
